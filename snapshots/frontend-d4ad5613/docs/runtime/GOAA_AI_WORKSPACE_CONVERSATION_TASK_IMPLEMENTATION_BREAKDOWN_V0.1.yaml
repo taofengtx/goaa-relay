@@ -1,0 +1,216 @@
+standard:
+  name: "GOAA_AI_WORKSPACE_CONVERSATION_TASK_IMPLEMENTATION_BREAKDOWN"
+  version: "V0.1"
+  date: "2026-06-22"
+  package: "V5.5_AI_WORKSPACE_PACKAGE_1"
+  package_pr: 12
+  package_branch: "feat/ai-workspace-conversation-task-flow-v01-20260622"
+  owner: "Tao"
+  architecture_lead: "ChatGPT"
+  executor: "Aika"
+  implementation_agent: "Claude Code"
+  independent_review: "ChatGPT Baton 8; Claude CLI / Antigravity CLI when required"
+  merge_policy: "Package merge only; do not merge per small task."
+
+source_spec:
+  file: "docs/runtime/GOAA_AI_WORKSPACE_CONVERSATION_TASK_FLOW_V0.1.yaml"
+  commit: "ae1e9fa48981ccd4ddc4c26299c49a4acf41ec15"
+  status: "committed_to_package_branch"
+  purpose: "Translate the frozen conversation-to-task spec into sequenced implementation tasks."
+
+scope:
+  included:
+    - "Frontend AI Workspace task card and lifecycle UI"
+    - "Conversation intent detection local-first MVP"
+    - "Task envelope schema and builder"
+    - "Readonly /tasks/run skeleton"
+    - "Risk classification and approval gate behavior"
+    - "Evidence package generation"
+    - "Task history display / retrieval"
+    - "Tests and review evidence"
+  excluded:
+    - "Production deployment"
+    - "DO connection"
+    - "Worker start"
+    - "Executor enablement"
+    - "Secret/private-key access"
+    - "Real mutation execution for embed or non-readonly tasks"
+    - "Package merge before Tao approval"
+
+safety_boundary:
+  default_decision: "deny"
+  docs_only_current_file: true
+  runtime_mutation_allowed: false
+  deploy_allowed: false
+  do_connection_allowed: false
+  worker_start_allowed: false
+  executor_enable_allowed: false
+  secret_access_allowed: false
+  private_key_access_allowed: false
+  merge_allowed: false
+  package_branch_push_allowed_after_review: true
+  package_merge_allowed_only_after_tao_baton10: true
+
+implementation_units:
+  - id: "P1-T2-U1"
+    name: "Codebase landing-point confirmation"
+    type: "readonly_inventory"
+    risk: "LOW"
+    goal: "Verify exact current files/functions before coding."
+    likely_files:
+      - "local-console/main.py"
+      - "services/rag/workers/task_runner.py"
+      - "services/model-router/api.py"
+      - "local-console/registry/agents.json"
+      - "local-console/registry/skills.json"
+    acceptance:
+      - "Existing /ai/chat behavior documented."
+      - "Existing /tasks/results behavior documented."
+      - "Existing /tasks/run skeleton status documented."
+      - "No code modified."
+    commit_policy: "No commit unless inventory doc is created and reviewed."
+
+  - id: "P1-T2-U2"
+    name: "Task envelope model"
+    type: "backend_schema"
+    risk: "LOW"
+    goal: "Add or document a structured task envelope builder for conversation-to-task flow."
+    candidate_outputs:
+      - "TaskEnvelope schema/dataclass or local-console helper"
+      - "Risk fields"
+      - "Approval fields"
+      - "Evidence fields"
+    acceptance:
+      - "Pure chat remains unchanged."
+      - "Executable intent returns task envelope."
+      - "No execution happens during envelope creation."
+      - "YAML/JSON examples match spec."
+
+  - id: "P1-T2-U3"
+    name: "Rule-based local-first intent detection MVP"
+    type: "backend_logic"
+    risk: "LOW"
+    goal: "Implement MVP intent detection without cloud egress."
+    supported_intents:
+      - "pure_chat"
+      - "topk_query"
+      - "memory_context_fetch"
+      - "status_check"
+      - "approve_task"
+      - "reject_task"
+      - "embed_corpus_full_envelope_only"
+    acceptance:
+      - "No llm_guided cloud classification in MVP."
+      - "User hint can override only within safe allowlist."
+      - "Unknown intent falls back to pure_chat or blocked envelope."
+
+  - id: "P1-T2-U4"
+    name: "Readonly /tasks/run skeleton"
+    type: "backend_endpoint"
+    risk: "MEDIUM"
+    goal: "Route approved readonly intents to existing safe local routines."
+    allowed_execution:
+      - "topk_query"
+      - "memory_context_fetch"
+      - "status_check"
+    blocked_execution:
+      - "embed_corpus_full actual mutation"
+      - "worker start"
+      - "executor enable"
+      - "DO connection"
+      - "deploy"
+      - "commit/push/merge"
+    acceptance:
+      - "Readonly tasks produce evidence package."
+      - "Blocked tasks return blocked status and stop reason."
+      - "No production/runtime mutation."
+
+  - id: "P1-T2-U5"
+    name: "Tao approval gate MVP"
+    type: "backend_and_ui"
+    risk: "MEDIUM"
+    goal: "Represent risk-4 tasks as awaiting approval / approved_envelope_only without executing mutations."
+    acceptance:
+      - "Risk 4 task creates awaiting_approval envelope."
+      - "Approval changes status to approved_envelope_only."
+      - "No mutation executes in MVP."
+      - "Evidence records post-MVP execution intent."
+
+  - id: "P1-T2-U6"
+    name: "AI Workspace UI task card lifecycle"
+    type: "frontend_ui"
+    risk: "LOW"
+    goal: "Show task lifecycle states in AI Workspace."
+    states:
+      - "candidate"
+      - "awaiting_approval"
+      - "approved_envelope_only"
+      - "running"
+      - "completed"
+      - "blocked"
+      - "failed"
+    acceptance:
+      - "Pure chat still renders as chat."
+      - "Task intent renders as task card."
+      - "Approved envelope-only state clearly says no mutation executed in MVP."
+      - "Evidence package is visible."
+
+  - id: "P1-T2-U7"
+    name: "Evidence package and task history"
+    type: "backend_frontend"
+    risk: "LOW"
+    goal: "Persist and display safe evidence for readonly tasks and envelope-only approvals."
+    acceptance:
+      - "repo/source file modification flag is distinct from task envelope persistence."
+      - "task_envelope_persisted_allowed is represented."
+      - "merge_performed/deploy_performed/worker_started/executor_enabled flags remain false."
+
+  - id: "P1-T2-U8"
+    name: "Tests and demo evidence"
+    type: "qa"
+    risk: "LOW"
+    goal: "Create test evidence for the MVP package."
+    acceptance:
+      - "Pure chat test passes."
+      - "topk_query envelope test passes."
+      - "status_check readonly execution test passes."
+      - "embed risk-4 envelope-only test passes."
+      - "Forbidden actions test blocked."
+
+recommended_pr_sequence_inside_package:
+  - order: 1
+    unit_ids: ["P1-T2-U1", "P1-T2-U2", "P1-T2-U3"]
+    description: "Foundation: inventory, envelope model, local intent detection."
+  - order: 2
+    unit_ids: ["P1-T2-U4", "P1-T2-U5"]
+    description: "Safe execution: readonly /tasks/run skeleton and approval gate."
+  - order: 3
+    unit_ids: ["P1-T2-U6", "P1-T2-U7"]
+    description: "UI and evidence package."
+  - order: 4
+    unit_ids: ["P1-T2-U8"]
+    description: "Tests and package readiness evidence."
+
+package_acceptance_boundary:
+  ready_for_package_baton8_when:
+    - "Spec file committed."
+    - "Implementation breakdown committed."
+    - "At least one vertical slice works: conversation input -> envelope -> readonly task result/evidence -> UI display."
+    - "Forbidden actions demonstrably blocked."
+    - "Aika returns runtime/local evidence."
+    - "ChatGPT confirms package-level review."
+  not_ready_if:
+    - "Only docs exist and no executable vertical slice exists."
+    - "Any safety flag is ambiguous."
+    - "Any real mutation path is enabled without Tao approval."
+    - "No download-review file is returned."
+
+version_history:
+  - version: "V0.1"
+    date: "2026-06-22"
+    author: "ChatGPT Architecture Lead"
+    status: "created_for_package_branch_review"
+    notes:
+      - "Implementation breakdown for V5.5 AI Workspace Package 1."
+      - "Created after conversation-to-task spec V0.1 was committed to package branch."
+      - "Package merge rule active: do not merge every small task."

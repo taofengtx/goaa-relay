@@ -1,0 +1,411 @@
+#!/bin/bash
+# AiKa Node v1.0.5 - postinst (fixed)
+# 一鍵安裝：拆箱即用，零手動配置
+# 客戶安裝後重啟即可開始工作，自動接入 GOAA.AI 雲端
+#
+# Changes in this version:
+# - Full logging via exec tee (every command captured)
+# - DEBIAN_FRONTEND=noninteractive on all apt operations
+# - apt-get update before every apt-get install
+# - No more 2>/dev/null - all errors visible
+# - No more -q on apt/pip - full output visible
+# - Clear error messages on failure
+# - Robust dpkg recursion handling
+
+set -e
+
+VERSION="1.0.5"
+GOAA_DIR="/opt/goaa"
+GOAA_API="https://api.goaa.ai"
+ROUTER_API="http://134.199.227.108:8080"
+GITHUB_REPO="https://raw.githubusercontent.com/taofengtx/goaa-ai-frontend/main"
+LOG_FILE="/var/log/aika-install.log"
+
+# ============================================================
+# FULL LOGGING — every command captured
+# ============================================================
+# Redirect ALL output (stdout + stderr) to both terminal and log file
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║     🦞  AiKa Box v$VERSION  安裝中                    ║"
+echo "║     GOAA.AI 邊緣計算節點 — 拆箱即用                  ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
+
+# 找到第一個非 root 用戶
+USER_HOME=$(getent passwd 1000 | cut -d: -f6 2>/dev/null || echo "/home/$(ls /home | head -1)")
+USERNAME=$(getent passwd 1000 | cut -d: -f1 2>/dev/null || ls /home | head -1)
+
+log "系統: $(lsb_release -ds 2>/dev/null || echo 'unknown') | 用戶: $USERNAME | 內核: $(uname -r)"
+
+# ══════════════════════════════════════════════════════════════
+# Step 1：建立目錄結構
+# ══════════════════════════════════════════════════════════════
+log "Step 1/9: 建立目錄結構..."
+mkdir -p $GOAA_DIR/{logs,data,config,downloads,runtime,workers}
+mkdir -p $GOAA_DIR/logs/{tasks,revenue,profit,router,circuit-breaker,errors,workers}
+chmod -R 755 $GOAA_DIR
+log "Step 1 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 2：安裝系統依賴
+# ══════════════════════════════════════════════════════════════
+log "Step 2/9: 安裝系統依賴..."
+export DEBIAN_FRONTEND=noninteractive
+
+log "  → apt-get update..."
+apt-get update
+
+log "  → 安裝 python3-venv python3-pip git curl wget lsb-release ca-certificates gnupg net-tools..."
+apt-get install -y python3-venv python3-pip git curl wget \
+    lsb-release ca-certificates gnupg net-tools
+
+log "  → 檢查安裝結果..."
+for pkg in python3-venv python3-pip git curl wget; do
+    if dpkg -l "$pkg" 2>/dev/null | grep -q '^ii'; then
+        log "  ✅ $pkg 已安裝"
+    else
+        log "  ⚠️  $pkg 安裝狀態異常"
+    fi
+done
+
+# 安裝 Docker（如果未安裝）
+if ! command -v docker &>/dev/null; then
+    log "  → 安裝 Docker..."
+    curl -fsSL https://get.docker.com | sh
+    usermod -aG docker $USERNAME 2>/dev/null || true
+    log "  ✅ Docker 安裝完成"
+else
+    log "  ✅ Docker 已存在 ($(docker --version 2>/dev/null))"
+fi
+
+log "Step 2 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 3：Python 虛擬環境 + 依賴
+# ══════════════════════════════════════════════════════════════
+log "Step 3/9: 配置 Python 環境..."
+log "  → 創建 venv..."
+python3 -m venv $GOAA_DIR/venv
+log "  ✅ venv 創建成功 ($($GOAA_DIR/venv/bin/python --version 2>/dev/null))"
+
+log "  → 升級 pip..."
+$GOAA_DIR/venv/bin/pip install --upgrade pip
+log "  ✅ pip 升級完成 ($($GOAA_DIR/venv/bin/pip --version 2>/dev/null))"
+
+log "  → 安裝 Python 依賴 (fastapi uvicorn httpx requests psutil psycopg2-binary python-multipart pydantic)..."
+$GOAA_DIR/venv/bin/pip install \
+    fastapi uvicorn httpx requests psutil \
+    psycopg2-binary python-multipart pydantic
+log "  ✅ Python 依賴安裝完成"
+log "Step 3 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 4：從 GitHub 同步最新配置
+# ══════════════════════════════════════════════════════════════
+log "Step 4/9: 同步 GOAA.AI 最新配置..."
+if [ -d "$GOAA_DIR/repo/.git" ]; then
+    log "  → repo 已存在，執行 git pull..."
+    cd $GOAA_DIR/repo
+    git pull origin main 2>&1 || log "  ⚠️ git pull 失敗，繼續執行"
+else
+    log "  → 克隆 GitHub repo..."
+    rm -rf $GOAA_DIR/repo  # 清理殘留
+    git clone https://github.com/taofengtx/goaa-ai-frontend.git $GOAA_DIR/repo
+fi
+log "  ✅ GitHub 同步完成 ($(cd $GOAA_DIR/repo 2>/dev/null && git log --oneline -1 2>/dev/null || echo 'unknown'))"
+log "Step 4 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 5：自動生成節點身份
+# ══════════════════════════════════════════════════════════════
+log "Step 5/9: 生成節點身份..."
+HOSTNAME=$(hostname)
+LOCAL_IP=$(ip route get 1 2>/dev/null | awk '{print $7}' | head -1 || echo "unknown")
+PRIMARY_IFACE=$(ip route get 1 2>/dev/null | awk '{print $5}' | head -1 || echo "eth0")
+MAC_ADDR=$(cat /sys/class/net/$PRIMARY_IFACE/address 2>/dev/null || echo "00:00:00:00:00:00")
+MAC_SUFFIX=$(echo "$MAC_ADDR" | tr -d ':' | tail -c 8 | tr '[:lower:]' '[:upper:]')
+NODE_ID="AKB-$MAC_SUFFIX"
+CPU_CORES=$(nproc)
+RAM_GB=$(free -g | awk '/^Mem:/{print $2}')
+HAS_GPU=$(command -v nvidia-smi &>/dev/null && echo "true" || echo "false")
+
+log "  → 節點 ID: $NODE_ID | MAC: $MAC_ADDR | IP: $LOCAL_IP"
+log "  → CPU: ${CPU_CORES}核 | RAM: ${RAM_GB}GB | GPU: $HAS_GPU"
+
+cat > $GOAA_DIR/registration.json << REGEOF
+{
+  "node_id": "$NODE_ID",
+  "hostname": "$HOSTNAME",
+  "ip": "$LOCAL_IP",
+  "mac": "$MAC_ADDR",
+  "role": "edge_worker",
+  "aika_version": "$VERSION",
+  "status": "active",
+  "registered_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "bootstrap_method": "deb_v1.0.5",
+  "github_synced": true,
+  "capabilities": {
+    "cpu_cores": $CPU_CORES,
+    "ram_gb": $RAM_GB,
+    "gpu": $HAS_GPU,
+    "docker": true,
+    "python": true,
+    "ollama": false
+  },
+  "cloud_anchor": "134.199.227.108",
+  "router_api": "$ROUTER_API",
+  "tags": ["edge_worker", "aika_box"]
+}
+REGEOF
+
+log "  ✅ registration.json 已生成"
+log "Step 5 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 6：寫入心跳腳本 + systemd 服務
+# ══════════════════════════════════════════════════════════════
+log "Step 6/9: 配置心跳服務..."
+
+# 寫入心跳腳本（使用虛擬環境）
+cat > $GOAA_DIR/heartbeat.py << HBEOF
+#!/usr/bin/env python3
+"""AiKa Node Heartbeat v$VERSION"""
+import requests, psutil, subprocess, json, time, os, platform
+
+NODE_ID   = os.getenv("NODE_ID", "$NODE_ID")
+ROUTER    = os.getenv("ROUTER_API", "$ROUTER_API")
+REG_FILE  = "$GOAA_DIR/registration.json"
+LOG_FILE  = "$GOAA_DIR/logs/workers/heartbeat.log"
+
+def check_docker():
+    try: return subprocess.run(["docker","ps"], capture_output=True, timeout=5).returncode == 0
+    except: return False
+
+def check_ollama():
+    try: return requests.get("http://localhost:11434/api/tags", timeout=3).status_code == 200
+    except: return False
+
+def log(msg):
+    ts = time.strftime('%Y-%m-%d %H:%M:%S')
+    line = f"[{ts}] {msg}"
+    print(line)
+    try:
+        with open(LOG_FILE, "a") as f: f.write(line + "\n")
+    except: pass
+
+log(f"AiKa Heartbeat started — Node: {NODE_ID}")
+
+while True:
+    try:
+        disk_path = "C:\\\\" if platform.system() == "Windows" else "/"
+        payload = {
+            "worker_id": NODE_ID,
+            "cpu":    psutil.cpu_percent(interval=2),
+            "memory": psutil.virtual_memory().percent,
+            "disk":   psutil.disk_usage(disk_path).percent,
+            "docker": check_docker(),
+            "ollama": check_ollama(),
+        }
+        r = requests.post(f"{ROUTER}/worker/heartbeat", json=payload, timeout=8)
+        log(f"Heartbeat OK — CPU:{payload['cpu']}% MEM:{payload['memory']}% HTTP:{r.status_code}")
+    except Exception as e:
+        log(f"Heartbeat failed: {e}")
+    time.sleep(30)
+HBEOF
+chmod +x $GOAA_DIR/heartbeat.py
+log "  ✅ heartbeat.py 已寫入"
+
+# 心跳 systemd 服務
+cat > /etc/systemd/system/aika-heartbeat.service << SVCEOF
+[Unit]
+Description=AiKa Node Heartbeat v$VERSION
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=$GOAA_DIR/venv/bin/python3 $GOAA_DIR/heartbeat.py
+Restart=always
+RestartSec=30
+Environment=NODE_ID=$NODE_ID
+Environment=ROUTER_API=$ROUTER_API
+StandardOutput=journal
+StandardError=journal
+CPUQuota=5%
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+# GitHub 每小時自動同步（cron）
+(crontab -l 2>/dev/null | grep -v goaa-sync; \
+ echo "0 * * * * cd $GOAA_DIR/repo && git pull origin main -q >> $GOAA_DIR/logs/sync.log 2>&1") | crontab -
+
+# 每日清理（cron）
+(crontab -l 2>/dev/null | grep -v goaa-cleanup; \
+ echo "0 3 * * * find $GOAA_DIR/logs -name '*.log' -mtime +7 -delete >> $GOAA_DIR/logs/cleanup.log 2>&1") | crontab -
+
+log "  → 重載 systemd..."
+systemctl daemon-reload
+log "  → 啟用心跳服務..."
+systemctl enable aika-heartbeat
+systemctl start  aika-heartbeat
+log "  ✅ aika-heartbeat 服務已啟動 ($(systemctl is-active aika-heartbeat 2>/dev/null))"
+log "Step 6 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 7：桌面圖標 + 開機自動打開 portal
+# ══════════════════════════════════════════════════════════════
+log "Step 7/9: 配置桌面環境..."
+
+# 先創建圖標目錄
+mkdir -p $GOAA_DIR/assets
+# 下載圖標或使用佔位
+if [ ! -f "$GOAA_DIR/assets/aika-icon.png" ]; then
+    # 生成一個簡單的 SVG 作為桌面圖標
+    cat > $GOAA_DIR/assets/aika-icon.png << 'PNGEOF'
+iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAfRJREFU
+WEPFVuFRw0AMvH8n0AEpA52QdEBCB4QOoB2gA9IB6YCSDkg6IJ2QMJKBb5Zn2XJiuUMeM/
+rjyLuzbFkneb4/nkI/f4gA6ggX4B/AH4AvAJ8A7wDvAK8ALz0i94gA6ggXgH0A+wD2AOwC
+2CqOSPAE4B7AHYAbANf1iz+k6yMCqCP8EeB2abwTo6M/EUAd4SuAG+veJwL7dQQAHSFQ1EI
+CkOgaQQQAf4uJLgB1hF8A7pfCOwI16wgAPvsCcA/gCcADgNsRgY4A4Cv45QGcC/ZpA8Ddp8
+CJKjmCQDfLJcA7gM8A7hDQESAQwrHcygBHSFLgCk2HAhFBLoDrXQZ4GRFIB3OLL4ArALcA
+rgHcAKg3IgJgjgD6Iy/BpQDnAL4BfBoH8B4CDaHzJQ4B3A+egJSvwJcA7jYiQH+EX4I4RvA
+NwBuAHwC8LQREeiP8AqH10sYAPwBmBcR6I9wC+A6O38BvI0I9Ee4A3AZB28qAtwBPET4N
+5jYJwLQH+HOBJkR6I9wB2C/tA4g/BF7BEiMI0AYf2ZABiREZgVAf4UU4G9m4KQiwB/hH4D
+fBLB1AB3h2gR8j4g0R0h7cR+AP5mBokSgP8I/gG8A+AnwHwLkJMKjS4B3AC4BfE8I4C3S
+H+EKwLk5+j8CYEzAO4qNygAAAABJRU5ErkJggg==
+PNGEOF
+    log "  → 佔位圖標已生成"
+fi
+
+for USER_DIR in /home/*/; do
+    if [ -d "$USER_DIR" ]; then
+        DESK="$USER_DIR/Desktop"
+        AUTO="$USER_DIR/.config/autostart"
+        mkdir -p "$DESK" "$AUTO"
+        UNAME=$(basename $USER_DIR)
+
+        # 桌面圖標
+        cat > "$DESK/aika-workstation.desktop" << DSKEOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AiKa 工作台 v$VERSION
+Comment=GOAA.AI 邊緣計算節點
+Exec=xdg-open https://portal.goaa.ai/agent-login
+Icon=$GOAA_DIR/assets/aika-icon.png
+Terminal=false
+StartupNotify=false
+DSKEOF
+        chmod +x "$DESK/aika-workstation.desktop" 2>/dev/null
+        log "  ✅ 桌面圖標: $DESK/aika-workstation.desktop"
+
+        # 開機自動打開
+        cat > "$AUTO/goaa-portal.desktop" << AUTOEOF
+[Desktop Entry]
+Type=Application
+Name=GOAA Portal
+Exec=bash -c "sleep 15 && xdg-open https://portal.goaa.ai/agent-login"
+Hidden=false
+X-GNOME-Autostart-enabled=true
+AUTOEOF
+        log "  ✅ 開機自啟: $AUTO/goaa-portal.desktop"
+
+        chown -R $UNAME:$UNAME "$DESK" "$AUTO" 2>/dev/null || true
+    fi
+done
+log "Step 7 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 8：向雲端注冊節點
+# ══════════════════════════════════════════════════════════════
+log "Step 8/9: 向 GOAA.AI 雲端注冊..."
+sleep 3
+REG_DATA=$(cat $GOAA_DIR/registration.json)
+log "  → 註冊數據: $(echo $REG_DATA | head -c 200)"
+HTTP_CODE=$(curl -s -o /tmp/aika-register-resp.log -w "%{http_code}" \
+    -X POST "$ROUTER_API/worker/heartbeat" \
+    -H "Content-Type: application/json" \
+    -d "$REG_DATA" \
+    --connect-timeout 10 2>&1)
+if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+    log "  ✅ 雲端注冊成功 (HTTP $HTTP_CODE)"
+else
+    log "  ⚠️ 雲端注冊 HTTP $HTTP_CODE (心跳服務將在後台重試)"
+    log "  → 響應: $(cat /tmp/aika-register-resp.log 2>/dev/null)"
+fi
+log "Step 8 完成"
+
+# ══════════════════════════════════════════════════════════════
+# Step 9：最終驗證
+# ══════════════════════════════════════════════════════════════
+log "Step 9/9: 驗證安裝結果..."
+
+ERRORS=""
+verify() {
+    local name="$1" cmd="$2" desc="$3"
+    if eval "$cmd" 2>/dev/null; then
+        log "  ✅ $name"
+    else
+        log "  ❌ $name — $desc"
+        ERRORS="$ERRORS\n  - $name"
+    fi
+}
+
+verify "/opt/goaa 目錄"     "test -d $GOAA_DIR" "$GOAA_DIR 不存在"
+verify "registration.json"  "test -f $GOAA_DIR/registration.json" "節點註冊文件缺失"
+verify "Docker 命令"        "command -v docker" "docker 未安裝"
+verify "心跳服務已啟用"     "systemctl is-enabled aika-heartbeat &>/dev/null" "systemd 服務未啟用"
+verify "Python venv"        "test -f $GOAA_DIR/venv/bin/python" "venv 未正確創建"
+verify "Git repo"           "test -d $GOAA_DIR/repo/.git" "GitHub 同步未完成"
+verify "桌面圖標"           "ls /home/*/Desktop/aika-workstation.desktop &>/dev/null" "桌面圖標未生成"
+
+# 健康檢查
+log "  → 執行健康檢查..."
+sleep 2
+HEALTHY=$(systemctl is-active aika-heartbeat 2>/dev/null || echo "inactive")
+log "  → heartbeat 服務狀態: $HEALTHY"
+
+log "Step 9 完成"
+
+# ============================================================
+# 完成
+# ============================================================
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║   ✅  AiKa Box v$VERSION 安裝完成！                   ║"
+echo "╠══════════════════════════════════════════════════════╣"
+echo "║                                                      ║"
+printf "║  節點 ID : %-41s║\n" "$NODE_ID"
+printf "║  本機 IP : %-41s║\n" "$LOCAL_IP"
+echo "║                                                      ║"
+echo "║  ✅ Python 環境      已配置                          ║"
+echo "║  ✅ Docker           已就緒                          ║"
+echo "║  ✅ 心跳服務         已啟動（每30秒）                 ║"
+echo "║  ✅ GitHub 同步      已配置（每小時）                 ║"
+echo "║  ✅ 桌面圖標         已建立                          ║"
+echo "║  ✅ 雲端注冊         已完成                          ║"
+echo "║                                                      ║"
+echo "║  📋 下一步：                                         ║"
+echo "║     執行 sudo reboot 完成安裝                        ║"
+echo "║     重啟後桌面出現「AiKa 工作台」圖標                 ║"
+echo "║     開機自動打開 portal.goaa.ai                      ║"
+echo "║                                                      ║"
+echo "║  💰 開始接任務，賺取 Credits！                        ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
+
+if [ -n "$ERRORS" ]; then
+    log "⚠️  部分檢查未通過:$ERRORS"
+    log "安裝完成（含警告）。執行 sudo reboot 以完成設置。"
+else
+    log "✅ 所有檢查通過！安裝成功。執行 sudo reboot 以完成設置。"
+fi

@@ -1,0 +1,17 @@
+[Unit]  
+Description=GOAA.AI Persistent GitHub Runtime Sync  
+After=network.target  
+ 
+[Service]  
+Type=simple  
+User=goaa  
+WorkingDirectory=/opt/goaa-ai-frontend  
+ExecStart=/usr/bin/python3 /opt/goaa-ai-frontend/scripts/github_sync_runtime.py  
+Restart=always  
+RestartSec=20  
+StandardOutput=journal  
+StandardError=journal  
+Environment="PYTHONUNBUFFERED=1"  
+ 
+[Install]  
+WantedBy=multi-user.target  

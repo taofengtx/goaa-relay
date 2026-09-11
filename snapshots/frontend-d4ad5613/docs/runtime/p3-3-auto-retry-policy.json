@@ -1,0 +1,8 @@
+{  
+"  \"retry_policy\": {"  
+"    \"api_timeout\": {\"max_retries\": 3, \"backoff_sec\": [1, 2, 4]},"  
+"    \"github_push\": {\"max_retries\": 3, \"backoff_sec\": [2, 4, 8]},"  
+"    \"ssh\": {\"max_retries\": 5, \"backoff_sec\": [1, 2, 4, 8, 16]},"  
+"    \"worker_reconnect\": {\"max_retries\": 10, \"backoff_sec\": [5, 10, 20]}"  
+"  }"  
+"}"  

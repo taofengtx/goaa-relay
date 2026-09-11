@@ -1,0 +1,18 @@
+[Unit]
+Description=GOAA Local Runtime Console
+After=network.target
+
+[Service]
+Type=simple
+User=aika
+Group=aika
+WorkingDirectory=/opt/goaa/local-console
+EnvironmentFile=/etc/goaa/console.env
+ExecStart=/opt/goaa/venv/bin/uvicorn main:app --host 127.0.0.1 --port 5188
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

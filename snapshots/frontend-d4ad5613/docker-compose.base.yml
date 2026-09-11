@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # OpenClaw API Gateway
+  openclaw:
+    image: goaa/openclaw:0.1.0
+    container_name: openclaw-api-gateway
+    ports:
+      - "18789:18789"
+    environment:
+      - LOG_LEVEL=info
+      - CORS_ORIGINS=https://portal.goaa.ai,https://api.goaa.ai,https://goaa.ai
+      - ALLOW_CREDENTIALS=true
+    volumes:
+      - ./logs/openclaw:/opt/goaa/logs
+      - ./config/openclaw:/opt/goaa/config
+    networks:
+      - goaa-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # QwenPaw Console
+  qwenpaw:
+    image: goaa/qwenpaw:latest
+    container_name: qwenpaw-console
+    ports:
+      - "8088:8088"
+    environment:
+      - LOG_LEVEL=info
+      - OPENCLAW_URL=http://openclaw:18789
+    volumes:
+      - ./logs/qwenpaw:/app/logs
+      - ./config/qwenpaw:/app/config
+    networks:
+      - goaa-network
+    depends_on:
+      openclaw:
+        condition: service_healthy
+    restart: always
+
+  # Cloudflare Tunnel (optional local testing)
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-tunnel
+    command: tunnel run goaa-api-v2
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TOKEN}
+    volumes:
+      - ./config/cloudflared:/root/.cloudflared
+    networks:
+      - goaa-network
+    restart: always
+    profiles:
+      - tunnel
+
+networks:
+  goaa-network:
+    driver: bridge
+
+volumes:
+  openclaw-logs:
+  qwenpaw-logs:
+  cloudflared-config:
+
+# Usage:
+# docker-compose -f docker-compose.base.yml up -d
+# docker-compose -f docker-compose.base.yml --profile tunnel up -d
