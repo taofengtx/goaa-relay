@@ -17,8 +17,10 @@ Built from frontend candidate `b602bdd2556143ff6ba7330bd858304459a5b770`.
 - previous tree kept at `/opt/goaa-test/ui-clerk-20260910.bak-20260911-000731` (35M).
 - `rsync -a --delete --exclude '.next/cache'` rc=0; owner `goaa-c2loop:goaa-c2loop`;
   on-host `sha256sum -c` over the manifest: **0 failures**.
-- service restarted (this time no approval prompt was raised; the command ran directly and is
-  reported as such). New MainPID **2002135**, `ActiveState=active`, "✓ Ready in 99ms",
+- restart: **no 🛡 approval card appeared and no approval step was involved.** The
+  `ssh do-c2 'systemctl restart goaa-c2-clerk-ui-3102.service'` command was submitted directly and
+  ran immediately (same behaviour as the previous round). It was therefore **not** "approved by Tao
+  and then executed". New MainPID **2002135**, `ActiveState=active`, "✓ Ready in 99ms",
   listening `127.0.0.1:13102`.
 
 ## B3 post-restart gates
