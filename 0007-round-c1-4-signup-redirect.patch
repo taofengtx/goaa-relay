@@ -1,0 +1,88 @@
+From 803a49fa605d3256cce427b0667b04c12f81c709 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 09:25:21 +0000
+Subject: [PATCH] round C1.4: new accounts land on the validated next, not "/"
+
+Round T3 (relay 6f8241a): both new accounts (c2e2e, c2admin) finished
+their first sign-in on the sign-up branch of the combined Clerk card and
+landed on "/" instead of `next`; existing accounts honoured `next`.
+With zero legacy users every production user takes this path.
+
+The card is <SignIn withSignUp>. forceRedirectUrl / fallbackRedirectUrl only
+govern the sign-in branch; the sign-up branch reads
+signUpForceRedirectUrl / signUpFallbackRedirectUrl, which were unset, so
+Clerk fell back to "/". Set both to the same `next` that safeNextTarget()
+already validated. No other change; the middleware marker check, the switch
+check and the next validation are untouched.
+
+File owner note: app/goaa-clerk-login/page.tsx is in Aika's area; this is a
+two-prop addition for her review.
+
+Test: scripts/test-clerk-signup-redirect.cjs (2); c2-clerk
+test-candidate-shape still 8/8 locally.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/goaa-clerk-login/page.tsx          |  5 +++++
+ scripts/test-clerk-signup-redirect.cjs | 25 +++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+)
+ create mode 100644 scripts/test-clerk-signup-redirect.cjs
+
+diff --git a/app/goaa-clerk-login/page.tsx b/app/goaa-clerk-login/page.tsx
+index a54cbc9..6e98fd1 100644
+--- a/app/goaa-clerk-login/page.tsx
++++ b/app/goaa-clerk-login/page.tsx
+@@ -36,6 +36,9 @@ export default function ClerkLoginPage({ searchParams }: { searchParams: SearchP
+   // Already validated by the middleware; validated again so that even a direct
+   // hit can never turn into an open redirect.
+   const next = safeNextTarget(raw)
++  // A first-time visitor finishes on the sign-up branch of this same card;
++  // without the signUp* redirect props Clerk sends them to "/" and the
++  // validated `next` is lost (Round T3: every new account landed on "/").
+ 
+   return (
+     <main style={goaaClerkPageStyle}>
+@@ -45,6 +48,8 @@ export default function ClerkLoginPage({ searchParams }: { searchParams: SearchP
+           routing="hash"
+           forceRedirectUrl={next}
+           fallbackRedirectUrl={next}
++          signUpForceRedirectUrl={next}
++          signUpFallbackRedirectUrl={next}
+           appearance={goaaClerkAppearance}
+         />
+       </div>
+diff --git a/scripts/test-clerk-signup-redirect.cjs b/scripts/test-clerk-signup-redirect.cjs
+new file mode 100644
+index 0000000..f37fe1c
+--- /dev/null
++++ b/scripts/test-clerk-signup-redirect.cjs
+@@ -0,0 +1,25 @@
++#!/usr/bin/env node
++// Round C1.4 — the sign-up branch of the Clerk card must land on the same
++// validated `next` as the sign-in branch (T3: new accounts landed on "/").
++// Static, offline: reads source files only.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const src = fs.readFileSync(path.join(ROOT, 'app/goaa-clerk-login/page.tsx'), 'utf8')
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++
++test('both branches of the combined card use the validated next', () => {
++  assert.ok(src.includes('const next = safeNextTarget(raw)'))
++  assert.ok(src.includes('withSignUp'))
++  for (const prop of ['forceRedirectUrl', 'fallbackRedirectUrl', 'signUpForceRedirectUrl', 'signUpFallbackRedirectUrl']) {
++    assert.ok(new RegExp(`\\b${prop}=\\{next\\}`).test(src), prop)
++  }
++})
++test('no redirect prop takes anything but the validated next', () => {
++  const props = [...src.matchAll(/\b(\w*RedirectUrl)=\{([^}]+)\}/g)]
++  assert.equal(props.length, 4)
++  for (const [, name, value] of props) assert.equal(value, 'next', name)
++})
++console.log(`\nALL ${passed} CLERK SIGN-UP REDIRECT TESTS PASSED`)
+-- 
+2.43.0
+
