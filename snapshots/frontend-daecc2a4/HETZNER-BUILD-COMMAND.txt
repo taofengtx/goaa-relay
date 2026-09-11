@@ -1,0 +1,6 @@
+# Hetzner Build Command  
+  
+cd /tmp  
+wget -q 'https://raw.githubusercontent.com/taofengtx/goaa-ai-frontend/main/scripts/aika-node-build-v1.0.5.sh'  
+bash aika-node-build-v1.0.5.sh  
+ls -lh /opt/goaa/downloads/aika-node*.deb  

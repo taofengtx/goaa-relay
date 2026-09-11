@@ -1,0 +1,272 @@
+matrix_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-WORKER-CAPABILITY-MATRIX-CREATE-20260621-092"
+phase: "Phase 2C"
+created_at_utc: "2026-06-21"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+
+truth_priority:
+  - runtime_truth
+  - git_truth
+  - documentation_truth
+
+dependencies:
+  node_registry: "docs/runtime/node-registry/GOAA_NODE_REGISTRY_V0.1.yaml"
+  dispatch_protocol: "docs/runtime/dispatch/GOAA_DISPATCH_PROTOCOL_V0.1.yaml"
+
+summary:
+  purpose: "Define per-node worker capability limits for GOAA multi-node orchestration."
+  target_node_count: 8
+  ready_for_real_task_dispatch: false
+  ready_for_multi_node_dry_run: false
+  worker_start_allowed: false
+  production_deploy_allowed: false
+  do_connection_allowed: false
+  secret_access_allowed: false
+  default_decision: "deny"
+
+capability_levels:
+  L0_observed:
+    description: "Observed only. No task execution."
+    execution_allowed: false
+  L1_readonly_probe:
+    description: "Read-only identity/resource/capability probe only."
+    execution_allowed: true
+  L2_dev_sandbox_candidate:
+    description: "Future sandbox candidate. Disabled in V0.1."
+    execution_allowed: false
+  L3_build_candidate:
+    description: "Future build candidate. Disabled in V0.1."
+    execution_allowed: false
+  L4_runtime_candidate:
+    description: "Future runtime candidate. Disabled in V0.1."
+    execution_allowed: false
+  L5_production_capable:
+    description: "Production-capable only after explicit Tao authorization. Disabled in V0.1."
+    execution_allowed: false
+
+task_type_policy_v0_1:
+  readonly_probe:
+    enabled: true
+  docs_or_code_review:
+    enabled: false
+  sandbox_test:
+    enabled: false
+  build_task:
+    enabled: false
+  runtime_task:
+    enabled: false
+  production_deploy:
+    enabled: false
+  worker_start:
+    enabled: false
+
+nodes:
+  - node_id: "local-aika-core-01"
+    hostname: "aika-core-01"
+    node_type: "local_linux"
+    tailscale_ip: "100.114.37.90"
+    current_role: "control_plane_and_local_runtime_core"
+    capability_level: "L1_readonly_probe"
+    allowed_task_types_v0_1:
+      - "readonly_probe"
+    forbidden_task_types_v0_1:
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    runtime_evidence: "confirmed"
+    blockers:
+      - "No real worker dispatch authorized."
+      - "No production/runtime mutation authorized."
+
+  - node_id: "local-aika-2"
+    hostname: "aika-2"
+    node_type: "local_linux"
+    tailscale_ip: "100.97.60.1"
+    current_role: "do_ssh_jump_path_holder"
+    capability_level: "L1_readonly_probe"
+    allowed_task_types_v0_1:
+      - "readonly_probe"
+    forbidden_task_types_v0_1:
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    runtime_evidence: "ssh_confirmed_from_aika_core_01"
+    special_safety:
+      private_key_copy_allowed: false
+      private_key_print_allowed: false
+      do_connection_allowed_without_tao: false
+    blockers:
+      - "DO access requires separate Tao authorization."
+      - "Private key must not be printed or copied."
+
+  - node_id: "do-goaa-aika-cloud-1"
+    hostname: "goaa-aika-cloud-1"
+    node_type: "do_linux"
+    public_ip: "134.199.227.108"
+    current_role: "primary_do_control_plane_candidate"
+    capability_level: "L1_readonly_probe"
+    allowed_task_types_v0_1:
+      - "readonly_probe"
+    forbidden_task_types_v0_1:
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    runtime_evidence: "readonly_ssh_confirmed_via_aika_2"
+    blockers:
+      - "No DO mutation authorized."
+      - "No runtime task authorized."
+
+  - node_id: "do-goaa-aika-cloud-2"
+    hostname: "goaa-aika-cloud-2"
+    node_type: "do_linux"
+    public_ip: "143.198.224.71"
+    current_role: "light_worker_candidate"
+    capability_level: "L1_readonly_probe"
+    allowed_task_types_v0_1:
+      - "readonly_probe"
+    forbidden_task_types_v0_1:
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    runtime_evidence: "readonly_ssh_confirmed_via_aika_2"
+    blockers:
+      - "1GB node; no build/heavy task."
+      - "No worker start authorized."
+
+  - node_id: "do-goaa-aika-cloud-3"
+    hostname: "goaa-aika-cloud-3"
+    node_type: "do_linux"
+    public_ip: "64.23.166.121"
+    current_role: "light_worker_or_standby_candidate"
+    capability_level: "L1_readonly_probe"
+    allowed_task_types_v0_1:
+      - "readonly_probe"
+    forbidden_task_types_v0_1:
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    runtime_evidence: "readonly_ssh_confirmed_via_aika_2"
+    blockers:
+      - "1GB node; no build/heavy task."
+      - "No worker start authorized."
+
+  - node_id: "local-aika-1"
+    hostname: "aika-1"
+    node_type: "windows"
+    tailscale_ip: "100.109.7.85"
+    current_role: "windows_ui_remote_entry_candidate"
+    capability_level: "L0_observed"
+    allowed_task_types_v0_1: []
+    forbidden_task_types_v0_1:
+      - "readonly_probe"
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    blockers:
+      - "Windows worker protocol not defined."
+      - "No GOAA process evidence."
+
+  - node_id: "local-fq168-sm-mini-it12"
+    hostname: "fq168-sm-mini-it12"
+    node_type: "local_linux"
+    tailscale_ip: "100.114.251.87"
+    current_role: "future_local_linux_candidate"
+    capability_level: "L0_observed"
+    allowed_task_types_v0_1: []
+    forbidden_task_types_v0_1:
+      - "readonly_probe"
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    blockers:
+      - "SSH trust not established."
+      - "Runtime capability not confirmed."
+
+  - node_id: "local-tap"
+    hostname: "tap"
+    node_type: "windows"
+    tailscale_ip: "100.123.248.87"
+    current_role: "windows_standby_or_ui_candidate"
+    capability_level: "L0_observed"
+    allowed_task_types_v0_1: []
+    forbidden_task_types_v0_1:
+      - "readonly_probe"
+      - "docs_or_code_review"
+      - "sandbox_test"
+      - "build_task"
+      - "runtime_task"
+      - "production_deploy"
+      - "worker_start"
+    blockers:
+      - "Windows worker protocol not defined."
+
+selection_rules_v0_1:
+  default_decision: "deny"
+  allowed_execution_level: "readonly_probe_only"
+  selectable_nodes_for_readonly_probe:
+    - "local-aika-core-01"
+    - "local-aika-2"
+    - "do-goaa-aika-cloud-1"
+    - "do-goaa-aika-cloud-2"
+    - "do-goaa-aika-cloud-3"
+  excluded_nodes:
+    - "local-aika-1"
+    - "local-fq168-sm-mini-it12"
+    - "local-tap"
+
+safety_gates:
+  tao_required_before:
+    - "commit"
+    - "push"
+    - "merge"
+    - "create_pr"
+    - "deploy"
+    - "restart_service"
+    - "start_worker"
+    - "enable_executor"
+    - "connect_do"
+    - "read_secret"
+    - "copy_private_key"
+    - "delete_branch"
+  forbidden_in_v0_1:
+    - "production_deploy"
+    - "runtime_mutation"
+    - "worker_start"
+    - "service_restart"
+    - "do_mutation"
+    - "secret_print"
+    - "private_key_read"
+    - "private_key_copy"
+    - "branch_delete"
+
+phase_status:
+  phase_2a_node_registry: "completed"
+  phase_2b_dispatch_protocol: "completed"
+  phase_2c_worker_capability_matrix: "in_progress"
+  ready_for_readonly_dry_run: false
+  ready_for_multi_node_execution: false
+  next_recommended_phase: "Phase 2D Readonly Dry Run Protocol V0.1"

@@ -1,0 +1,18 @@
+[Unit]  
+Description=GOAA.AI Runtime Supervisor  
+After=network.target heartbeat-daemon.service runtime-scheduler.service metrics-collector.service  
+Wants=heartbeat-daemon.service runtime-scheduler.service metrics-collector.service  
+ 
+[Service]  
+Type=simple  
+User=root  
+WorkingDirectory=/opt/goaa-ai-frontend  
+ExecStart=/usr/bin/python3 /opt/goaa-ai-frontend/scripts/runtime_supervisor.py  
+Restart=always  
+RestartSec=30  
+StandardOutput=journal  
+StandardError=journal  
+Environment="PYTHONUNBUFFERED=1"  
+ 
+[Install]  
+WantedBy=multi-user.target  

@@ -1,0 +1,14 @@
+﻿# Pinned runtime dependencies for the C2 agent-application loop service.
+#
+# These are installed into a dedicated virtualenv from a local wheel directory
+# (`pip install --no-index --find-links=...`). The C2 host therefore never needs
+# to reach PyPI, and no PGDG/third-party apt repository is added.
+fastapi==0.115.6
+uvicorn==0.32.1
+psycopg[binary]==3.2.3
+bcrypt==4.2.1
+# Clerk session-token verification (identity authority). Official SDK only:
+# this service never signs, decrypts or hand-rolls JWT verification.
+# Transitive additions resolved by pip: cryptography 50.0.1, cffi 2.1.1,
+# pycparser 3.0, PyJWT 2.13.0.
+clerk-backend-api==7.0.0

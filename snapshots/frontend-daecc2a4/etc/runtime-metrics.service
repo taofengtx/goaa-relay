@@ -1,0 +1,32 @@
+[Unit]
+Description=GOAA.AI Runtime Presence Metrics Collector
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/goaa-ai
+ExecStart=/usr/bin/python3 /root/goaa-ai/scripts/runtime_presence_metrics.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=runtime-metrics
+Environment="PYTHONUNBUFFERED=1"
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Security
+NoNewPrivileges=true
+
+# Hardening
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/root/goaa-ai/runtime /root/goaa-ai/logs
+
+[Install]
+WantedBy=multi-user.target

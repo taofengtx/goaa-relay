@@ -1,0 +1,8 @@
+*.env
+env/
+*.pem
+*.key
+secrets*
+node_modules/
+.next/
+*.log
