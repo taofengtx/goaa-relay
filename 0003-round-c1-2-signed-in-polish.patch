@@ -1,0 +1,270 @@
+From f02c9387e86d2b63ec8aaf4964210f99ecdbddd4 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 06:49:05 +0000
+Subject: [PATCH] round C1.2: signed-in polish (Earning Paths, skill prompt,
+ Matters link, pills, Outfit)
+
+Fixes found on reports/2026-09-11/c1-signed-in (relay b73a97a).
+
+- Rename the growth entry "Earning Opportunities" -> "Earning Paths" in the
+  portal rail, the golden butler rail and the earning page eyebrow, so it
+  fits on one line in both rails (Tao, 2026-09-11). Page title unchanged.
+- Skills "Use this skill" linked to /planning?q=, but /planning only reads
+  ?prompt=; the seeded prompt was dropped. Now /planning?prompt=.
+- Rail "Matters" links to /planning?view=matters, which nothing read, so it
+  landed on Chat. ChatComponent (butler mode only) now opens Matters for
+  ?view=matters and removes the param from the URL. Reuses the existing
+  viewMode state; no new hook state.
+- Status pills (.goaa-pill, .pp-status) no longer wrap ("Not started").
+- Outfit was declared in --goaa-font but never loaded anywhere, so every
+  surface fell back to system fonts (LoginMenu to Arial). Add a self-hosted
+  @font-face -> /fonts/outfit/outfit-latin-wght-normal.woff2 (variable,
+  100-900, swap). The woff2 + OFL file are added on aika-core-01 in a
+  separate commit; if absent, the stack falls back and nothing breaks.
+
+Preserved: both Get Licensed entries (customer home and
+/customer/get-licensed) with their apply buttons, on purpose, so already
+licensed agents can apply from the home page. client-login, agent-login,
+/portal-preview/** and Aika-owned files untouched.
+
+Tests: new scripts/test-round-c1-2.cjs (6); test-portal-shell and
+test-customer-growth-pages updated for the rename and ?prompt=.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/agent-loop/customer/earning/page.tsx |  2 +-
+ app/agent-loop/customer/skills/page.tsx  |  2 +-
+ app/components/ChatComponent.tsx         | 13 ++++-
+ app/components/portal/PortalShell.tsx    |  2 +-
+ app/styles/goaa-pp-compat.css            |  1 +
+ app/styles/goaa-tokens.css               | 15 ++++-
+ scripts/test-customer-growth-pages.cjs   |  4 +-
+ scripts/test-portal-shell.cjs            |  2 +-
+ scripts/test-round-c1-2.cjs              | 71 ++++++++++++++++++++++++
+ 9 files changed, 105 insertions(+), 7 deletions(-)
+ create mode 100644 scripts/test-round-c1-2.cjs
+
+diff --git a/app/agent-loop/customer/earning/page.tsx b/app/agent-loop/customer/earning/page.tsx
+index f6f6f2c..f250274 100644
+--- a/app/agent-loop/customer/earning/page.tsx
++++ b/app/agent-loop/customer/earning/page.tsx
+@@ -10,7 +10,7 @@ export default async function Page() {
+   if (!session) redirect('/agent-loop/login?next=/agent-loop/customer/earning')
+   const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
+   return (
+-    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="customer" activeId="earning" eyebrow="Earning Opportunities" title="Ways to earn with GOAA">
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="customer" activeId="earning" eyebrow="Earning Paths" title="Ways to earn with GOAA">
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+         <div className="goaa-card-2">
+           <h2 className="goaa-h2">Become a licensed agent</h2>
+diff --git a/app/agent-loop/customer/skills/page.tsx b/app/agent-loop/customer/skills/page.tsx
+index 5566f0d..4d0cc4a 100644
+--- a/app/agent-loop/customer/skills/page.tsx
++++ b/app/agent-loop/customer/skills/page.tsx
+@@ -22,7 +22,7 @@ export default async function Page() {
+           <div key={name} className="goaa-card">
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}><b>{name}</b><span className="goaa-pill ok">Free</span></div>
+             <p className="goaa-muted" style={{ fontSize: 13, margin: '8px 0 12px' }}>{blurb}</p>
+-            <a className="goaa-btn goaa-btn-secondary" href={`/planning?q=${encodeURIComponent('Help me with ' + name.toLowerCase())}`}>Use this skill</a>
++            <a className="goaa-btn goaa-btn-secondary" href={`/planning?prompt=${encodeURIComponent('Help me with ' + name.toLowerCase())}`}>Use this skill</a>
+           </div>
+         ))}
+       </div>
+diff --git a/app/components/ChatComponent.tsx b/app/components/ChatComponent.tsx
+index 12db91e..7e3b578 100644
+--- a/app/components/ChatComponent.tsx
++++ b/app/components/ChatComponent.tsx
+@@ -174,6 +174,17 @@ export default function ChatComponent({ butlerMode = false }: { butlerMode?: boo
+       try { window.history.replaceState(window.history.state, '', window.location.pathname) } catch { /* non-fatal */ }
+     }
+   }, [])
++  // Round C1.2: portal rails link to /planning?view=matters. Only butler mode
++  // has a Matters view. The param is dropped after use (other params are kept)
++  // so a refresh or a later Chat click is not pulled back to Matters.
++  useEffect(() => {
++    if (!butlerMode || typeof window === 'undefined') return
++    const url = new URL(window.location.href)
++    if (url.searchParams.get('view') !== 'matters') return
++    setViewMode('matters')
++    url.searchParams.delete('view')
++    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
++  }, [butlerMode])
+   // Agent-layer UI restore: reuse the existing Matter event and saved schema.
+   // No submission, new session, matching or canonical action is triggered here.
+   useEffect(() => {
+@@ -489,7 +500,7 @@ export default function ChatComponent({ butlerMode = false }: { butlerMode?: boo
+             {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/skills">Skills Marketplace</a>}
+             {butlerMode && <div className="workspace-rail-divider" />}
+             {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/get-licensed">Get Licensed <span className="workspace-nav-tag">NEW</span></a>}
+-            {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/earning">Earning Opportunities <span className="workspace-nav-tag">NEW</span></a>}
++            {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/earning">Earning Paths <span className="workspace-nav-tag">NEW</span></a>}
+             {!butlerMode && <button className={`workspace-nav-item ${viewMode === 'plan' ? 'active' : ''}`} onClick={() => setViewMode('plan')}>Plan Result</button>}
+             {!butlerMode && <button className={`workspace-nav-item ${viewMode === 'execution' ? 'active' : ''}`} onClick={() => setViewMode('execution')}>Professional Execution</button>}
+             <div className="workspace-rail-spacer" />
+diff --git a/app/components/portal/PortalShell.tsx b/app/components/portal/PortalShell.tsx
+index 6d19d2e..b1c10ec 100644
+--- a/app/components/portal/PortalShell.tsx
++++ b/app/components/portal/PortalShell.tsx
+@@ -153,7 +153,7 @@ export const CUSTOMER_RAIL: RailSection[] = [
+       { id: 'matters', label: 'Matters', href: '/planning?view=matters' },
+       { id: 'skills', label: 'Skills Marketplace', href: '/agent-loop/customer/skills' },
+       { id: 'licensed', label: 'Get Licensed', href: '/agent-loop/customer/get-licensed', isNew: true, dividerAbove: true },
+-      { id: 'earning', label: 'Earning Opportunities', href: '/agent-loop/customer/earning', isNew: true },
++      { id: 'earning', label: 'Earning Paths', href: '/agent-loop/customer/earning', isNew: true },
+       // Plan Result and Professional Execution are intentionally absent:
+       // capabilities remain reachable from Matters cards and the order flow.
+     ],
+diff --git a/app/styles/goaa-pp-compat.css b/app/styles/goaa-pp-compat.css
+index 4b4438f..ea763ef 100644
+--- a/app/styles/goaa-pp-compat.css
++++ b/app/styles/goaa-pp-compat.css
+@@ -29,6 +29,7 @@
+ .goaa-portal .pp-btn-danger { background: rgba(252,165,165,.08); border: 1px solid rgba(252,165,165,.35); color: var(--goaa-danger); }
+ .goaa-portal .pp-btn[disabled] { opacity: .45; cursor: not-allowed; }
+ .goaa-portal .pp-status, .goaa-portal .pp-chip { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
++.goaa-portal .pp-status { white-space: nowrap; flex-shrink: 0; }
+ .goaa-portal .pp-status-good { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
+ .goaa-portal .pp-status-warn { background: #3a2d12; color: #f5d38a; }
+ .goaa-portal .pp-status-review { background: var(--goaa-accent-bg); color: var(--goaa-accent-soft); }
+diff --git a/app/styles/goaa-tokens.css b/app/styles/goaa-tokens.css
+index 3a50034..895cbfd 100644
+--- a/app/styles/goaa-tokens.css
++++ b/app/styles/goaa-tokens.css
+@@ -2,6 +2,19 @@
+  * Dashboard = planning.goaa.ai workspace; sign-in = /client-login card.
+  * Load once in app/layout.tsx. /portal-preview/** must NOT import this. */
+ 
++/* Outfit (SIL OFL 1.1), self-hosted from public/fonts/outfit/ — no request to
++ * a font CDN at runtime or at build time. One variable file covers 100–900.
++ * If the file is missing the stack below simply falls back; nothing breaks. */
++@font-face {
++  font-family: 'Outfit';
++  font-style: normal;
++  font-weight: 100 900;
++  font-display: swap;
++  src: url('/fonts/outfit/outfit-latin-wght-normal.woff2') format('woff2-variations'),
++       url('/fonts/outfit/outfit-latin-wght-normal.woff2') format('woff2');
++  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
++}
++
+ :root {
+   --goaa-bg: #0d0b15;
+   --goaa-bg-elev: #111016;
+@@ -94,7 +107,7 @@
+ .goaa-portal .goaa-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
+ .goaa-portal .goaa-btn-secondary { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
+ .goaa-portal .goaa-btn[disabled] { opacity: .45; cursor: not-allowed; }
+-.goaa-portal .goaa-pill { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
++.goaa-portal .goaa-pill { display: inline-block; white-space: nowrap; flex-shrink: 0; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
+ .goaa-portal .goaa-pill.ok { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
+ .goaa-portal .goaa-pill.outline { background: transparent; border: 1px solid var(--goaa-accent-bg-border); color: var(--goaa-accent-soft); }
+ .goaa-portal .goaa-input { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
+diff --git a/scripts/test-customer-growth-pages.cjs b/scripts/test-customer-growth-pages.cjs
+index 6c55553..0bd76f4 100644
+--- a/scripts/test-customer-growth-pages.cjs
++++ b/scripts/test-customer-growth-pages.cjs
+@@ -28,7 +28,9 @@ test('each page requires a session and mounts the customer portal with the right
+ })
+ test('Skills: partner pending notice, Use this skill seeds the chat', () => {
+   assert.ok(pages.skills.includes('data-testid="skills-partner-pending"'))
+-  assert.ok(pages.skills.includes('/planning?q='))
++  // /planning reads ?prompt= (app/planning/page.tsx); ?q= was silently dropped.
++  assert.ok(pages.skills.includes('/planning?prompt='))
++  assert.ok(!pages.skills.includes('/planning?q='))
+ })
+ test('Get Licensed: Learn first disabled, Apply now -> /agent-loop/apply', () => {
+   assert.ok(pages.licensed.includes('disabled>Coming soon'))
+diff --git a/scripts/test-portal-shell.cjs b/scripts/test-portal-shell.cjs
+index 5774434..b4675f8 100644
+--- a/scripts/test-portal-shell.cjs
++++ b/scripts/test-portal-shell.cjs
+@@ -20,7 +20,7 @@ test('customer rail hides Plan Result / Professional Execution and shows the thr
+   const r = rail('CUSTOMER_RAIL')
+   assert.ok(!/label: 'Plan Result'/.test(r))
+   assert.ok(!/label: 'Professional Execution'/.test(r))
+-  for (const label of ['Chat', 'Matters', 'Skills Marketplace', 'Get Licensed', 'Earning Opportunities']) assert.ok(r.includes(`label: '${label}'`), label)
++  for (const label of ['Chat', 'Matters', 'Skills Marketplace', 'Get Licensed', 'Earning Paths']) assert.ok(r.includes(`label: '${label}'`), label)
+   assert.ok(r.includes("href: '/agent-loop/customer/skills'"))
+   assert.ok(r.includes("href: '/agent-loop/customer/get-licensed'"))
+   assert.ok(r.includes("href: '/agent-loop/customer/earning'"))
+diff --git a/scripts/test-round-c1-2.cjs b/scripts/test-round-c1-2.cjs
+new file mode 100644
+index 0000000..e994a6d
+--- /dev/null
++++ b/scripts/test-round-c1-2.cjs
+@@ -0,0 +1,71 @@
++#!/usr/bin/env node
++// Round C1.2 — fixes found on the signed-in C2 screenshots (2026-09-11).
++// Static, offline: reads source files only. No browser, no network, no API.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++
++const shell = read('app/components/portal/PortalShell.tsx')
++const chat = read('app/components/ChatComponent.tsx')
++const planning = read('app/planning/page.tsx')
++const tokens = read('app/styles/goaa-tokens.css')
++const compat = read('app/styles/goaa-pp-compat.css')
++
++test('growth entry is called "Earning Paths" in both rails and on its page', () => {
++  assert.ok(shell.includes("{ id: 'earning', label: 'Earning Paths', href: '/agent-loop/customer/earning', isNew: true }"))
++  const r = chat.slice(chat.indexOf('<aside className="workspace-rail">'), chat.indexOf('</aside>', chat.indexOf('<aside className="workspace-rail">')))
++  assert.ok(r.includes('href="/agent-loop/customer/earning">Earning Paths <span className="workspace-nav-tag">NEW</span></a>'))
++  assert.ok(!r.includes('Earning Opportunities'))
++  assert.ok(!shell.includes("label: 'Earning Opportunities'"))
++  assert.ok(read('app/agent-loop/customer/earning/page.tsx').includes('eyebrow="Earning Paths"'))
++})
++
++test('Skills "Use this skill" uses the query key /planning actually reads', () => {
++  assert.ok(planning.includes("searchParams.get('prompt')"))
++  const skills = read('app/agent-loop/customer/skills/page.tsx')
++  assert.ok(skills.includes('`/planning?prompt=${encodeURIComponent('))
++})
++
++test('rail "Matters" deep link is consumed by the butler workspace, then removed from the URL', () => {
++  assert.ok(shell.includes("{ id: 'matters', label: 'Matters', href: '/planning?view=matters' }"))
++  const i = chat.indexOf("url.searchParams.get('view') !== 'matters'")
++  assert.ok(i > 0, 'ChatComponent reads ?view=matters')
++  const block = chat.slice(chat.lastIndexOf('useEffect(() => {', i), chat.indexOf('}, [butlerMode])', i) + 16)
++  assert.ok(block.includes("if (!butlerMode || typeof window === 'undefined') return"), 'butler mode only, SSR safe')
++  assert.ok(block.includes("setViewMode('matters')"))
++  assert.ok(block.includes("url.searchParams.delete('view')"))
++  assert.ok(block.includes('window.history.replaceState('))
++  assert.ok(!/catch\s*\{\s*\}/.test(block), 'no silent catch (rule #28)')
++  // No new state hook: the effect reuses the existing viewMode state.
++  assert.equal((chat.match(/const \[viewMode, setViewMode\] = useState/g) || []).length, 1)
++})
++
++test('status pills never break onto two lines', () => {
++  assert.ok(/\.goaa-portal \.goaa-pill \{[^}]*white-space: nowrap;[^}]*flex-shrink: 0;/.test(tokens))
++  assert.ok(compat.includes('.goaa-portal .pp-status { white-space: nowrap; flex-shrink: 0; }'))
++})
++
++test('Outfit is self-hosted: @font-face points at public/fonts, no font CDN', () => {
++  const face = tokens.slice(tokens.indexOf('@font-face'), tokens.indexOf('}', tokens.indexOf('@font-face')))
++  assert.ok(face.includes("font-family: 'Outfit'"))
++  assert.ok(face.includes("url('/fonts/outfit/outfit-latin-wght-normal.woff2')"))
++  assert.ok(face.includes('font-display: swap'))
++  assert.ok(face.includes('font-weight: 100 900'))
++  assert.ok(tokens.indexOf('@font-face') < tokens.indexOf(':root {'), '@font-face before tokens')
++  for (const f of ['app/styles/goaa-tokens.css', 'app/styles/goaa-pp-compat.css', 'app/layout.tsx']) {
++    assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(read(f)), `${f} must not call a font CDN`)
++  }
++  assert.ok(tokens.includes('--goaa-font: Outfit, Inter,'))
++})
++
++test('both Get Licensed entries keep their apply buttons (intentional: licensed agents apply from home)', () => {
++  const panel = read('app/components/agent-loop/CustomerPanel.tsx')
++  assert.ok(panel.includes('data-testid="become-an-agent" href="/agent-loop/apply"'))
++  assert.ok(read('app/agent-loop/customer/get-licensed/page.tsx').includes('data-testid="apply-now" href="/agent-loop/apply"'))
++})
++
++console.log(`\nALL ${passed} ROUND C1.2 TESTS PASSED`)
+-- 
+2.43.0
+
