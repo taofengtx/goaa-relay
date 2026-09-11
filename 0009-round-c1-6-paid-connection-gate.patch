@@ -1,0 +1,354 @@
+From e3826abb3a9ad76f5e46af8b9b2718565171ad4b Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 10:23:30 +0000
+Subject: [PATCH] round C1.6: launch switch closes the $39.90 connection
+ (coming soon + 30-min booking)
+
+Tao, 2026-09-11: release to planning.goaa.ai on C1 without changing
+api.goaa.ai. That API only accepts the old login's order tokens, so after
+the Clerk cutover a signed-in customer's purchase would fail at checkout.
+At launch the paid connection is closed; the 30-minute booking stays.
+
+- app/lib/paid-connection.ts: runtime, server-side switch
+  GOAA_PAID_CONNECTION=open reopens; unset or anything else = closed.
+  Not NEXT_PUBLIC_: flipping it needs an env change and a restart, no build.
+- app/layout.tsx (dynamic): stamps <html data-goaa-paid="open|closed">.
+- goaa-tokens.css: .goaa-paid-closed hidden by default; when closed,
+  .goaa-paid-open-only hides and .goaa-paid-closed shows. A page without
+  the stamp keeps today's behaviour. Pure CSS: no new client state, no
+  hydration mismatch.
+- ProfessionalHandoffCard: paid button and fee copy are open-only; a closed
+  twin says the paid connection is opening soon and links to the 30-minute
+  booking (never charges). "Continue with AI" unchanged.
+- ProfessionalConnectBar: whole bar open-only.
+- MatterProfessionalConnect: paid block open-only, booking twin when closed.
+- app/connect-pass/layout.tsx (new, dynamic): when closed, renders a notice
+  and never mounts the checkout page, so no order-API call can start even
+  from a stale bookmark or saved sign-in return target.
+
+Untouched: app/connect-pass/page.tsx, ChatComponent purchase handlers
+(hash-protected by test-product-handoff), order-api, api.goaa.ai.
+
+Test: scripts/test-paid-connection-gate.cjs (7) transpiles the real files
+(switch semantics, layout stamp, CSS, card twin in en/zh, top bar, matter
+block, /connect-pass closed vs open). product-handoff, brand-font,
+portal-shell still pass. c2-clerk candidate-shape lists app/connect-pass/
+layout.tsx as a new route while uncommitted; clean once committed.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/components/MatterProfessionalConnect.tsx | 11 ++-
+ app/components/ProfessionalConnectBar.tsx    |  2 +-
+ app/components/ProfessionalHandoffCard.tsx   | 16 +++-
+ app/connect-pass/layout.tsx                  | 30 +++++++
+ app/layout.tsx                               |  3 +-
+ app/lib/paid-connection.ts                   | 24 ++++++
+ app/styles/goaa-tokens.css                   | 10 +++
+ scripts/test-paid-connection-gate.cjs        | 89 ++++++++++++++++++++
+ 8 files changed, 180 insertions(+), 5 deletions(-)
+ create mode 100644 app/connect-pass/layout.tsx
+ create mode 100644 app/lib/paid-connection.ts
+ create mode 100644 scripts/test-paid-connection-gate.cjs
+
+diff --git a/app/components/MatterProfessionalConnect.tsx b/app/components/MatterProfessionalConnect.tsx
+index ba29648..95db740 100644
+--- a/app/components/MatterProfessionalConnect.tsx
++++ b/app/components/MatterProfessionalConnect.tsx
+@@ -4,6 +4,7 @@ import { PersonalAgentMatter } from '../lib/personal-agent-matter'
+ import { evaluateMatterProgress } from '../lib/personal-agent-matter-progress'
+ import { buildProfessionalHandoffPackage } from '../lib/personal-agent-handoff-package'
+ import { CUSTOMER_JOURNEY_KEYS, writeCustomerJourney } from '../lib/customer-journey'
++import { BOOKING_URL } from '../lib/paid-connection'
+ 
+ const HANDOFF_PACKAGE_KEY = 'goaa_pending_professional_handoff_v1'
+ 
+@@ -23,11 +24,19 @@ export default function MatterProfessionalConnect({ matter }: { matter: Personal
+   }
+ 
+   return (
+-    <div style={{ marginTop: 10, border: '1px solid rgba(96,165,250,0.20)', borderRadius: 12, padding: '10px 11px', background: 'rgba(37,99,235,0.035)' }}>
++    <>
++    <div className="goaa-paid-closed" data-testid="matter-paid-closed" style={{ marginTop: 10, border: '1px solid rgba(96,165,250,0.20)', borderRadius: 12, padding: '10px 11px', background: 'rgba(37,99,235,0.035)' }}>
++      <div style={{ color: '#93c5fd', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Professional Connection</div>
++      <strong style={{ display: 'block', color: '#eff6ff', fontSize: 11, marginTop: 2 }}>Paid connection to a {category} is opening soon.</strong>
++      <p style={{ color: '#9ca3af', fontSize: 9, lineHeight: 1.45, margin: '6px 0 0' }}>For now, book a 30-minute assessment with the GOAA team — booking never charges you.</p>
++      <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 8, border: '1px solid rgba(96,165,250,0.34)', borderRadius: 999, background: 'rgba(37,99,235,0.10)', color: '#bfdbfe', padding: '6px 10px', fontSize: 9, fontWeight: 650, textDecoration: 'none' }}>Book a 30-minute assessment ↗</a>
++    </div>
++    <div className="goaa-paid-open-only" style={{ marginTop: 10, border: '1px solid rgba(96,165,250,0.20)', borderRadius: 12, padding: '10px 11px', background: 'rgba(37,99,235,0.035)' }}>
+       <div style={{ color: '#93c5fd', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Professional Connection</div>
+       <strong style={{ display: 'block', color: '#eff6ff', fontSize: 11, marginTop: 2 }}>When you’re ready, I can carry this Matter to the right {category}.</strong>
+       <p style={{ color: '#9ca3af', fontSize: 9, lineHeight: 1.45, margin: '6px 0 0' }}>I’ll pass the reviewed Matter into GOAA’s existing Connect Pass journey. Authentication, payment verification, matching, and the live service order remain canonical — this Butler does not create a second checkout path.</p>
+       <button type="button" onClick={connect} disabled={!ready} style={{ marginTop: 8, cursor: ready ? 'pointer' : 'not-allowed', opacity: ready ? 1 : .55, border: '1px solid rgba(96,165,250,0.34)', borderRadius: 999, background: 'rgba(37,99,235,0.10)', color: '#bfdbfe', padding: '6px 10px', fontSize: 9, fontWeight: 650 }}>{ready ? 'Continue to protected connection →' : 'Finish assessment before connecting'}</button>
+     </div>
++    </>
+   )
+ }
+diff --git a/app/components/ProfessionalConnectBar.tsx b/app/components/ProfessionalConnectBar.tsx
+index 6802b86..19e0cd7 100644
+--- a/app/components/ProfessionalConnectBar.tsx
++++ b/app/components/ProfessionalConnectBar.tsx
+@@ -49,7 +49,7 @@ export default function ProfessionalConnectBar() {
+ 
+   return (
+     <>
+-      <div className="goaa-professional-connect" role="region" aria-label="Connect with a Professional">
++      <div className="goaa-professional-connect goaa-paid-open-only" role="region" aria-label="Connect with a Professional">
+         <div className="goaa-professional-connect-copy">
+           <strong>Need a professional to handle this directly?</strong>
+           <span>One-time connection fee · 30-day access · No automatic renewal</span>
+diff --git a/app/components/ProfessionalHandoffCard.tsx b/app/components/ProfessionalHandoffCard.tsx
+index 27d99b4..bb91761 100644
+--- a/app/components/ProfessionalHandoffCard.tsx
++++ b/app/components/ProfessionalHandoffCard.tsx
+@@ -12,6 +12,10 @@
+ // GOAA can also help connect the customer with other appropriate licensed
+ // professionals for additional eligible needs.
+ 
++// Same value as BOOKING_URL in lib/paid-connection.ts (kept local so this card
++// stays import-free; scripts/test-paid-connection-gate.cjs asserts they match).
++const BOOKING_URL = 'https://cal.com/goaa.ai/30min'
++
+ const FACT_LABEL_EN: Record<string, string> = {
+   child_age: 'Child Age', monthly_budget: 'Monthly Budget', current_savings: 'Current Savings',
+   college_start_age: 'College Start Age', college_type: 'School Type', location: 'Region',
+@@ -50,6 +54,8 @@ const COPY = {
+     primary: 'Connect with a Licensed Professional · $39.90',
+     secondary: 'Continue with AI',
+     support: 'GOAA platform connection fee: $39.90 USD · One-time · 30-day access · No automatic renewal. Professional service fees are separate and require your agreement. During your 30-day access, GOAA can also help connect you with other appropriate licensed professionals for additional eligible professional needs. Nothing is charged by this conversation; review and confirm in checkout.',
++    closedNote: 'Paid professional connection is opening soon. For now, book a 30-minute assessment with the GOAA team to plan your next step — booking never charges you.',
++    closedCta: 'Book a 30-minute assessment ↗',
+   },
+   zh: {
+     label: '专业交接',
+@@ -59,6 +65,8 @@ const COPY = {
+     primary: '连接持证专业人士 · $39.90',
+     secondary: '继续使用 AI 规划',
+     support: 'GOAA 平台一次性连接费 $39.90 美元 · 30 天有效 · 不自动续费。不包含报税等专业办理费用；专业人士的服务费另行说明，并经您确认。有效期内，其他符合条件的专业需求也可以申请匹配。对话不会扣款，请在结账页面核对并确认购买。',
++    closedNote: '专业人士付费连接即将开放。现在可以先预约 30 分钟评估，与 GOAA 团队梳理下一步；预约不会触发平台扣款。',
++    closedCta: '预约 30 分钟评估 ↗',
+   },
+ }
+ 
+@@ -87,9 +95,13 @@ export default function ProfessionalHandoffCard({ lang, facts, onConnect, onCont
+         </div>
+       )}
+       <p className="handoff-question">{c.question}</p>
+-      <button type="button" className="handoff-primary" onClick={onConnect}>{c.primary}</button>
++      <button type="button" className="handoff-primary goaa-paid-open-only" onClick={onConnect}>{c.primary}</button>
++      <div className="goaa-paid-closed" data-testid="handoff-paid-closed">
++        <p className="handoff-question">{c.closedNote}</p>
++        <a className="handoff-primary" href={BOOKING_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', boxSizing: 'border-box' }}>{c.closedCta}</a>
++      </div>
+       <button type="button" className="handoff-secondary" onClick={onContinue}>{c.secondary}</button>
+-      <p className="handoff-support">{c.support}</p>
++      <p className="handoff-support goaa-paid-open-only">{c.support}</p>
+     </div>
+   )
+ }
+diff --git a/app/connect-pass/layout.tsx b/app/connect-pass/layout.tsx
+new file mode 100644
+index 0000000..98ef3a4
+--- /dev/null
++++ b/app/connect-pass/layout.tsx
+@@ -0,0 +1,30 @@
++import type { ReactNode } from "react"
++import { BOOKING_URL, paidConnectionOpen } from "../lib/paid-connection"
++
++// Decided per request from the runtime switch; never prerendered.
++export const dynamic = "force-dynamic"
++
++/**
++ * While the paid connection is closed (see lib/paid-connection.ts) the
++ * checkout page is not mounted at all, so none of its order-API calls run —
++ * even for a visitor who arrives here from an old bookmark or a saved
++ * sign-in return target. The page itself is unchanged.
++ */
++export default function ConnectPassLayout({ children }: { children: ReactNode }) {
++  if (paidConnectionOpen()) return <>{children}</>
++  return (
++    <main data-testid="connect-pass-closed" style={{ minHeight: "100vh", background: "#0b0b10", color: "#fff", fontFamily: "system-ui,-apple-system,sans-serif", padding: "34px 18px 70px" }}>
++      <div style={{ maxWidth: 560, margin: "12vh auto 0", display: "grid", gap: 14 }}>
++        <h1 style={{ fontSize: 26, margin: 0 }}>Professional connection is opening soon</h1>
++        <p style={{ color: "#b5b5bf", lineHeight: 1.7, margin: 0 }}>
++          Paid connection to a licensed professional is not available yet, and nothing has been charged.
++          You can book a 30-minute assessment with the GOAA team to plan your next step — booking never charges you.
++        </p>
++        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
++          <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" style={{ padding: "11px 17px", borderRadius: 10, fontWeight: 650, background: "#6944cc", color: "#fff", textDecoration: "none" }}>Book a 30-minute assessment ↗</a>
++          <a href="/planning" style={{ padding: "11px 17px", borderRadius: 10, fontWeight: 600, border: "1px solid rgba(255,255,255,.18)", color: "#fff", textDecoration: "none" }}>Back to AI Butler</a>
++        </div>
++      </div>
++    </main>
++  )
++}
+diff --git a/app/layout.tsx b/app/layout.tsx
+index 952cd6a..383e239 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -8,6 +8,7 @@ import ProfessionalConnectBar from "./components/ProfessionalConnectBar"
+ import SignedInCookieSync from "./components/SignedInCookieSync"
+ import GoldenSessionBridge from "./components/GoldenSessionBridge"
+ import { clerkAuthState } from "./lib/clerk-entry"
++import { paidConnectionOpen } from "./lib/paid-connection"
+ 
+ /**
+  * Round C1.3c: this layout decides at *render* time whether Clerk is in charge
+@@ -51,7 +52,7 @@ export default function RootLayout({
+   const clerkAuth = clerkState === "enabled" && Boolean(publishableKey)
+ 
+   const page = (
+-    <html lang="en">
++    <html lang="en" data-goaa-paid={paidConnectionOpen() ? "open" : "closed"}>
+       <body>
+         {children}
+         <ProfessionalConnectBar />
+diff --git a/app/lib/paid-connection.ts b/app/lib/paid-connection.ts
+new file mode 100644
+index 0000000..5d02def
+--- /dev/null
++++ b/app/lib/paid-connection.ts
+@@ -0,0 +1,24 @@
++/**
++ * paid-connection.ts — launch switch for the $39.90 professional connection.
++ *
++ * At launch the golden order API (api.goaa.ai) is not changed and does not
++ * accept the business credential that Clerk sign-in produces, so a signed-in
++ * customer's purchase would fail at checkout. Until that API is updated the
++ * purchase stays closed: the entry points show "coming soon" with the
++ * 30-minute booking instead, and /connect-pass shows a notice instead of
++ * mounting the checkout page (so it never calls the order API).
++ *
++ * Runtime, server-side switch (the root layout is dynamic): set
++ *   GOAA_PAID_CONNECTION=open
++ * in the service environment and restart to reopen; no rebuild. Anything else,
++ * including unset, means closed.
++ */
++export const PAID_CONNECTION_SWITCH = "GOAA_PAID_CONNECTION"
++export const BOOKING_URL = "https://cal.com/goaa.ai/30min"
++
++type Env = Record<string, string | undefined>
++
++export function paidConnectionOpen(env: Env = process.env): boolean {
++  const raw = env[PAID_CONNECTION_SWITCH]
++  return typeof raw === "string" && raw.trim().toLowerCase() === "open"
++}
+diff --git a/app/styles/goaa-tokens.css b/app/styles/goaa-tokens.css
+index b728ff9..05421e8 100644
+--- a/app/styles/goaa-tokens.css
++++ b/app/styles/goaa-tokens.css
+@@ -141,6 +141,16 @@
+ .goaa-auth-link { background: transparent; border: 0; padding: 0; color: #fff; font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+ .goaa-auth-foot { margin: 22px 0 0; text-align: center; font-size: 12px; color: rgba(255,255,255,.45); }
+ 
++
++/* ---------------------------------------------------------------------------
++ * Launch switch for the $39.90 connection (app/lib/paid-connection.ts). The
++ * root layout stamps <html data-goaa-paid="open|closed"> from the runtime env.
++ * Closed: paid entry points hide and their "coming soon" twins show. The twin
++ * is hidden by default, so a page without the stamp keeps today's behaviour. */
++.goaa-paid-closed { display: none; }
++html[data-goaa-paid="closed"] .goaa-paid-open-only { display: none !important; }
++html[data-goaa-paid="closed"] .goaa-paid-closed { display: block; }
++
+ /* ---------------------------------------------------------------------------
+  * C1.3 brand layer — one rule for both surfaces, so the portal shell and the
+  * golden /planning workspace read as one product. Only brand, rails, titles
+diff --git a/scripts/test-paid-connection-gate.cjs b/scripts/test-paid-connection-gate.cjs
+new file mode 100644
+index 0000000..ea28ea1
+--- /dev/null
++++ b/scripts/test-paid-connection-gate.cjs
+@@ -0,0 +1,89 @@
++#!/usr/bin/env node
++// Launch switch for the $39.90 connection (Tao, 2026-09-11): closed at launch,
++// "coming soon" + 30-minute booking instead; reopened later by env, no rebuild.
++// Offline: transpiles the real files; no browser, no network, no payment.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const vm = require('node:vm')
++const ts = require('typescript')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++const tx = (src, name) => ts.transpileModule(src, { fileName: name, compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: false } }).outputText
++const jsx = { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }), Fragment: 'Fragment' }
++function load(file, modules, env = {}) {
++  const exp = {}
++  vm.runInNewContext(tx(read(file), path.basename(file)), { exports: exp, module: { exports: exp }, process: { env }, console,
++    require: (id) => { assert.ok(id in modules, `unexpected import ${id} in ${file}`); return modules[id] } })
++  return exp
++}
++const walk = (n, pred, out = []) => { if (!n || typeof n !== 'object') return out; if (Array.isArray(n)) { n.forEach((c) => walk(c, pred, out)); return out } if (pred(n)) out.push(n); walk(n.props && n.props.children, pred, out); return out }
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++
++const lib = load('app/lib/paid-connection.ts', {})
++const libFor = (env) => { const l = load('app/lib/paid-connection.ts', {}, env); return l }
++
++test('switch: only GOAA_PAID_CONNECTION=open opens; unset and anything else stay closed', () => {
++  assert.equal(lib.PAID_CONNECTION_SWITCH, 'GOAA_PAID_CONNECTION')
++  assert.equal(lib.paidConnectionOpen({}), false)
++  assert.equal(lib.paidConnectionOpen({ GOAA_PAID_CONNECTION: 'open' }), true)
++  assert.equal(lib.paidConnectionOpen({ GOAA_PAID_CONNECTION: ' OPEN ' }), true)
++  for (const v of ['', 'true', '1', 'yes', 'opened', 'closed']) assert.equal(lib.paidConnectionOpen({ GOAA_PAID_CONNECTION: v }), false, v)
++  assert.ok(!read('app/lib/paid-connection.ts').includes('NEXT_PUBLIC_'), 'runtime server switch, never inlined at build')
++})
++test('root layout stamps <html data-goaa-paid> from the runtime switch', () => {
++  const l = read('app/layout.tsx')
++  assert.ok(l.includes('import { paidConnectionOpen } from "./lib/paid-connection"'))
++  assert.ok(l.includes('<html lang="en" data-goaa-paid={paidConnectionOpen() ? "open" : "closed"}>'))
++  assert.ok(/^export const dynamic = ["']force-dynamic["']$/m.test(l), 'layout stays dynamic so the stamp is per request')
++})
++test('CSS: closed twin hidden by default; closed hides open-only and shows the twin', () => {
++  const css = read('app/styles/goaa-tokens.css')
++  assert.ok(css.includes('.goaa-paid-closed { display: none; }'))
++  assert.ok(css.includes('html[data-goaa-paid="closed"] .goaa-paid-open-only { display: none !important; }'))
++  assert.ok(css.includes('html[data-goaa-paid="closed"] .goaa-paid-closed { display: block; }'))
++})
++test('handoff card: paid button + fee copy are open-only; closed twin links to the booking', () => {
++  const card = load('app/components/ProfessionalHandoffCard.tsx', { 'react/jsx-runtime': jsx }).default
++  assert.ok(read('app/components/ProfessionalHandoffCard.tsx').includes(`const BOOKING_URL = '${lib.BOOKING_URL}'`), 'card booking URL matches lib')
++  for (const lang of ['en', 'zh']) {
++    const tree = card({ lang, facts: {}, onConnect() {}, onContinue() {} })
++    const paid = walk(tree, (n) => n.type === 'button' && /\bhandoff-primary\b/.test(n.props.className))
++    assert.equal(paid.length, 1); assert.ok(paid[0].props.className.includes('goaa-paid-open-only'))
++    const support = walk(tree, (n) => n.type === 'p' && /\bhandoff-support\b/.test(n.props.className))
++    assert.ok(support[0].props.className.includes('goaa-paid-open-only'))
++    const twin = walk(tree, (n) => n.props && n.props.className === 'goaa-paid-closed')
++    assert.equal(twin.length, 1)
++    const a = walk(twin[0], (n) => n.type === 'a')[0]
++    assert.equal(a.props.href, lib.BOOKING_URL); assert.equal(a.props.target, '_blank'); assert.equal(a.props.rel, 'noopener noreferrer')
++    const text = JSON.stringify(twin[0])
++    assert.ok(lang === 'en' ? text.includes('opening soon') && text.includes('never charges') : text.includes('即将开放') && text.includes('不会触发平台扣款'))
++    assert.ok(!text.includes('$39.90'), 'closed copy does not sell the fee')
++    assert.equal(walk(tree, (n) => n.type === 'button' && n.props.className === 'handoff-secondary').length, 1, 'Continue with AI stays')
++  }
++})
++test('top bar and matter connect: paid entry is open-only; matter has a booking twin', () => {
++  assert.ok(read('app/components/ProfessionalConnectBar.tsx').includes('className="goaa-professional-connect goaa-paid-open-only"'))
++  const m = read('app/components/MatterProfessionalConnect.tsx')
++  assert.ok(m.includes('className="goaa-paid-closed" data-testid="matter-paid-closed"'))
++  assert.ok(m.includes('<div className="goaa-paid-open-only" style={{ marginTop: 10, border'))
++  assert.ok(m.includes("import { BOOKING_URL } from '../lib/paid-connection'"))
++})
++test('/connect-pass: closed renders a notice and never mounts the checkout page; open passes through', () => {
++  const mods = (env) => ({ 'react/jsx-runtime': jsx, '../lib/paid-connection': libFor(env) })
++  const closed = load('app/connect-pass/layout.tsx', mods({}), {}).default({ children: 'CHECKOUT' })
++  assert.ok(!JSON.stringify(closed).includes('CHECKOUT'), 'children not rendered')
++  assert.equal(closed.props['data-testid'], 'connect-pass-closed')
++  const links = walk(closed, (n) => n.type === 'a').map((n) => n.props.href)
++  assert.deepEqual(links, [lib.BOOKING_URL, '/planning'])
++  const open = load('app/connect-pass/layout.tsx', mods({ GOAA_PAID_CONNECTION: 'open' }), { GOAA_PAID_CONNECTION: 'open' }).default({ children: 'CHECKOUT' })
++  assert.ok(JSON.stringify(open).includes('CHECKOUT'))
++  assert.ok(/^export const dynamic = ["']force-dynamic["']$/m.test(read('app/connect-pass/layout.tsx')))
++})
++test('the checkout page and the protected purchase handlers are untouched', () => {
++  const page = read('app/connect-pass/page.tsx')
++  assert.ok(!page.includes('paid-connection'), 'page.tsx not edited')
++  assert.ok(!read('app/components/ChatComponent.tsx').includes('paid-connection'), 'ChatComponent purchase path not edited')
++})
++console.log(`\nALL ${passed} PAID CONNECTION GATE TESTS PASSED`)
+-- 
+2.43.0
+
