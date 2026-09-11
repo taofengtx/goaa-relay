@@ -1,0 +1,70 @@
+# ═══════════════════════════════════════════════════════════════════════
+# GOAA Router systemd unit (V5.0 Batch 3.2.B)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# 對齊規範:
+#   #23 systemd Secrets Audit (5/14 立規 教科書級對齊)
+#   #22 secrets 安全處理 (EnvironmentFile 而非 Environment=)
+#   #28 反模式 (Restart=on-failure, 不靜默)
+#   #45 v5 production change (5/13 P1 改善項 16 天技術債解!)
+#
+# 解 3 個問題 (規範 #44):
+#   ✅ 5/13 P1 改善項 (router 沒 systemd, nohup 手動啟動)
+#   ✅ 5/29 V5.0 Mock 元兇 (DEEPSEEK_API_KEY 沒載入 environ)
+#   ✅ 機器重啟自動恢復 (生產級)
+#
+# 部署 SOP (Batch 3.2.B 階段 B):
+#   1. scp goaa-router.service root@DO:/etc/systemd/system/
+#   2. chmod 644 + chown root:root
+#   3. systemctl daemon-reload
+#   4. kill old nohup PID (1172775)
+#   5. systemctl enable --now goaa-router
+#   6. 驗證 PID environ 含 DEEPSEEK_API_KEY (規範 #23 6 步 audit)
+#   7. curl /chat 真實驗證 (沒 [Mock-DeepSeek])
+#
+# 回滾 (規範 #11 only-add 嚴守):
+#   systemctl stop goaa-router
+#   systemctl disable goaa-router
+#   rm /etc/systemd/system/goaa-router.service
+#   cd /opt/goaa/router && nohup /opt/goaa/venv/bin/uvicorn api:app --host 0.0.0.0 --port 8080 > /var/log/goaa-router.log 2>&1 &
+# ═══════════════════════════════════════════════════════════════════════
+
+[Unit]
+Description=GOAA Router (FastAPI + DeepSeek + DB)
+Documentation=https://github.com/taofengtx/goaa-ai-frontend
+After=network.target docker.service
+Wants=network.target
+
+[Service]
+Type=simple
+
+# Run as root (對齊現有 nohup 啟動方式; 5/30+ 可降權)
+User=root
+Group=root
+
+# Working dir (對齊現有 /opt/goaa/router/)
+WorkingDirectory=/opt/goaa/router
+
+# 規範 #22 嚴守: 用 EnvironmentFile 載入 secrets.env
+# 不用 Environment=KEY=value (規範 #22 立規禁止)
+# secrets.env chmod 600 + root owner
+EnvironmentFile=/etc/goaa/secrets.env
+
+# 規範 #36 v2 真實對齊: 用 uvicorn 在 /opt/goaa/venv/bin/
+# 完全對齊 5/13 揭露的 nohup 啟動指令
+ExecStart=/opt/goaa/venv/bin/uvicorn api:app --host 0.0.0.0 --port 8080
+
+# 規範 #28 反模式 嚴守: failure 重啟
+Restart=on-failure
+RestartSec=5
+
+# Log to journal (對齊 systemd 標準, 可 journalctl 看)
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits (規範 #20 v2 防呆)
+# memory: DO 1GB / 2GB / 4GB, 留半給 PG + 其他
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,67 @@
+tunnel: 66ad1cc0-7754-45db-9ba9-99237900285d
+credentials-file: /root/.cloudflared/66ad1cc0-7754-45db-9ba9-99237900285d.json
+ingress:
+    - hostname: api.goaa.ai
+      path: /workers/status
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /workers/metrics
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /worker/heartbeat
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/dispatch
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/status/*
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/queue
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/cancel/*
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/next/*
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /task/complete
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/pool
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/pool/add
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/pool/add-batch
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/pool/stats
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /tasks/history
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /cost/status
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /profit/status
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /revenue/status
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /models/status
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /route
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      path: /chat
+      service: http://127.0.0.1:8080
+    - hostname: api.goaa.ai
+      service: http://127.0.0.1:18789
+    - service: http_status:404
+"# DO production sync: $(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)"  

@@ -1,0 +1,218 @@
+# GOAA Package 1 Task 2 Unit 1 — Codebase Landing-Point Inventory V0.1
+# =============================================================================
+# READONLY INVENTORY — No code modified.
+# Created: 2026-06-22
+# Source branch: feat/ai-workspace-conversation-task-flow-v01-20260622 (PR #12)
+# Source spec: docs/runtime/GOAA_AI_WORKSPACE_CONVERSATION_TASK_FLOW_V0.1.yaml
+# =============================================================================
+
+inventory:
+  date: "2026-06-22"
+  head_commit: "481f2659d81791d7186b82ca75315bfd900499c0"
+  base_spec_commit: "ae1e9fa48981ccd4ddc4c26299c49a4acf41ec15"
+  mode: "readonly"
+  code_modified: false
+
+landing_points:
+
+  - id: "LP-01"
+    component: "Conversation input /ai/chat endpoint"
+    file: "local-console/main.py"
+    line: 460
+    signature: |
+      @app.post("/ai/chat")
+      async def ai_chat(req: AIChatReq, request: Request)
+    current_behavior:
+      - "Accepts: AIChatReq { prompt: str, session_id: str | None }"
+      - "Returns: AIChatResp { ok, answer, session_id, model, duration_ms, cost_usd, mock, route }"
+      - "Routes through DO Router (134.199.227.108:8080/chat) → DeepSeek"
+      - "No intent_hint or task_params fields exist yet"
+      - "No tasks array in response"
+      - "Timeout: 30s (GOAA_CHAT_TIMEOUT env)"
+    spec_required_changes:
+      - "Add intent_hint field (optional, enum: embed/topk_verify/memory_fetch/task_status/approve_task/reject_task/auto)"
+      - "Add task_params field (optional, object)"
+      - "Return 'intent' and 'tasks' fields in response"
+    status: "exists — needs extension per spec"
+
+  - id: "LP-02"
+    component: "Intent detection logic"
+    file: "local-console/main.py"
+    line: "(new function needed)"
+    current_behavior: "DOES NOT EXIST — no intent detection in current codebase"
+    spec_required_changes:
+      - "New function: detect_intent(prompt, intent_hint) -> (intent, confidence)"
+      - "MVP mode: rule_based_local_first (keyword/pattern matching, no cloud egress)"
+      - "Supported intents: pure_chat, topk_query, memory_context_fetch, status_check, approve_task, reject_task, embed_corpus_full_envelope_only"
+      - "llm_guided: post-MVP only, requires Tao provider/cloud routing approval"
+    status: "not_implemented — needs new code"
+
+  - id: "LP-03"
+    component: "Task envelope dispatch /tasks/run"
+    file: "local-console/main.py"
+    line: "(not implemented — skeleton only)"
+    current_behavior: |
+      File header (line 10): ".../tasks/run 第一版只 allowlist(本骨架先不實作 run,只展示 results)"
+      No POST /tasks/run endpoint exists. Only GET endpoints for results.
+      Returns 501 Not Implemented if called.
+    spec_required_changes:
+      - "Implement POST /tasks/run with allowlist, risk classification, and approval gate"
+      - "Accept TaskEnvelope as request body"
+      - "Allowlist: topk_query, memory_context_fetch, status_check (readonly, no approval)"
+      - "Risk 4 (embed): create awaiting_approval envelope, do NOT execute"
+      - "Blocked: embed actual mutation, worker start, executor enable, DO, deploy, commit/push/merge"
+    status: "not_implemented — needs new endpoint"
+
+  - id: "LP-04"
+    component: "Risk classification"
+    file: "local-console/main.py"
+    line: "(new function needed)"
+    current_behavior: "DOES NOT EXIST as separate function. Model-router has risk_level field in DispatchReq (line 242)."
+    spec_required_changes:
+      - "New function: classify_risk(intent, params) -> risk_level (0-4)"
+      - "Rule-based: embed→4, topk→1, memory_fetch→2, task_status→0, approve/reject→3"
+      - "Params with path/secret patterns→4 (blocked)"
+    status: "not_implemented — needs new code"
+
+  - id: "LP-05"
+    component: "Task persistence (awaiting_approval JSON)"
+    file: "/opt/goaa/task_results/ (runtime directory)"
+    line: "(runtime)"
+    current_behavior: |
+      TASK_RESULTS_DIR = "/opt/goaa/task_results/" (main.py line 40)
+      task_runner.py writes task_result JSON here after execution (line 169-174)
+      Local-console reads results via GET /tasks/results and /tasks/results/{task_id}
+    spec_required_changes:
+      - "Write task envelope JSON to task_results with 'awaiting_approval' status before execution"
+      - "Task envelope persistence is NOT a repo/source file modification (covered by task_envelope_persisted_allowed: true)"
+    status: "runtime_dir_exists — needs new envelope persistence logic"
+
+  - id: "LP-06"
+    component: "Evidence package assembly"
+    file: "local-console/main.py"
+    line: "(new function needed)"
+    current_behavior: "DOES NOT EXIST as separate function"
+    spec_required_changes:
+      - "New function: assemble_evidence(task_result) -> EvidencePackage"
+      - "Fields: task_id, envelope_id, source_session, intent, executor, status, timestamps, output_summary, evidence_sha256, safety_flags, final_marker"
+      - "Safety flags: repo_or_source_file_modified:false, task_envelope_persisted_allowed:true, commit/push/merge/DO/secret/worker/executor/deploy/runtime all false"
+    status: "not_implemented — needs new code"
+
+  - id: "LP-07"
+    component: "UI lifecycle (task card in chat)"
+    file: "local-console/main.py"
+    line: 808-870 (inline HTML/JS)
+    current_behavior: |
+      Inline JavaScript chat handler (IIFE at line 808)
+      Sends POST to /ai/chat, renders response as HTML message
+      Shows model name, duration, cost, task_id if present in route
+      No task card rendering — only text messages
+    spec_required_changes:
+      - "After chat response, if intent produces a task, show a 'Task Dispatch' card in the message thread"
+      - "Task card shows: intent, risk_level, status, link to /tasks/results/{task_id}"
+      - "States: awaiting_approval (badge), approved_envelope_only (message), running (spinner), completed (summary), rejected (reason)"
+    status: "exists — needs task card extension"
+
+  - id: "LP-08"
+    component: "exec_topk_query_verify handler"
+    file: "services/rag/workers/task_runner.py"
+    line: 71
+    current_behavior: |
+      def _handle_exec_topk_query_verify(params: dict) -> dict:
+        Calls topk_query.exec_topk_query_verify
+        Returns stats only (query_text_hash, query_embedding_dim, top_k, rows_returned, matches)
+        matches: only id/role/text_len/dim/distance — NO raw text
+      Already registered in TASK_HANDLERS at line 109
+    spec_required_changes:
+      - "Already exists and is readonly-safe. Can be used by /tasks/run allowlist without modification."
+    status: "exists_and_ready — no changes needed for MVP"
+
+  - id: "LP-09"
+    component: "exec_embed_corpus_full handler"
+    file: "services/rag/workers/task_runner.py"
+    line: 51
+    current_behavior: |
+      def _handle_exec_embed_corpus_full(params: dict) -> dict:
+        Calls embed_worker.exec_embed_corpus
+        Returns stats only (processed, inserted, skipped_secret, skipped_empty, failed, dry_run)
+        Already registered in TASK_HANDLERS at line 108
+    spec_required_changes:
+      - "EXISTS but MUTATION. MVP scope: envelope_only — envelope can be created (awaiting_approval) but actual execution is POST-MVP."
+      - "Handler itself does NOT need modification; it must simply not be called in MVP."
+    status: "exists_but_blocked_in_MVP — use only for envelope creation, not execution"
+
+  - id: "LP-10"
+    component: "exec_memory_context_fetch handler"
+    file: "services/rag/workers/task_runner.py"
+    line: "(not implemented)"
+    current_behavior: "DOES NOT EXIST in task_runner.py TASK_HANDLERS. Only exec_embed_corpus_full and exec_topk_query_verify exist."
+    spec_required_changes:
+      - "New handler: _handle_exec_memory_context_fetch(params) -> dict"
+      - "In-memory context only — no disk, no frontend, no cloud egress"
+      - "Register in TASK_HANDLERS for MVP allowlist"
+    status: "not_implemented — needs new code"
+
+  - id: "LP-11"
+    component: "Authorization Kernel Pre-Action Gate"
+    file: "services/rag/workers/authorization_kernel/pre_action_gate.py"
+    line: "(check if exists)"
+    current_behavior: "POST-MVP scope per spec — not required for current implementation"
+    spec_required_changes: "Post-MVP — current gate is allowlist + risk, not yet AK-integrated"
+    status: "post_mvp — not needed for current implementation"
+
+  - id: "LP-12"
+    component: "/tasks/results (task history read)"
+    file: "local-console/main.py"
+    line: 248
+    current_behavior: |
+      @app.get("/tasks/results") — lists all task results (line 248)
+      @app.get("/tasks/results/{task_id}") — single task result (line 334)
+      Both require authentication
+      Return sanitized fields only — no secrets, no raw text
+    spec_required_changes:
+      - "Already exists and is safe. Can be used as-is for task history display."
+      - "May need to also read awaiting_approval envelopes for MVP status display."
+    status: "exists_and_ready — may need minor extension for envelope status"
+
+  - id: "LP-13"
+    component: "model-router /chat endpoint"
+    file: "services/model-router/api.py"
+    line: "(varies)"
+    current_behavior: |
+      model-router has DispatchReq schema (risk_level field exists at line 242)
+      Has auto_dispatcher_loop for task dispatch
+      Has call_deepseek for LLM inference
+      Risk classification: level 1-4 in schema
+    spec_required_changes:
+      - "Not directly in scope for conversation→task flow MVP. The /ai/chat on local-console routes to DO Router /chat, not directly to model-router."
+      - "model-router risk_level field aligns with spec's risk classification concept."
+    status: "exists — reference only, not directly modified"
+
+  - id: "LP-14"
+    component: "Local registry files"
+    files:
+      - "local-console/registry/agents.json"
+      - "local-console/registry/skills.json"
+    current_behavior: |
+      agents.json: 1 agent (rag_memory_agent), bound_skills: [exec_topk_query_verify]
+      skills.json: 1 skill (rag_topk_verify), associated_agents: [rag_memory_agent]
+      Both reflect existing readonly capability only
+    spec_required_changes:
+      - "May need to add new agent/skill entries for conversation→task flow (e.g., conversation_task_agent, intent_detection skill)"
+    status: "exists — may need extension"
+
+summary:
+  total_landing_points_inventoried: 14
+  exists_and_ready: 4
+  exists_but_needs_extension: 2
+  exists_but_blocked_in_MVP: 1
+  not_implemented_needs_new_code: 6
+  post_mvp: 1
+  reference_only: 1
+  code_modified: false
+  safety_notes:
+    - "No new endpoints exposed without authentication"
+    - "No mutation paths enabled without Tao approval"
+    - "task_runner handlers already sanitize output (no raw text, no secrets)"
+    - "Existing GET /tasks/results already filters sensitive fields"
+    - "exec_embed_corpus_full exists but is blocked in MVP — only envelope creation allowed"
