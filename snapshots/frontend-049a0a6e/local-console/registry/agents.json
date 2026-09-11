@@ -1,0 +1,8 @@
+{
+  "agents": [
+    {"agent_id": "rag_memory_agent", "agent_name": "RAG Memory Agent", "agent_deployment_type": "local", "agent_category": "rag_memory", "agent_runtime": "local_worker", "bound_skills": ["exec_topk_query_verify"], "supported_execution_targets": ["local"], "permission_scope": "provider_only", "status": "alpha", "enabled": true},
+    {"agent_id": "provider_assistant_agent", "agent_name": "Provider Assistant Digital Human", "agent_deployment_type": "local", "agent_category": "workflow_agent", "agent_runtime": "local_worker", "bound_skills": [], "supported_execution_targets": ["local"], "permission_scope": "provider_only", "status": "candidate", "enabled": false},
+    {"agent_id": "wonderclip_video_agent", "agent_name": "WonderClip Video Digital Human", "agent_deployment_type": "cloud", "agent_category": "digital_human", "agent_runtime": "external_api", "agent_provider": "Alibaba WonderClip", "bound_skills": [], "supported_execution_targets": ["cloud"], "permission_scope": "internal_only", "billing_mode": "credits placeholder", "status": "candidate", "enabled": false, "note": "API pending verification — not Provider-callable"},
+    {"agent_id": "antigravity_dev_agent", "agent_name": "Antigravity Developer Skill Digital Human", "agent_deployment_type": "local", "agent_category": "workflow_agent", "agent_runtime": "local_worker", "bound_skills": [], "supported_execution_targets": ["local"], "permission_scope": "internal_only", "status": "candidate", "enabled": false, "note": "dev-side only; outputs must pass Sandbox Review Gate"}
+  ]
+}

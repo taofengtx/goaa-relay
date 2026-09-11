@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+.npm
+.pnp
+.pnp.js
+
+# Testing
+.coverage
+.nyc_output
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+
+# Tunnel
+tunnel_output.txt
+tunnel_error.txt
+tunnel_error.txt.old
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+.vercel
+
+services/rag/corpus*.jsonl
+
+# Local Console — 本地狀態,不入庫
+local-console/local_user.db
+*.db
+
+# 舊備份/暫存(歷史誤入清理)
+*.bak
+*.bak.*
+*.backup-*
+outbox_*/
+_send_*.py
+
+.env
+.env.production
+secrets.env

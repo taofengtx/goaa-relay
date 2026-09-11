@@ -1,0 +1,429 @@
+registry_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-MULTI-NODE-NODE-REGISTRY-CREATE-20260621-077"
+created_at_utc: "2026-06-21"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+
+truth_priority:
+  - runtime_truth
+  - git_truth
+  - documentation_truth
+
+summary:
+  total_target_nodes: 8
+  local_edge_nodes: 5
+  cloud_do_nodes: 3
+  runtime_confirmed_nodes: 4
+  ssh_ready_do_nodes_via_aika2: 3
+  ready_for_task_dispatch: 0
+  worker_agent_installed_on_all_nodes: false
+  production_deploy_authorized: false
+  worker_start_authorized: false
+
+access_topology:
+  control_plane:
+    node_id: "local-aika-core-01"
+    hostname: "aika-core-01"
+    tailscale_ip: "100.114.37.90"
+  do_access_path:
+    description: "DO nodes are reachable through aika-2 using aika-2 local ~/.ssh/id_ed25519. The private key must not be copied or printed."
+    jump_node: "local-aika-2"
+    jump_user: "tao"
+    private_key_location: "aika-2:~/.ssh/id_ed25519"
+    private_key_copy_authorized: false
+    private_key_print_authorized: false
+
+permission_levels:
+  L0_observed: "Registered only; no task execution."
+  L1_readonly_probe: "Readonly hostname/uname/hardware/process/ports probe only."
+  L2_dev_sandbox_worker: "May run non-production development tasks only after explicit approval."
+  L3_build_worker: "May run build/test tasks only after explicit approval."
+  L4_runtime_worker: "May run GOAA runtime worker tasks in sandbox only after explicit approval."
+  L5_production_capable: "Production-capable; requires Tao explicit production approval."
+
+nodes:
+  - node_id: "local-aika-core-01"
+    display_name: "aika-core-01"
+    type: "local_edge"
+    os_family: "linux"
+    hostname: "aika-core-01"
+    tailscale_ip: "100.114.37.90"
+    public_ip: ""
+    private_ip: "192.168.1.24"
+    evidence_level: "runtime_truth"
+    current_status: "active"
+    ssh_status: "local"
+    permission_level: "L2_dev_sandbox_worker"
+    roles:
+      - "control_plane"
+      - "runtime_core"
+      - "dev_worker"
+      - "model_gateway"
+    runtime_processes:
+      - "qwenpaw:8088"
+      - "uvicorn:5188"
+      - "telemetry_writer"
+      - "agent.py"
+      - "ollama:11434"
+    listening_ports:
+      - "100.114.37.90:8088"
+      - "127.0.0.1:5188"
+      - "127.0.0.1:19820"
+      - "*:11434"
+    hardware:
+      cpu: "Intel i7-9700K, 8C/8T"
+      ram: "30GiB"
+      disk: "937G total, approx 76G used"
+      gpu: "none confirmed; nvidia-smi not found"
+    dev_tools:
+      git: "present"
+      python3: "present"
+      pip: "present"
+      node: "not installed"
+      npm: "not installed"
+      docker: "not installed"
+      tailscale: "present"
+      ssh: "present"
+    allowed_actions:
+      readonly_probe: true
+      dev_task: true
+      build_task: false
+      model_task: true
+      runtime_task: true
+      production_task: false
+    blockers:
+      - "Do not expose local console publicly."
+      - "No production deploy authorization."
+    notes:
+      - "Current only local machine with confirmed active GOAA runtime processes."
+
+  - node_id: "local-aika-1"
+    display_name: "aika-1"
+    type: "local_edge"
+    os_family: "windows"
+    hostname: "aika-1"
+    tailscale_ip: "100.109.7.85"
+    public_ip: ""
+    private_ip: ""
+    evidence_level: "network_truth"
+    current_status: "reachable"
+    ssh_status: "not_applicable"
+    permission_level: "L1_readonly_probe"
+    roles:
+      - "ui_remote_entry"
+      - "windows_test_node"
+      - "operator_console"
+    runtime_processes: []
+    listening_ports: []
+    hardware:
+      cpu: "unknown"
+      ram: "unknown"
+      disk: "unknown"
+      gpu: "unknown"
+    dev_tools:
+      git: "unknown"
+      python3: "unknown"
+      node: "unknown"
+      npm: "unknown"
+      docker: "unknown"
+      tailscale: "present"
+      ssh: "unknown"
+    allowed_actions:
+      readonly_probe: true
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "No runtime process evidence."
+    notes:
+      - "Used as remote UI/operator entry."
+
+  - node_id: "local-aika-2"
+    display_name: "aika-2"
+    type: "local_edge"
+    os_family: "linux"
+    hostname: "aika-2"
+    tailscale_ip: "100.97.60.1"
+    public_ip: ""
+    private_ip: ""
+    evidence_level: "runtime_truth"
+    current_status: "ssh_ready"
+    ssh_status: "trusted_from_aika_core_as_tao"
+    permission_level: "L1_readonly_probe"
+    roles:
+      - "do_jump_node"
+      - "dev_worker_candidate"
+      - "build_worker_candidate"
+      - "light_runtime_worker_candidate"
+    runtime_processes: []
+    listening_ports: []
+    hardware:
+      cpu: "unknown"
+      ram: "unknown"
+      disk: "unknown"
+      gpu: "unknown"
+    dev_tools:
+      git: "unknown"
+      python3: "unknown"
+      node: "unknown"
+      npm: "unknown"
+      docker: "unknown"
+      tailscale: "present"
+      ssh: "present"
+    allowed_actions:
+      readonly_probe: true
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "Worker agent not installed or not verified."
+      - "No task dispatch authorization."
+    notes:
+      - "aika-core-01 can SSH to tao@100.97.60.1."
+      - "Contains local ~/.ssh/id_ed25519 used for DO access."
+      - "Private key must not be copied or printed."
+
+  - node_id: "local-fq168-sm-mini-it12"
+    display_name: "fq168-sm-mini-it12"
+    type: "local_edge"
+    os_family: "linux"
+    hostname: "fq168-sm-mini-it12"
+    tailscale_ip: "100.114.251.87"
+    public_ip: ""
+    private_ip: ""
+    evidence_level: "network_truth"
+    current_status: "ping_reachable_ssh_untrusted"
+    ssh_status: "host_key_untrusted"
+    permission_level: "L0_observed"
+    roles:
+      - "build_ci_worker_candidate"
+      - "utility_worker_candidate"
+      - "backup_linux_worker"
+    runtime_processes: []
+    listening_ports: []
+    hardware:
+      cpu: "unknown"
+      ram: "unknown"
+      disk: "unknown"
+      gpu: "unknown"
+    dev_tools:
+      git: "unknown"
+      python3: "unknown"
+      node: "unknown"
+      npm: "unknown"
+      docker: "unknown"
+      tailscale: "present"
+      ssh: "unknown"
+    allowed_actions:
+      readonly_probe: false
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "SSH host key trust not established."
+      - "Remote hardware/dev-tools inventory missing."
+
+  - node_id: "local-tap"
+    display_name: "tap"
+    type: "local_edge"
+    os_family: "windows"
+    hostname: "tap"
+    tailscale_ip: "100.123.248.87"
+    public_ip: ""
+    private_ip: "192.168.1.161"
+    evidence_level: "network_truth"
+    current_status: "reachable"
+    ssh_status: "not_applicable"
+    permission_level: "L0_observed"
+    roles:
+      - "ui_standby"
+      - "windows_test_node"
+      - "manual_operator_node"
+    runtime_processes: []
+    listening_ports: []
+    hardware:
+      cpu: "unknown"
+      ram: "unknown"
+      disk: "unknown"
+      gpu: "unknown"
+    dev_tools:
+      git: "unknown"
+      python3: "unknown"
+      node: "unknown"
+      npm: "unknown"
+      docker: "unknown"
+      tailscale: "present"
+      ssh: "unknown"
+    allowed_actions:
+      readonly_probe: false
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "No runtime process evidence."
+      - "No Windows worker design yet."
+
+  - node_id: "do-goaa-aika-cloud-1"
+    display_name: "goaa-aika-cloud-1"
+    type: "cloud_do"
+    os_family: "linux"
+    hostname: "ubuntu-s-2vcpu-4gb-sfo3"
+    tailscale_ip: ""
+    public_ip: "134.199.227.108"
+    private_ip: ""
+    evidence_level: "runtime_truth"
+    current_status: "ssh_ready_via_aika2"
+    ssh_status: "root_access_via_aika2_id_ed25519"
+    permission_level: "L1_readonly_probe"
+    roles:
+      - "primary_do_control_plane_candidate"
+      - "cloud_runtime_candidate"
+      - "cloud_worker_candidate"
+    runtime_processes:
+      - "uvicorn api:8080, main:18789, main:8088"
+      - "agent.py"
+      - "fail2ban"
+      - "cloudflared"
+      - "heartbeat"
+      - "postgres:5432"
+    listening_ports:
+      - "0.0.0.0:22"
+      - "0.0.0.0:8080"
+      - "0.0.0.0:8088"
+      - "0.0.0.0:18789"
+      - "0.0.0.0:5432"
+    hardware:
+      cpu: "2 vCPU"
+      ram: "4GB"
+      disk: "80GB"
+      gpu: "none confirmed"
+    dev_tools:
+      git: "present (2.43.0)"
+      python3: "present (3.12.3)"
+      pip: "present"
+      node: "not installed"
+      npm: "not installed"
+      docker: "present (29.4.3)"
+      tailscale: "unknown"
+      ssh: "present"
+    allowed_actions:
+      readonly_probe: true
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "Worker agent not started on this node (only GOAA processes observed)."
+      - "No task dispatch authorization."
+    notes:
+      - "Currently has full GOAA stack (3 uvicorn + agent + postgres + cloudflared)."
+      - "Largest DO node; best candidate for cloud runtime."
+
+  - node_id: "do-goaa-aika-cloud-2"
+    display_name: "goaa-aika-cloud-2"
+    type: "cloud_do"
+    os_family: "linux"
+    hostname: "goaa-aika-cloud-2-01"
+    tailscale_ip: ""
+    public_ip: "143.198.224.71"
+    private_ip: ""
+    evidence_level: "runtime_truth"
+    current_status: "ssh_ready_via_aika2"
+    ssh_status: "root_access_via_aika2_id_ed25519"
+    permission_level: "L1_readonly_probe"
+    roles:
+      - "light_worker_candidate"
+      - "ci_agent_candidate"
+      - "standby_node"
+    runtime_processes:
+      - "agent.py"
+    listening_ports:
+      - "0.0.0.0:22"
+      - "127.0.0.53:53"
+      - "127.0.0.54:53"
+    hardware:
+      cpu: "1 vCPU"
+      ram: "1GB"
+      disk: "25GB"
+      gpu: "none confirmed"
+    dev_tools:
+      git: "present (2.43.0)"
+      python3: "present (3.12.3)"
+      pip: "present"
+      node: "not installed"
+      npm: "not installed"
+      docker: "not installed"
+      tailscale: "unknown"
+      ssh: "present"
+    allowed_actions:
+      readonly_probe: true
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "Only 1GB RAM; cannot build or run containers."
+      - "No task dispatch authorization."
+    notes:
+      - "Smallest DO node; agent.py confirmed running."
+
+  - node_id: "do-goaa-aika-cloud-3"
+    display_name: "goaa-aika-cloud-3"
+    type: "cloud_do"
+    os_family: "linux"
+    hostname: "goaa-aika-cloud-3"
+    tailscale_ip: ""
+    public_ip: "64.23.166.121"
+    private_ip: ""
+    evidence_level: "runtime_truth"
+    current_status: "ssh_ready_via_aika2"
+    ssh_status: "root_access_via_aika2_id_ed25519"
+    permission_level: "L1_readonly_probe"
+    roles:
+      - "light_worker_candidate"
+      - "ci_agent_candidate"
+      - "standby_node"
+    runtime_processes:
+      - "agent.py"
+    listening_ports:
+      - "0.0.0.0:22"
+      - "127.0.0.53:53"
+      - "127.0.0.54:53"
+    hardware:
+      cpu: "1 vCPU"
+      ram: "1GB"
+      disk: "25GB"
+      gpu: "none confirmed"
+    dev_tools:
+      git: "present (2.43.0)"
+      python3: "present (3.12.3)"
+      pip: "present"
+      node: "not installed"
+      npm: "not installed"
+      docker: "not installed"
+      tailscale: "unknown"
+      ssh: "present"
+    allowed_actions:
+      readonly_probe: true
+      dev_task: false
+      build_task: false
+      model_task: false
+      runtime_task: false
+      production_task: false
+    blockers:
+      - "Only 1GB RAM; cannot build or run containers."
+      - "No task dispatch authorization."
+    notes:
+      - "Smallest DO node; agent.py confirmed running."

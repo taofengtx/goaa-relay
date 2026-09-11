@@ -1,0 +1,8 @@
+{
+  "corpus_path": "/opt/goaa/workers/corpus_all.jsonl",
+  "target_table": "qwenpaw_memory_chunks",
+  "dry_run": true,
+  "limit": 3,
+  "batch_size": 50,
+  "model": "nomic-embed-text"
+}

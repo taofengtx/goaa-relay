@@ -1,0 +1,6 @@
+{
+  "query_text": "GOAA Worker Runtime 任務調度",
+  "top_k": 5,
+  "target_table": "qwenpaw_memory_chunks",
+  "model": "nomic-embed-text"
+}

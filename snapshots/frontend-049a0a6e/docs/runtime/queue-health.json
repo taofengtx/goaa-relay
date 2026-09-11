@@ -1,0 +1,63 @@
+{
+  "queue_health": {
+    "version": "2.1",
+    "timestamp": "2026-05-09T11:35:00Z",
+    "overall_status": "healthy",
+    "metrics": {
+      "pending_tasks": {
+        "count": 12,
+        "threshold_warning": 80,
+        "threshold_critical": 150,
+        "status": "normal"
+      },
+      "running_tasks": {
+        "count": 3,
+        "active_nodes": ["AiKa-1", "AKC-001"],
+        "max_concurrent": 10,
+        "status": "normal"
+      },
+      "failed_tasks": {
+        "count": 2,
+        "retry_attempts_remaining": [2, 1],
+        "max_retries": 3,
+        "status": "monitoring"
+      },
+      "retry_tasks": {
+        "count": 1,
+        "next_retry_at": "2026-05-09T11:40:00Z",
+        "status": "scheduled"
+      },
+      "node_load": {
+        "AiKa-1": {
+          "status": "online",
+          "cpu_usage": "45%",
+          "memory_usage": "62%",
+          "active_tasks": 2,
+          "capacity": "75%"
+        },
+        "AiKa-2": {
+          "status": "initializing",
+          "cpu_usage": "N/A",
+          "memory_usage": "N/A",
+          "active_tasks": 0,
+          "capacity": "0%"
+        },
+        "AKC-001": {
+          "status": "online",
+          "cpu_usage": "38%",
+          "memory_usage": "55%",
+          "active_tasks": 1,
+          "capacity": "60%"
+        }
+      }
+    },
+    "health_score": 95,
+    "recommendations": [
+      "AiKa-2 bootstrap in progress - monitor completion",
+      "All metrics within acceptable ranges",
+      "Continue idle task execution"
+    ],
+    "last_check": "2026-05-09T11:35:00Z",
+    "next_check": "2026-05-09T11:40:00Z"
+  }
+}
