@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiKa Node Download — goaa.ai</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --border: #1e1e2e;
+    --accent: #e53e3e;
+    --accent2: #4f46e5;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --green: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: white;
+  }
+  .logo-text { font-weight: 700; font-size: 18px; color: var(--text); }
+  .nav-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color .2s;
+  }
+  .nav-link:hover { color: var(--text); }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 80px 40px 60px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(34,197,94,.12);
+    border: 1px solid rgba(34,197,94,.3);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    letter-spacing: .5px;
+  }
+  .version-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+  h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 30%, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 18px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 48px;
+  }
+
+  /* Download Cards */
+  .download-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+  }
+  .dl-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    transition: border-color .2s, transform .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .dl-card.active {
+    border-color: var(--accent2);
+    cursor: pointer;
+  }
+  .dl-card.active:hover {
+    transform: translateY(-3px);
+    border-color: #7c72ff;
+  }
+  .dl-card.disabled { opacity: .45; cursor: not-allowed; }
+  .dl-card.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), #7c72ff);
+  }
+  .dl-os-icon { font-size: 36px; margin-bottom: 12px; }
+  .dl-os-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .dl-os-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .dl-btn {
+    display: inline-block;
+    background: var(--accent2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s;
+    width: 100%;
+  }
+  .dl-btn:hover { background: #4338ca; }
+  .dl-btn-disabled {
+    display: inline-block;
+    background: var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    width: 100%;
+  }
+  .coming-soon {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: var(--border);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .file-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  /* Install Steps */
+  .install-section {
+    max-width: 700px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+  }
+  .install-section h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .steps { display: flex; flex-direction: column; gap: 16px; }
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    background: var(--accent2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .step-content p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .code-block {
+    background: #0d0d16;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    color: #a5f3fc;
+    position: relative;
+    cursor: pointer;
+  }
+  .code-block:hover { border-color: #333; }
+  .copy-hint {
+    position: absolute;
+    right: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: sans-serif;
+  }
+
+  /* What happens after */
+  .after-section {
+    max-width: 700px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+    text-align: center;
+  }
+  .after-section h2 { font-size: 22px; font-weight: 700; margin-bottom: 32px; }
+  .after-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    text-align: left;
+  }
+  .after-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .after-icon { font-size: 20px; flex-shrink: 0; }
+  .after-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .after-text p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* Changelog */
+  .changelog-section {
+    max-width: 700px;
+    margin: 0 auto 80px;
+    padding: 0 40px;
+  }
+  .changelog-section h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+  .changelog-item {
+    border-left: 2px solid var(--border);
+    padding-left: 20px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .changelog-item::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--accent2);
+    border-radius: 50%;
+    position: absolute;
+    left: -5px; top: 6px;
+  }
+  .changelog-ver { font-size: 14px; font-weight: 700; color: var(--accent2); }
+  .changelog-date { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .changelog-list { list-style: none; }
+  .changelog-list li { font-size: 13px; color: var(--muted); padding: 2px 0; }
+  .changelog-list li::before { content: '+ '; color: var(--green); }
+
+  footer {
+    text-align: center;
+    padding: 32px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  /* Download notification */
+  .dl-notify {
+    display: none;
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--green);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    z-index: 100;
+    animation: slideIn .3s ease;
+  }
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    .download-grid { grid-template-columns: 1fr; padding: 0 20px; }
+    h1 { font-size: 36px; }
+    .hero { padding: 50px 20px 40px; }
+    .after-grid { grid-template-columns: 1fr; }
+    .install-section, .after-section, .changelog-section { padding: 0 20px; }
+    header { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="https://goaa.ai" class="logo">
+    <div class="logo-icon">G</div>
+    <span class="logo-text">goaa.ai</span>
+  </a>
+  <a href="https://portal.goaa.ai/agent-login" class="nav-link">Agent Login →</a>
+</header>
+
+<section class="hero">
+  <div class="version-badge">v1.0.5 — Latest Release</div>
+  <h1>AiKa Node<br>One-Click Install</h1>
+  <p class="subtitle">
+    Turn your device into a goaa.ai edge compute node.<br>
+    Run AI tasks, contribute compute, and earn Credits.
+  </p>
+</section>
+
+<div class="download-grid">
+  <!-- Linux -->
+  <div class="dl-card active" onclick="downloadLinux()">
+    <div class="dl-os-icon">🐧</div>
+    <div class="dl-os-name">Linux</div>
+    <div class="dl-os-sub">Ubuntu 24.04+ / 26.04 LTS</div>
+    <a class="dl-btn" href="https://api.goaa.ai/downloads/aika-node_1.0.5.deb"
+       onclick="showNotify(event)">
+      Download .deb (5.5 MB)
+    </a>
+    <div class="file-meta">aika-node_1.0.5.deb · 2026-05-09</div>
+  </div>
+
+  <!-- macOS -->
+  <div class="dl-card disabled">
+    <span class="coming-soon">Coming Soon</span>
+    <div class="dl-os-icon">🍎</div>
+    <div class="dl-os-name">macOS</div>
+    <div class="dl-os-sub">Apple Silicon / Intel</div>
+    <div class="dl-btn-disabled">aika-node.pkg</div>
+    <div class="file-meta">Stay Tuned</div>
+  </div>
+
+  <!-- Windows -->
+  <div class="dl-card disabled">
+    <span class="coming-soon">Coming Soon</span>
+    <div class="dl-os-icon">🪟</div>
+    <div class="dl-os-name">Windows</div>
+    <div class="dl-os-sub">Windows 10/11 x64</div>
+    <div class="dl-btn-disabled">aika-node-setup.exe</div>
+    <div class="file-meta">Stay Tuned</div>
+  </div>
+</div>
+
+<section class="install-section">
+  <h2>Install Steps</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Download the Installer</h3>
+        <p>Click the button above to download, or run in a terminal:</p>
+        <div class="code-block" onclick="copyCode(this)">
+          wget https://api.goaa.ai/downloads/aika-node_1.0.5.deb
+          <span class="copy-hint">Click to Copy</span>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Run the Installer</h3>
+        <p>Run in a terminal (requires sudo password):</p>
+        <div class="code-block" onclick="copyCode(this)">
+          sudo dpkg -i aika-node_1.0.5.deb
+          <span class="copy-hint">Click to Copy</span>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Restart the Device</h3>
+        <p>After the install completes, restart; the AiKa node starts automatically:</p>
+        <div class="code-block" onclick="copyCode(this)">
+          sudo reboot
+          <span class="copy-hint">Click to Copy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="after-section">
+  <h2>Automatic After Restart</h2>
+  <div class="after-grid">
+    <div class="after-item">
+      <div class="after-icon">🖥️</div>
+      <div class="after-text">
+        <h4>Desktop Icon</h4>
+        <p>The "AiKa Workspace" appears on your desktop. Double-click to open goaa.ai.</p>
+      </div>
+    </div>
+    <div class="after-item">
+      <div class="after-icon">🌐</div>
+      <div class="after-text">
+        <h4>Auto-Login Page</h4>
+        <p>Opens portal.goaa.ai/agent-login automatically 10 seconds after boot.</p>
+      </div>
+    </div>
+    <div class="after-item">
+      <div class="after-icon">⚙️</div>
+      <div class="after-text">
+        <h4>Background Services</h4>
+        <p>OpenClaw + QwenPaw start automatically and run in the background.</p>
+      </div>
+    </div>
+    <div class="after-item">
+      <div class="after-icon">💰</div>
+      <div class="after-text">
+        <h4>Earn Credits</h4>
+        <p>Contributes compute while idle; Credits are added to your account.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="changelog-section">
+  <h2>Version History</h2>
+  <div class="changelog-item">
+    <div class="changelog-ver">v1.0.5 — Current</div>
+    <div class="changelog-date">2026-05-09</div>
+    <ul class="changelog-list">
+      <li>Auto-bootstrap on install (pulls the latest config from GitHub)</li>
+      <li>Auto-generates a node ID (based on MAC address)</li>
+      <li>Heartbeat service starts automatically (systemd)</li>
+      <li>Auto-syncs with GitHub every hour (cron)</li>
+      <li>Multi-user desktop icon support</li>
+    </ul>
+  </div>
+  <div class="changelog-item">
+    <div class="changelog-ver">v1.0.4</div>
+    <div class="changelog-date">2026-05-06</div>
+    <ul class="changelog-list">
+      <li>Password policy fix (username not included)</li>
+      <li>Removed unavailable PyPI dependencies; switched to offline packages</li>
+      <li>Desktop icon and auto-start on boot</li>
+      <li>Ships with offline dependencies (5.4MB, no network needed)</li>
+    </ul>
+  </div>
+  <div class="changelog-item">
+    <div class="changelog-ver">v1.0.3</div>
+    <div class="changelog-date">2026-05-06</div>
+    <ul class="changelog-list">
+      <li>Fixed postinst syntax error</li>
+      <li>Added Cloudflared auto-install</li>
+    </ul>
+  </div>
+  <div class="changelog-item">
+    <div class="changelog-ver">v1.0.0</div>
+    <div class="changelog-date">2026-05-05</div>
+    <ul class="changelog-list">
+      <li>Initial release</li>
+      <li>OpenClaw + QwenPaw + heartbeat service</li>
+    </ul>
+  </div>
+</section>
+
+<div class="dl-notify" id="dlNotify">
+  ✅ Download started. Check your download folder.
+</div>
+
+<footer>
+  <p>goaa.ai &copy; 2026 · <a href="https://portal.goaa.ai/agent-login">Agent Login</a> · <a href="https://portal.goaa.ai/client-login">User Login</a></p>
+</footer>
+
+<script>
+function showNotify(e) {
+  const n = document.getElementById('dlNotify');
+  n.style.display = 'block';
+  setTimeout(() => { n.style.display = 'none'; }, 3000);
+}
+
+function copyCode(el) {
+  const text = el.firstChild.textContent.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const hint = el.querySelector('.copy-hint');
+    const orig = hint.textContent;
+    hint.textContent = 'Copied!';
+    setTimeout(() => { hint.textContent = orig; }, 1500);
+  });
+}
+</script>
+</body>
+</html>

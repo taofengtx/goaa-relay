@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "registry": {
+    "nodes": [
+      {
+        "id": "openclaw-gateway",
+        "name": "OpenClaw API Gateway",
+        "type": "gateway",
+        "endpoint": "https://api.goaa.ai",
+        "status": "active",
+        "version": "0.1.0",
+        "features": [
+          "CORS",
+          "WebSocket",
+          "Agent Login",
+          "Chat Session"
+        ]
+      },
+      {
+        "id": "qwenpaw-console",
+        "name": "QwenPaw Console",
+        "type": "control-panel",
+        "endpoint": "http://localhost:8088",
+        "status": "active",
+        "version": "latest",
+        "features": [
+          "Agent Management",
+          "Dashboard",
+          "Monitoring"
+        ]
+      },
+      {
+        "id": "portal-frontend",
+        "name": "Portal Frontend",
+        "type": "frontend",
+        "endpoint": "https://portal.goaa.ai",
+        "status": "active",
+        "version": "1.0.0",
+        "features": [
+          "Agent Login",
+          "Dashboard",
+          "Chat UI"
+        ]
+      }
+    ],
+    "services": [
+      {
+        "id": "openclaw",
+        "name": "OpenClaw Service",
+        "type": "backend",
+        "port": 18789,
+        "protocol": "HTTP/WebSocket",
+        "status": "active"
+      },
+      {
+        "id": "qwenpaw",
+        "name": "QwenPaw Service",
+        "type": "control",
+        "port": 8088,
+        "protocol": "HTTP",
+        "status": "active"
+      },
+      {
+        "id": "cloudflared",
+        "name": "Cloudflare Tunnel",
+        "type": "tunnel",
+        "tunnel_id": "6eb05b1b-5648-4a8f-b33f-0f97a03495ec",
+        "tunnel_name": "goaa-api-v2",
+        "status": "active"
+      }
+    ]
+  },
+  "timestamp": "2026-05-08T10:17:00Z",
+  "phase": "Phase 2 - Multi-Agent Pipeline"
+}

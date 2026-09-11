@@ -1,0 +1,15 @@
+=========================  
+GOAA-20260510-RUNTIME-ACTIVATE  
+=========================  
+  
+Execute on AiKa-2 - Copy and paste each section  
+  
+========== Step 1: Sync Repository ==========  
+cd /opt/goaa/repo 2>/dev/null || git clone https://github.com/taofengtx/goaa-ai-frontend.git /opt/goaa/repo  
+cd /opt/goaa/repo && git pull origin main  
+mkdir -p /opt/goaa/runtime /opt/goaa/logs  
+echo "Step 1 OK"  
+  
+========== Step 2: Create Watchdog Script ==========  
+Copy the watchdog.py content from the documentation  
+  
