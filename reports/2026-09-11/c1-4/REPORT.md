@@ -72,13 +72,16 @@ Screenshot: `r3-newuser-landing.jpg` (91640 B, 1440x813) - new account's landing
 
 ### Deviations and findings (reported, not hidden)
 
-1. **Account name deviates.** The first attempt used exactly `c2e2e2+clerk_test@example.com`
-   but it ran during the environment fault described in finding 2, so its signup consumed the
-   account before the landing could be observed cleanly. The clean run therefore used a fresh
-   account `c2e2e2b+clerk_test@example.com`. `goaa_c2test` had **no** rows for `c2e2e2`
-   (`users`, `user_identities`, `identity_events` all 0), so nothing was orphaned.
-   Re-running with exactly `c2e2e2` would require deleting that Clerk test user first
-   (a destructive operation on the identity provider, not performed).
+1. **Account name deviates.** The first attempt used exactly `c2e2e2+clerk_test@example.com`, but
+   it ran while the allow-list fault of finding 2 was still active: Clerk accepted the signup
+   while the backend answered 401, so `goaa_c2test` held **no** rows for `c2e2e2` (`users` and
+   `user_identities` both 0) and the landing could not be observed cleanly. The clean R3 run
+   therefore used a fresh account `c2e2e2b+clerk_test@example.com`; nothing was orphaned.
+   **Update (round C1.5, segment Z):** with the allow-list corrected, signing `c2e2e2` in over
+   `http://127.0.0.1:13102` now produces the previously missing rows
+   (`users.id 6f3fb772…`, subject `c5175f19…`, 1 token, 0 live after sign-out) and the backend
+   logs `POST /api/v1/agent-loop/golden/session 200 OK`. The account was never permanently
+   lost — it simply could not finish a business session while the stale origin was in effect.
 2. **`CLERK_AUTHORIZED_PARTIES` has a stale entry - NOT caused by this patch, NOT modified.**
    `/opt/goaa-test/env/clerk-api-3103.env`:
    `CLERK_AUTHORIZED_PARTIES=http://localhost:13102,http://127.0.0.1:3102`
@@ -126,6 +129,48 @@ no line removed, no truncation, no new file (the live logger keeps writing to th
 **Not handled, per K3 instruction:** the `dialog/2026-09-11.jsonl` hit is left untouched and
 listed above for Tao's decision. It is the conversation record, i.e. the message in which the
 key was pasted; it is not a log the agent writes to on its own.
+
+---
+
+## Z — the stale allow-list entry (found in R3, fixed in round C1.5)
+
+**Root cause.** The backend env file carried its origin allow-list with an entry left over
+from the earlier port: `http://127.0.0.1:3102`. C2's frontend has served on `13102` since the
+topology change, so a browser on `http://127.0.0.1:13102` presents a Clerk token whose `azp`
+is not on the list. Clerk token verification then fails on the backend, the BFF surfaces
+`401 invalid_clerk_session`, no business session can be minted, and
+`/agent-loop/customer` → `307` → `/agent-loop/login` → `/client-login` loops.
+`http://localhost:13102` *was* on the list, which is why earlier rounds (which browsed
+`localhost`) passed. The patch-0007 result in R3 is unaffected: it was verified over
+`localhost:13102`.
+
+**Fix (round C1.5, Z1–Z5).**
+
+- **Z1** backup in place, same directory, same mode (440) and same owner/group as the original:
+  `clerk-api-3103.env.bak-20260911-100202` (`root:goaa-c2loop`, 440, 1171 B).
+- **Z2** only that one line changed, to
+  `CLERK_AUTHORIZED_PARTIES=http://localhost:13102,http://127.0.0.1:13102`.
+  Every other line is byte-identical: sha256 over the file **with that line removed** is the
+  same before and after (`3f77418b44fba3184d20d71a212df2420bfeae3587b8871f7b1e782aee969903`),
+  the line count is unchanged (28), and the file mode (440) and owner/group are unchanged.
+- **Z3** the frontend env (`clerk-ui-3102.env`) also carries a `CLERK_AUTHORIZED_PARTIES`
+  variable, and so does `clerk.env`; both still list the stale `http://127.0.0.1:3102`.
+  They were **reported, not modified** (this round asked only to inspect them first).
+  The systemd drop-ins contain no allow-list settings; they hold egress allow-list IPs and one
+  `ReadWritePaths`.
+- **Z4** backend restarted: `is-active: active`, new MainPID `2013392`, and
+  `GET /api/v1/agent-loop/health` → **200** with `database.name=goaa_c2test`.
+  **No approval card appeared on Aika's side** for this restart; whether it went through an
+  approval on Tao's side is Tao's record to state.
+- **Z5** browsing `http://127.0.0.1:13102` and signing in, the backend logs
+  `POST /api/v1/agent-loop/golden/session` → **200 OK** (previously 401
+  `invalid_clerk_session`), and the account's business subject receives a live token.
+  `http://localhost:13102` still works — the same call returns 200 there. Both accounts were
+  signed out afterwards; `POST …/golden/session/revoke` returned 200 and the live count went
+  to zero.
+
+**Still open:** the two remaining stale entries (frontend env and `clerk.env`) are unfixed by
+design of this round, awaiting a decision.
 
 ---
 
