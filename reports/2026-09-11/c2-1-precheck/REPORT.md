@@ -191,3 +191,55 @@ To                         Action      From
 ## 6. 本輪未做的事
 
 未改任何檔案、未重啟／未 reload、未建目錄、未動 env／DNS／tunnel／防火牆；除依令的 `git fetch`（僅更新 remote-tracking ref）外，全部指令為唯讀查詢。
+
+---
+
+## 附錄 A — 第 1 項原始輸出（重跑留檔，作為正式取證）
+
+```
+### git fetch origin --prune
+来自 github-goaa:taofengtx/goaa-ai-frontend
+ * branch            codex/backend-source-capture-20260902 -> FETCH_HEAD
+
+### merge-base 718ee109 76af718b0568992c900b72d1aff5aad2516046dc
+76af718b0568992c900b72d1aff5aad2516046dc
+
+### git log --oneline 718ee109..76af718b（C1 有、候選線沒有）
+count=0
+
+### git log --oneline 76af718b..718ee109（候選線有、C1 沒有）
+718ee10 Round C1 fix: scope token sheets to .goaa-portal (golden chat avatar already uses class goaa)
+51c9914 Round C1: three-portal shell, growth pages, golden sign-out wiring, tests
+daecc2a fix(c2): keep the golden business credential in the golden slot
+45ca6de feat(c2): clerk sign-in with a golden business-session bridge (isolated candidate)
+13ecaa8 docs(c2): document the hardened database authentication posture
+b289587 feat(c2): isolated PostgreSQL-backed agent licence application loop
+b8050fc feat: add isolated three-portal business preview
+a7e8b1c Portal Preview Technical Foundation (isolated v1)
+count=8
+
+### git diff --stat 718ee109 76af718b
+ 109 files changed, 14 insertions(+), 16045 deletions(-)
+
+### main 最新 commit 與日期
+00c848d85b5de93e725c0df99743783d365022f0 | 2026-08-25 23:20:22 -0700 | Tao | fix: show $39.90 professional connect CTA in planning workspace
+```
+
+> 本次重跑輸出與首次執行**逐字一致**（含 commit 計數與 diffstat）。
+
+## 附錄 B — 第 2 項判定依據
+
+條件句式：「**若**第 1 項顯示 C1 有候選線沒有的改動」→ 第 1 項 `718ee109..76af718b` = **0 筆** → **條件不成立**，故不產出「C1 專有 commit 的檔案清單」。
+
+反向事實（候選線相對 C1 的 109 檔增量）中，與指定 6 個項目重疊者：
+
+| 指定檔案 | 是否被候選線動到 |
+|---|---|
+| `app/lib/clerk-entry.ts` | 是 |
+| `middleware.ts` | 是 |
+| `app/layout.tsx` | 是 |
+| `app/goaa-clerk-login/page.tsx` | 是 |
+| `app/styles/goaa-tokens.css` | 是 |
+| `app/components/`（`ProfessionalHandoffCard`／`ProfessionalConnectBar`／`MatterProfessionalConnect`） | 否 |
+
+判定指令：`git diff --name-only 76af718b… 718ee109 | grep -E 'clerk-entry|(^|/)middleware\.ts$|layout\.tsx|goaa-clerk-login|goaa-tokens|ProfessionalHandoff|ProfessionalConnectBar|MatterProfessionalConnect'`
