@@ -1,0 +1,81 @@
+/* UI-only scope: do not restyle canonical order, payment or invoice pages. */
+.butler-workspace .goaa-nav { margin-top: 12px; min-height: 64px; }
+.butler-workspace .workspace-shell { height: calc(100dvh - 128px); min-height: 560px; margin-top: 12px; grid-template-columns: 190px minmax(0, 1.2fr) minmax(290px, .8fr); }
+.butler-workspace .workspace-conversation, .butler-workspace .workspace-plan { min-height: 0; overflow: auto; }
+.butler-workspace .workspace-thread { min-height: 0; }
+.butler-workspace .workspace-section-head, .butler-workspace .workspace-plan-head { flex-shrink: 0; padding: 20px 22px; }
+.butler-workspace .workspace-nav-item { font-size: 14px; line-height: 1.5; }
+.butler-workspace .workspace-kicker { font-size: 12px; }
+.butler-workspace .chat-bubble { font-size: 16px; }
+.butler-workspace .workspace-rail small { color: #92909f; }
+.butler-workspace .workspace-composer { flex-shrink: 0; margin-bottom: 16px; }
+.butler-workspace .workspace-composer textarea { font-size: 16px; }
+.butler-workspace button:disabled { cursor: not-allowed; opacity: .5; }
+.butler-workspace :is(button, a, input, textarea, summary):focus-visible { outline: 2px solid #bca7ff; outline-offset: 3px; }
+.butler-workspace .butler-wide-view .workspace-conversation { grid-column: 2 / -1; }
+.butler-workspace .butler-wide-view > .workspace-plan { display: none; }
+.butler-workspace .butler-welcome .chat-bubble { max-width: 100%; border-color: rgba(167, 139, 250, .2); }
+.butler-workspace .butler-welcome details { margin-top: 12px; white-space: normal; }
+.butler-workspace summary { cursor: pointer; color: #c4b5fd; font-size: 14px; line-height: 1.6; }
+.butler-workspace .butler-welcome small { display: block; color: #a4a0b1; font-size: 12px; margin-top: 8px; }
+.butler-workspace .butler-name-editor { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.butler-workspace .butler-name-editor label { flex: 1; font-size: 14px; min-width: 120px; }
+.butler-workspace .butler-name-editor input { width: 100%; display: block; margin-top: 4px; padding: 9px; background: #0d0b15; border: 1px solid #393047; border-radius: 8px; color: #fff; }
+.butler-workspace .butler-inline-inbox { flex-shrink: 0; padding: 0 22px 10px; max-height: 45vh; overflow: auto; }
+.butler-workspace .butler-inline-inbox > section { margin-top: 10px !important; }
+.butler-workspace .butler-existing-tools { margin-top: 18px; }
+.butler-workspace .butler-tool-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.butler-workspace .butler-capabilities { padding: 14px; overflow: auto; }
+.butler-workspace .butler-capabilities #agent-problem-solving-model { max-width: 100%; }
+.butler-workspace .butler-matters { padding: 28px; }
+.butler-workspace .butler-view-heading { display: flex; justify-content: space-between; align-items: start; gap: 14px; }
+.butler-workspace .butler-view-heading h2 { margin: 8px 0; font-size: 28px; }
+.butler-workspace .butler-view-heading p { color: #aaa5b7; line-height: 1.6; font-size: 16px; }
+.butler-workspace .butler-primary, .butler-workspace .butler-secondary { display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; padding: 10px 14px; font-size: 14px; line-height: 1.4; cursor: pointer; text-decoration: none; }
+.butler-workspace .butler-primary { border: 1px solid #7b57e7; background: #6944cc; color: #fff; }
+.butler-workspace .butler-secondary { border: 1px solid #393343; background: #17131e; color: #dfd8ee; }
+.butler-workspace .butler-filters { display: flex; gap: 8px; border-bottom: 1px solid #292330; padding: 20px 0 14px; margin-bottom: 18px; }
+.butler-workspace .butler-filters button { padding: 10px 16px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: #aaa5b7; cursor: pointer; font-size: 15px; }
+.butler-workspace .butler-filters button[aria-pressed=true] { border-color: #4b386f; background: #21162f; color: #eee4ff; }
+.butler-workspace .butler-filters span { margin-left: 8px; font-size: 13px; }
+.butler-workspace .butler-notice { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; line-height: 1.65; }
+.butler-workspace .butler-notice a { color: #c4b5fd; text-decoration: underline; }
+.butler-workspace .butler-matter-list { display: grid; gap: 12px; }
+.butler-workspace .butler-matter-card { border: 1px solid #2b2533; border-radius: 14px; background: #121017; padding: 20px; }
+.butler-workspace .butler-matter-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: start; }
+.butler-workspace .butler-matter-heading h3 { font-size: 18px; line-height: 1.5; overflow-wrap: anywhere; }
+.butler-workspace .butler-state { font-size: 12px; padding: 5px 9px; border-radius: 999px; background: #272035; color: #d7c8f6; }
+.butler-workspace .butler-state.completed { background: #15312a; color: #a8e7cb; }
+.butler-workspace .butler-matter-meta { font-size: 13px; color: #9d96ab; margin: 10px 0 18px; }
+.butler-workspace .butler-matter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.butler-workspace .butler-matter-note { margin-top: 12px; color: #96909f; font-size: 13px; line-height: 1.6; }
+.butler-workspace .butler-empty { padding: 48px 16px; text-align: center; color: #aca4b9; }
+.butler-workspace .butler-empty h3 { color: #e5deef; margin-bottom: 12px; font-size: 18px; }
+.butler-workspace .butler-empty p { line-height: 1.7; font-size: 15px; }
+.butler-workspace .goaa-footer { padding-top: 8px; padding-bottom: 12px; }
+@media (max-width: 1050px) and (min-width: 761px) {
+  .butler-workspace .workspace-shell { grid-template-columns: 160px minmax(0, 1fr) 270px; width: calc(100% - 24px); }
+  .butler-workspace .workspace-plan { grid-column: auto; border-top: 0; border-left: 1px solid var(--line); }
+  .butler-workspace .workspace-thread { padding: 20px 16px; }
+  .butler-workspace .chat-bubble { max-width: 90%; }
+}
+@media (max-width: 760px) {
+  .butler-workspace .workspace-shell { height: auto; min-height: calc(100dvh - 110px); grid-template-columns: 1fr; }
+  .butler-workspace .workspace-rail { display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .butler-workspace .workspace-rail > .workspace-nav-label, .butler-workspace .workspace-rail > small, .butler-workspace .workspace-rail-spacer { display: none; }
+  .butler-workspace .workspace-new { margin: 0; padding: 8px; }
+  .butler-workspace .workspace-nav-item { margin: 0; padding: 8px; }
+  .butler-workspace .workspace-conversation { min-height: 65dvh; }
+  .butler-workspace .workspace-thread { max-height: 65dvh; padding: 18px 14px; }
+  .butler-workspace .workspace-plan { grid-column: 1; border-left: 0; border-top: 1px solid var(--line); }
+  .butler-workspace .butler-wide-view .workspace-conversation { grid-column: 1; }
+  .butler-workspace .butler-matters { padding: 20px 14px; }
+  .butler-workspace .butler-matter-card { padding: 15px; }
+  .butler-workspace .butler-inline-inbox { padding-left: 14px; padding-right: 14px; }
+  .butler-workspace .workspace-composer { margin-left: 14px; margin-right: 14px; }
+}
+
+/* Round C1: growth-area links in the customer rail */
+.butler-workspace .workspace-rail a.workspace-nav-item { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.butler-workspace .workspace-rail-divider { height: 1px; background: rgba(255,255,255,.08); margin: 10px 8px; }
+.butler-workspace .workspace-nav-tag { margin-left: auto; font-size: 10px; letter-spacing: .06em; padding: 2px 7px; border-radius: 999px; background: #6944cc; color: #fff; }

@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "id": "agent_demo_001",
+      "name": "Demo Agent",
+      "email": "demo@goaa.ai",
+      "password": "$2b$12$nOFYyakCaOLC4viaj6GJJelk/.2NuvjwF7624gl.KtuN1VV626htu",
+      "phone": "",
+      "license_number": "DEMO-001",
+      "role": "agent",
+      "status": "active",
+      "created_at": "2026-05-01T00:00:00Z",
+      "credits": 3990
+    },
+    {
+      "id": "client_demo_001",
+      "name": "Demo Client",
+      "email": "client@goaa.ai",
+      "password": "$2b$12$JNFjEzz7eWq2lHS/yssEROrmSFLkUhB1F12/lMKWwTjmelN357fQK",
+      "phone": "",
+      "role": "client",
+      "status": "active",
+      "created_at": "2026-05-01T00:00:00Z",
+      "credits": 1000
+    },
+    {
+      "id": "agent_portal_001",
+      "name": "demo",
+      "email": "demo",
+      "password": "$2b$12$wgK3vmDeRwQxHfy/PFrJR.t99SAjJV60kVkCwcUhihoidWd7cVMz2",
+      "phone": "",
+      "license_number": "DEMO-PORTAL-001",
+      "role": "agent",
+      "status": "active",
+      "created_at": "2026-05-11T00:00:00Z",
+      "credits": 5000
+    }
+  ]
+}

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiKa Node — Download</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --black: #0a0a0a;
+  --dark: #141414;
+  --mid: #1e1e1e;
+  --border: #2a2a2a;
+  --muted: #666;
+  --subtle: #444;
+  --text: #e8e8e8;
+  --white: #f5f5f0;
+  --red: #e53e3e;
+  --red-dim: rgba(229,62,62,0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --gold: #f0c060;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--black);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 48px;
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--red);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: white;
+  font-weight: 400;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.3px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--white); }
+
+.nav-cta {
+  background: var(--white);
+  color: var(--black);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.nav-cta:hover { opacity: 0.85; }
+
+/* Hero */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  z-index: 1;
+}
+
+/* Radial glow */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(229,62,62,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--red-dim);
+  border: 1px solid rgba(229,62,62,0.25);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  color: #fc8181;
+  margin-bottom: 40px;
+  animation: fadeUp 0.6s ease both;
+}
+
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(42px, 7vw, 80px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  color: var(--white);
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--red);
+}
+
+.hero p {
+  font-size: clamp(15px, 2vw, 18px);
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 56px;
+  font-weight: 300;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+/* Download buttons */
+.download-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.download-primary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--white);
+  color: var(--black);
+  padding: 16px 32px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.4);
+  cursor: pointer;
+  border: none;
+}
+
+.download-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 16px 48px rgba(0,0,0,0.5);
+  opacity: 0.95;
+}
+
+.download-primary:active { transform: translateY(0); }
+
+.dl-icon {
+  width: 36px; height: 36px;
+  background: var(--black);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.dl-info { text-align: left; }
+.dl-name { font-size: 15px; font-weight: 600; line-height: 1.2; }
+.dl-meta { font-size: 12px; color: #666; font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+.download-soon {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-soon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--mid);
+  border: 1px solid var(--border);
+  color: var(--subtle);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-soon::after {
+  content: 'Coming Soon';
+  position: absolute;
+  inset: 0;
+  background: rgba(10,10,10,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--subtle);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn-soon:hover::after { opacity: 1; }
+
+.os-icon { font-size: 16px; }
+
+/* Version info */
+.version-info {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--subtle);
+  font-family: 'DM Mono', monospace;
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+
+/* Features */
+.features {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 24px;
+}
+
+.features-label {
+  text-align: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--subtle);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 48px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .download-soon { flex-direction: column; }
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+}
+
+.feat {
+  background: var(--dark);
+  padding: 32px 28px;
+  transition: background 0.2s;
+}
+
+.feat:hover { background: var(--mid); }
+
+.feat-icon {
+  font-size: 24px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.feat-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 8px;
+  letter-spacing: -0.2px;
+}
+
+.feat-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* Install steps */
+.install {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+}
+
+.install h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 400;
+  color: var(--white);
+  letter-spacing: -1px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.install-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 48px;
+  font-weight: 300;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step {
+  display: flex;
+  gap: 20px;
+  background: var(--dark);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 2px;
+  transition: border-color 0.2s;
+}
+
+.step:hover { border-color: var(--subtle); }
+
+.step-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content { flex: 1; }
+.step-title { font-size: 15px; font-weight: 500; color: var(--white); margin-bottom: 6px; }
+.step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; font-weight: 300; }
+
+.code-block {
+  background: var(--black);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: #86efac;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.copy-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--subtle);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copy-btn:hover { border-color: var(--subtle); color: var(--text); }
+
+.step-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Footer */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 32px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-left {
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.footer-left strong { color: var(--text); }
+
+.footer-right {
+  font-size: 12px;
+  color: var(--subtle);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Download progress modal */
+.dl-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.dl-overlay.active { display: flex; }
+
+.dl-modal {
+  background: var(--dark);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 48px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  animation: fadeUp 0.3s ease;
+}
+
+.dl-modal h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.dl-modal p {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  font-weight: 300;
+}
+
+.progress-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--red);
+  border-radius: 2px;
+  animation: progress 2.5s ease forwards;
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  60% { width: 75%; }
+  100% { width: 100%; }
+}
+
+.dl-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  color: var(--subtle);
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a href="https://goaa.ai" class="nav-logo">
+    <div class="logo-mark">g</div>
+    <span class="logo-text">goaa.ai</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="https://portal.goaa.ai/agent-login">Agent Console</a></li>
+    <li><a href="/aika-comparison.html">AiKa Box</a></li>
+    <li><a href="https://github.com/taofengtx/goaa-ai-frontend">GitHub</a></li>
+  </ul>
+  <a href="https://portal.goaa.ai/agent-login" class="nav-cta">Get Started</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    AiKa Node v1.0.0 — Production Release
+  </div>
+
+  <h1>AiKa Node<br>Installs on <em>Your Computer</em></h1>
+
+  <p>With the local compute of an AiKa Box, AiKa can manage files, run commands, and work deeply with your office environment — automating taxes, forms, video publishing, and more.</p>
+
+  <div class="download-group">
+    <!-- Linux .deb primary button -->
+    <a href="/downloads/aika-node_1.0.0.deb" class="download-primary" onclick="showDownload(event, this)" download>
+      <div class="dl-icon">🐧</div>
+      <div class="dl-info">
+        <div class="dl-name">Linux（Ubuntu 24.04+）</div>
+        <div class="dl-meta">aika-node_1.0.0.deb · ~45 MB</div>
+      </div>
+    </a>
+
+    <!-- Coming Soon -->
+    <div class="download-soon">
+      <div class="btn-soon">
+        <span class="os-icon">🍎</span>
+        macOS（Apple Silicon）
+      </div>
+      <div class="btn-soon">
+        <span class="os-icon">🪟</span>
+        Windows
+      </div>
+    </div>
+  </div>
+
+  <div class="version-info">
+    v1.0.0 · Ubuntu 24.04 / 26.04 · 2026-05-06
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="features-label">AiKa Node Core Capabilities</div>
+  <div class="features-grid">
+    <div class="feat">
+      <span class="feat-icon">🖥</span>
+      <div class="feat-title">Local Software Automation</div>
+      <div class="feat-desc">Directly controls local software like TurboTax and Excel to complete tax filing and forms automatically, with no manual work.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📁</span>
+      <div class="feat-title">LAN File Access</div>
+      <div class="feat-desc">Access shared folders across office computers and read client data instantly, without data leaving your premises.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🌐</span>
+      <div class="feat-title">Web Automation</div>
+      <div class="feat-desc">Uses a local IP to reach government sites and banking systems with far higher success than cloud, bypassing anti-bot limits.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">⚡</span>
+      <div class="feat-title">Sell Idle Compute</div>
+      <div class="feat-desc">Automatically joins the compute market off-hours, earning an extra $50-150 per month — the box pays for itself.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🔒</span>
+      <div class="feat-title">Privacy & Security</div>
+      <div class="feat-desc">All client data is processed locally and never uploaded to the cloud, meeting U.S. data privacy compliance requirements.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🚀</span>
+      <div class="feat-title">Plug & Play</div>
+      <div class="feat-desc">After installing and restarting, it auto-logs in, auto-starts the goaa.ai workspace, and the desktop icon is ready to use.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Install Steps -->
+<section class="install">
+  <h2>Install in Three Steps</h2>
+  <p class="install-sub">About 5 minutes total; restart after installing and you are ready</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <div class="step-title">Download the .deb Package</div>
+        <div class="step-desc">Click the "Linux (Ubuntu)" button above to download, or use the command line:。</div>
+        <div class="code-block">
+          <span>wget https://portal.goaa.ai/downloads/aika-node_1.0.0.deb</span>
+          <button class="copy-btn" onclick="copyCode(this, 'wget https://portal.goaa.ai/downloads/aika-node_1.0.0.deb')">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <div class="step-title">Run the Install Command</div>
+        <div class="step-desc">Open a terminal and run the install command. The installer configures all dependencies and services automatically.</div>
+        <div class="code-block">
+          <span>sudo dpkg -i aika-node_1.0.0.deb</span>
+          <button class="copy-btn" onclick="copyCode(this, 'sudo dpkg -i aika-node_1.0.0.deb')">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <div class="step-title">Restart the System</div>
+        <div class="step-desc">Restart after installing; the system auto-logs in, creates an "AiKa Workspace" icon on the desktop, and opens the goaa.ai login page.</div>
+        <div class="code-block">
+          <span>sudo reboot</span>
+          <button class="copy-btn" onclick="copyCode(this, 'sudo reboot')">Copy</button>
+        </div>
+        <div class="step-result">
+          <span>●</span> Automatically opens portal.goaa.ai/agent-login after restart
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-left">
+    <strong>goaa.ai</strong> — Built for life, built for the future
+  </div>
+  <div class="footer-right">AiKa Node v1.0.0 · 2026-05-06</div>
+</footer>
+
+<!-- Download Modal -->
+<div class="dl-overlay" id="dlOverlay" onclick="hideDownload()">
+  <div class="dl-modal" onclick="event.stopPropagation()">
+    <h3>Downloading</h3>
+    <p>aika-node_1.0.0.deb<br>Please wait, then install once the download finishes</p>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="dl-meta-row">
+      <span>aika-node_1.0.0.deb</span>
+      <span>~45 MB</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function showDownload(e, btn) {
+  // show download notice
+  const overlay = document.getElementById('dlOverlay');
+  overlay.classList.add('active');
+  setTimeout(() => overlay.classList.remove('active'), 3000);
+}
+
+function hideDownload() {
+  document.getElementById('dlOverlay').classList.remove('active');
+}
+
+function copyCode(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied';
+    btn.style.color = '#4ade80';
+    btn.style.borderColor = '#4ade80';
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

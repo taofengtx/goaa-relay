@@ -1,0 +1,49 @@
+/* goaa-pp-compat.css — maps the pp-* content classes still used inside the
+ * real /agent-loop panels onto goaa tokens, so those panels render in the
+ * planning.goaa.ai look without a rewrite. Scoped to .goaa; /portal-preview
+ * keeps its own stylesheet and is unaffected. */
+.goaa-portal .pp-stack { display: grid; gap: 16px; }
+.goaa-portal .pp-panel { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
+.goaa-portal .pp-panel-inner { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: 12px; padding: 16px; }
+.goaa-portal .pp-section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.goaa-portal .pp-h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.01em; }
+.goaa-portal .pp-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+.goaa-portal .pp-h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+.goaa-portal .pp-body { margin: 0 0 14px; line-height: 1.6; }
+.goaa-portal .pp-muted { color: var(--goaa-muted); }
+.goaa-portal .pp-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+.goaa-portal .pp-label { font-size: var(--goaa-fs-eyebrow); letter-spacing: .08em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 12px 0 4px; }
+.goaa-portal .pp-inline-label { font-size: 13px; color: var(--goaa-muted); }
+.goaa-portal .pp-inline-hint, .goaa-portal .pp-footnote { font-size: 13px; color: var(--goaa-muted-2); }
+.goaa-portal .pp-note { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
+.goaa-portal .pp-warn-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(245,181,68,.35); border-radius: 10px; background: rgba(245,181,68,.08); color: #f5d38a; font-size: 14px; }
+.goaa-portal .pp-good-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(168,231,203,.3); border-radius: 10px; background: var(--goaa-ok-bg); color: var(--goaa-ok-text); font-size: 14px; }
+.goaa-portal .pp-err { color: var(--goaa-danger); }
+.goaa-portal .pp-ok { color: var(--goaa-ok-text); }
+.goaa-portal .pp-flag { color: var(--goaa-warn); }
+.goaa-portal .pp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.goaa-portal .pp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; text-decoration: none; }
+.goaa-portal .pp-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
+.goaa-portal .pp-btn-secondary, .goaa-portal .pp-btn-ghost { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
+.goaa-portal .pp-btn-ghost { background: transparent; }
+.goaa-portal .pp-btn-danger { background: rgba(252,165,165,.08); border: 1px solid rgba(252,165,165,.35); color: var(--goaa-danger); }
+.goaa-portal .pp-btn[disabled] { opacity: .45; cursor: not-allowed; }
+.goaa-portal .pp-status, .goaa-portal .pp-chip { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
+.goaa-portal .pp-status-good { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
+.goaa-portal .pp-status-warn { background: #3a2d12; color: #f5d38a; }
+.goaa-portal .pp-status-review { background: var(--goaa-accent-bg); color: var(--goaa-accent-soft); }
+.goaa-portal .pp-status-muted { background: transparent; border: 1px solid var(--goaa-border-strong); color: var(--goaa-muted); }
+.goaa-portal .pp-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.goaa-portal .pp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
+.goaa-portal .pp-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
+.goaa-portal .pp-tab.pp-active { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
+.goaa-portal .pp-field { display: grid; gap: 6px; margin-bottom: 12px; }
+.goaa-portal .pp-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.goaa-portal .pp-input, .goaa-portal .pp-select, .goaa-portal .pp-textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
+.goaa-portal .pp-textarea { min-height: 96px; resize: vertical; }
+.goaa-portal .pp-toggle-row { display: flex; align-items: center; gap: 10px; }
+.goaa-portal .pp-kv { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--goaa-border); font-size: 14px; }
+.goaa-portal .pp-list { margin: 0; padding-left: 18px; line-height: 1.7; }
+.goaa-portal .pp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.goaa-portal .pp-table th { text-align: left; color: var(--goaa-muted-2); font-weight: 500; font-size: 12px; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--goaa-border); }
+.goaa-portal .pp-table td { padding: 12px 10px; border-bottom: 1px solid var(--goaa-border); vertical-align: top; }
