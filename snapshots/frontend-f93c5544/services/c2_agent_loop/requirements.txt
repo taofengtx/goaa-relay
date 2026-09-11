@@ -1,0 +1,9 @@
+﻿# Pinned runtime dependencies for the C2 agent-application loop service.
+#
+# These are installed into a dedicated virtualenv from a local wheel directory
+# (`pip install --no-index --find-links=...`). The C2 host therefore never needs
+# to reach PyPI, and no PGDG/third-party apt repository is added.
+fastapi==0.115.6
+uvicorn==0.32.1
+psycopg[binary]==3.2.3
+bcrypt==4.2.1

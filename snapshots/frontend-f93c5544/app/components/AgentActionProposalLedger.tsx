@@ -1,0 +1,17 @@
+'use client'
+
+import {useCallback,useEffect,useState} from 'react'
+import {cancelActionProposal,listActionProposals,prepareActionRetry,proposalStatusLabel,type AgentAuthorizer,type AgentActionProposal} from '../lib/agent-action-proposals'
+import {useOrderRuntime} from './OrderRuntimeBridge'
+
+export default function AgentActionProposalLedger({role}:{role:'customer'|'agent'}){
+ const runtime=useOrderRuntime(role,9000);const authorizer:AgentAuthorizer=role==='customer'?'customer':'professional';const [items,setItems]=useState<AgentActionProposal[]>([]);const [notice,setNotice]=useState('')
+ const orderId=runtime.orderId
+ const load=useCallback(()=>{if(orderId)setItems(listActionProposals(orderId,authorizer).slice(0,8))},[orderId,authorizer])
+ useEffect(()=>{load();const t=window.setInterval(load,2500);const onUpdate=()=>load();window.addEventListener('goaa-agent-action-proposals-updated',onUpdate);return()=>{window.clearInterval(t);window.removeEventListener('goaa-agent-action-proposals-updated',onUpdate)}},[load])
+ if(!items.length)return null
+ function cancel(id:string){const next=cancelActionProposal(id);if(next?.status==='cancelled'){setNotice('Proposal cancelled before execution. No canonical business action was changed.');load()}}
+ function retry(id:string){const next=prepareActionRetry(id);if(next){setNotice('A new retry proposal was prepared. It still requires a new explicit authorization.');load()}}
+ return <section style={{maxWidth:1180,margin:'10px auto 0',padding:'0 18px',fontFamily:'Inter,Arial,sans-serif'}}><div style={{border:'1px solid rgba(148,163,184,.16)',borderRadius:16,padding:14,background:'#101318',color:'#e5e7eb'}}><div style={{fontSize:10,fontWeight:850,letterSpacing:'.08em',color:'#94a3b8'}}>AGENT ACTION PROPOSALS · LOCAL AUDIT VIEW</div>{notice&&<div style={{fontSize:9,color:'#bfdbfe',marginTop:7}}>{notice}</div>}<div style={{display:'grid',gap:7,marginTop:9}}>{items.map(item=><div key={item.id} style={{padding:'8px 10px',border:'1px solid rgba(255,255,255,.06)',borderRadius:10,background:'rgba(255,255,255,.02)',display:'grid',gridTemplateColumns:'1fr auto',gap:8}}><div><div style={{fontSize:11,fontWeight:800}}>{item.title}</div><div style={{fontSize:9,color:'#94a3b8',marginTop:3}}>{item.actionType} · {new Date(item.createdAt).toLocaleString()}</div>{item.retryOf&&<div style={{fontSize:8,color:'#64748b',marginTop:3}}>Retry of previous failed proposal</div>}</div><div style={{display:'grid',justifyItems:'end',gap:5}}><span style={{fontSize:9,fontWeight:800,color:item.status==='executed'?'#86efac':item.status==='failed'?'#fca5a5':'#cbd5e1'}}>{proposalStatusLabel(item.status)}</span>{['proposed','approved'].includes(item.status)&&<button type="button" onClick={()=>cancel(item.id)} style={mini}>Cancel</button>}{item.status==='failed'&&<button type="button" onClick={()=>retry(item.id)} style={mini}>Prepare new retry</button>}</div></div>)}</div><div style={{fontSize:9,lineHeight:1.45,color:'#667085',marginTop:8}}>This ledger records the frontend authorization lifecycle for reviewability. Cancelling never rolls back a canonical action; it is only allowed before execution. Retry always creates a new proposal and requires new authorization. Canonical business truth still comes from the Order Engine.</div></div></section>
+}
+const mini={border:'1px solid rgba(148,163,184,.2)',borderRadius:999,background:'transparent',color:'#cbd5e1',padding:'4px 7px',fontSize:8,cursor:'pointer'} as const

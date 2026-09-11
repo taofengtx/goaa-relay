@@ -1,0 +1,116 @@
+{
+  "worker_capabilities_registry": {
+    "version": "2.1",
+    "timestamp": "2026-05-09T11:35:00Z",
+    "nodes": {
+      "aika-1": {
+        "node_id": "aika-1",
+        "ip": "192.168.1.207",
+        "os": "Windows 11",
+        "role": "primary-coordinator",
+        "status": "online",
+        "capabilities": {
+          "docker": false,
+          "python": true,
+          "gpu": false,
+          "browser_agent": true,
+          "ssh_client": true,
+          "github_cli": true
+        },
+        "resources": {
+          "cpu_cores": 8,
+          "memory_gb": 16,
+          "storage_gb": 500,
+          "cpu_score": 85,
+          "network_score": 95,
+          "reliability_score": 98
+        },
+        "max_concurrent_tasks": 5,
+        "uptime_hours": 48
+      },
+      "aika-2": {
+        "node_id": "aika-2",
+        "ip": "192.168.1.208",
+        "os": "Ubuntu 22.04 LTS",
+        "role": "secondary-worker",
+        "status": "initializing",
+        "capabilities": {
+          "docker": false,
+          "python": false,
+          "gpu": false,
+          "browser_agent": false,
+          "ssh_server": false,
+          "git": false
+        },
+        "resources": {
+          "cpu_cores": "N/A",
+          "memory_gb": "N/A",
+          "storage_gb": "N/A",
+          "cpu_score": 0,
+          "network_score": 0,
+          "reliability_score": 0
+        },
+        "max_concurrent_tasks": 0,
+        "uptime_hours": 0,
+        "bootstrap_status": "NODE-20260509-002-L1-FINAL pending"
+      },
+      "akc-001": {
+        "node_id": "akc-001",
+        "ip": "5.78.76.21",
+        "os": "Ubuntu 20.04 LTS",
+        "role": "cloud-node",
+        "status": "online",
+        "capabilities": {
+          "docker": true,
+          "python": true,
+          "gpu": false,
+          "browser_agent": true,
+          "ssh_server": true,
+          "git": true,
+          "openai_api": true,
+          "mongodb": true
+        },
+        "resources": {
+          "cpu_cores": 4,
+          "memory_gb": 8,
+          "storage_gb": 160,
+          "cpu_score": 72,
+          "network_score": 88,
+          "reliability_score": 96
+        },
+        "max_concurrent_tasks": 3,
+        "uptime_hours": 720,
+        "services": {
+          "openclaw": "running",
+          "mongodb": "running",
+          "nginx": "running"
+        }
+      }
+    },
+    "capability_levels": {
+      "docker": {
+        "level_0": "not_installed",
+        "level_1": "installed",
+        "level_2": "running",
+        "level_3": "configured_for_workers"
+      },
+      "python": {
+        "level_0": "not_installed",
+        "level_1": "python3_basic",
+        "level_2": "pip_packages_installed",
+        "level_3": "virtual_env_ready"
+      },
+      "browser_agent": {
+        "level_0": "not_available",
+        "level_1": "chromium_available",
+        "level_2": "playwright_installed",
+        "level_3": "headless_ready"
+      }
+    },
+    "total_nodes": 3,
+    "online_nodes": 2,
+    "initializing_nodes": 1,
+    "cluster_capability_score": 85,
+    "next_update": "2026-05-09T11:40:00Z"
+  }
+}

@@ -1,0 +1,325 @@
+protocol_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-DISPATCH-PROTOCOL-CREATE-20260621-086"
+phase: "Phase 2B"
+created_at_utc: "2026-06-21"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+
+truth_priority:
+  - runtime_truth
+  - git_truth
+  - documentation_truth
+
+summary:
+  purpose: "Define the minimum safe dispatch protocol for GOAA multi-node orchestration."
+  registry_dependency: "docs/runtime/node-registry/GOAA_NODE_REGISTRY_V0.1.yaml"
+  target_node_count: 8
+  ready_for_real_task_dispatch: false
+  readonly_probe_allowed: true
+  sandbox_task_allowed: false
+  build_task_allowed: false
+  runtime_task_allowed: false
+  production_deploy_allowed: false
+  worker_start_allowed: false
+  secret_access_allowed: false
+
+dispatch_principles:
+  - "No task may execute without a task_id."
+  - "No node may receive a task unless it is registered in Node Registry."
+  - "Runtime Truth has priority over Git Truth and Documentation Truth."
+  - "Every dispatched task must return evidence."
+  - "No evidence means not completed."
+  - "Tao approval is required before commit, push, merge, deploy, service restart, or real worker start."
+  - "Private keys, tokens, .env files, and secrets must not be printed or copied."
+  - "DO access through aika-2 must not copy or expose aika-2 private key."
+
+task_envelope:
+  required_fields:
+    - task_id
+    - parent_task_id
+    - phase
+    - requested_by
+    - approved_by
+    - created_at_utc
+    - risk_level
+    - task_type
+    - target_node_selector
+    - allowed_actions
+    - forbidden_actions
+    - timeout_seconds
+    - evidence_contract
+    - stop_conditions
+  example:
+    task_id: "GOAA-EXAMPLE-READONLY-PROBE-000"
+    parent_task_id: ""
+    phase: "Phase 2B"
+    requested_by: "ChatGPT"
+    approved_by: "Tao"
+    created_at_utc: "2026-06-21T00:00:00Z"
+    risk_level: "low"
+    task_type: "readonly_probe"
+    target_node_selector:
+      node_ids:
+        - "local-aika-core-01"
+      permission_required: "L1_readonly_probe"
+    allowed_actions:
+      - "hostname"
+      - "whoami"
+      - "date -u"
+      - "uname -a"
+      - "uptime"
+    forbidden_actions:
+      - "deploy"
+      - "worker_start"
+      - "service_restart"
+      - "secret_read"
+      - "private_key_read"
+    timeout_seconds: 30
+    evidence_contract:
+      required_markers:
+        - "TASK_ID"
+        - "TASK_STATUS"
+        - "NODE_ID"
+        - "FINAL_MARKER"
+    stop_conditions:
+      - "unauthorized_action_detected"
+      - "secret_exposure_risk"
+      - "unknown_node"
+
+task_types:
+  readonly_probe:
+    enabled: true
+    risk_level: "low"
+    description: "Read-only node identity, hardware, process, and port inspection."
+    allowed_permission_levels:
+      - "L1_readonly_probe"
+      - "L2_dev_sandbox_worker"
+      - "L3_build_worker"
+      - "L4_runtime_worker"
+      - "L5_production_capable"
+    allowed_commands_examples:
+      - "hostname"
+      - "whoami"
+      - "date -u"
+      - "uname -a"
+      - "uptime"
+      - "free -h"
+      - "df -h"
+      - "ps"
+      - "ss -ltnp"
+    forbidden_commands_examples:
+      - "cat .env"
+      - "cat ~/.ssh/id_ed25519"
+      - "rm -rf"
+      - "systemctl restart"
+      - "docker run"
+      - "git pull"
+      - "npm install"
+      - "pip install"
+
+  docs_or_code_review:
+    enabled: false
+    risk_level: "low"
+    description: "Read-only review of docs or code diffs. Disabled until Phase 2C."
+    allowed_permission_levels: []
+    blockers:
+      - "Needs review evidence schema."
+
+  sandbox_test:
+    enabled: false
+    risk_level: "medium"
+    description: "Non-production tests in sandbox only. Disabled until worker agent exists."
+    allowed_permission_levels: []
+    blockers:
+      - "Needs worker agent."
+      - "Needs timeout and artifact policy."
+
+  build_task:
+    enabled: false
+    risk_level: "medium"
+    description: "Build/test task. Disabled in V0.1."
+    allowed_permission_levels: []
+    blockers:
+      - "Needs capability matrix."
+      - "Needs resource limits."
+
+  runtime_task:
+    enabled: false
+    risk_level: "high"
+    description: "Runtime-affecting task. Disabled in V0.1."
+    allowed_permission_levels: []
+    blockers:
+      - "Needs Tao runtime authorization."
+      - "Needs rollback plan."
+
+  production_deploy:
+    enabled: false
+    risk_level: "critical"
+    description: "Production deployment. Explicitly forbidden in V0.1."
+    allowed_permission_levels: []
+    blockers:
+      - "Requires separate production authorization."
+
+permission_gate:
+  default_decision: "deny"
+  require_registered_node: true
+  require_permission_level_match: true
+  require_task_type_enabled: true
+  require_tao_approval_for:
+    - "commit"
+    - "push"
+    - "merge"
+    - "pr_create"
+    - "deploy"
+    - "service_restart"
+    - "worker_start"
+    - "runtime_change"
+    - "do_connection"
+    - "secret_access"
+    - "private_key_access"
+  denied_by_default:
+    - "production_deploy"
+    - "worker_start"
+    - "service_restart"
+    - "secret_read"
+    - "private_key_read"
+    - "private_key_copy"
+    - "token_print"
+    - "env_print"
+    - "database_write"
+    - "firewall_change"
+
+node_selector:
+  source_of_truth: "docs/runtime/node-registry/GOAA_NODE_REGISTRY_V0.1.yaml"
+  selection_rules:
+    - "Select only nodes with current_status not equal to disabled."
+    - "Select only nodes whose permission_level satisfies the task type."
+    - "Select only nodes whose blockers do not conflict with the task."
+    - "Do not select L0_observed nodes for execution."
+    - "Do not select Windows nodes until Windows worker protocol is defined."
+    - "Do not select DO nodes for anything beyond readonly_probe in V0.1."
+  v0_1_allowed_targets_for_readonly_probe:
+    - "local-aika-core-01"
+    - "local-aika-2"
+    - "do-goaa-aika-cloud-1"
+    - "do-goaa-aika-cloud-2"
+    - "do-goaa-aika-cloud-3"
+  v0_1_excluded_targets:
+    - node_id: "local-aika-1"
+      reason: "Windows worker protocol not defined."
+    - node_id: "local-fq168-sm-mini-it12"
+      reason: "SSH trust not established."
+    - node_id: "local-tap"
+      reason: "Windows worker protocol not defined."
+
+execution_modes:
+  readonly:
+    enabled: true
+    writes_files: false
+    changes_runtime: false
+    requires_tao_approval: true
+    allowed_in_v0_1: true
+  sandbox:
+    enabled: false
+    writes_files: true
+    changes_runtime: false
+    requires_tao_approval: true
+    allowed_in_v0_1: false
+  build:
+    enabled: false
+    writes_files: true
+    changes_runtime: false
+    requires_tao_approval: true
+    allowed_in_v0_1: false
+  runtime:
+    enabled: false
+    writes_files: true
+    changes_runtime: true
+    requires_tao_approval: true
+    allowed_in_v0_1: false
+  production:
+    enabled: false
+    writes_files: true
+    changes_runtime: true
+    requires_tao_approval: true
+    allowed_in_v0_1: false
+
+evidence_contract:
+  every_task_must_return:
+    - "TASK_ID"
+    - "TASK_STATUS"
+    - "NODE_ID"
+    - "HOSTNAME"
+    - "USER"
+    - "STARTED_AT_UTC"
+    - "ENDED_AT_UTC"
+    - "COMMANDS_EXECUTED_SUMMARY"
+    - "AUTHORIZED_ACTIONS_USED"
+    - "FORBIDDEN_ACTIONS_PERFORMED"
+    - "FILES_MODIFIED"
+    - "RUNTIME_MODIFIED"
+    - "SECRET_PRINTED"
+    - "PRIVATE_KEY_READ"
+    - "FINAL_MARKER"
+  success_requires:
+    - "FORBIDDEN_ACTIONS_PERFORMED=NO"
+    - "SECRET_PRINTED=NO"
+    - "PRIVATE_KEY_READ=NO"
+    - "FINAL_MARKER present"
+  raw_output_retention: true
+  failure_output_retention: true
+
+failure_policy:
+  on_node_unreachable: "mark_node_failed_and_continue_if_task_allows"
+  on_permission_mismatch: "deny_task_and_stop"
+  on_secret_exposure_risk: "stop_immediately_and_report"
+  on_command_failure: "return_exit_code_and_raw_output"
+  on_partial_success: "mark_partial_success; do not claim completed"
+  on_unknown_state: "stop_and_request_Tao_decision"
+  retry_default: false
+  max_retries_without_tao_approval: 0
+
+approval_gates:
+  tao_required_before:
+    - "commit"
+    - "push"
+    - "merge"
+    - "create_pr"
+    - "deploy"
+    - "restart_service"
+    - "start_worker"
+    - "enable_executor"
+    - "connect_new_production_runtime"
+    - "modify_firewall"
+    - "read_secret"
+    - "copy_private_key"
+    - "delete_branch"
+  authorization_must_explicit:
+    - "Do not ask 'can I do X'. The absence of 'no' is not a 'yes'."
+    - "Every action must have an explicit 'AUTHORIZED=YES' marker in the task definition."
+    - "If the authorization scope of a task expires, the task must be paused."
+
+forbidden_actions_v0_1:
+  - "commit_without_tao_approval"
+  - "push_without_tao_approval"
+  - "merge_without_tao_approval"
+  - "deploy"
+  - "service_restart"
+  - "worker_start"
+  - "executor_enable"
+  - "private_key_print"
+  - "private_key_copy"
+  - "token_print"
+  - "env_print"
+  - "database_write"
+  - "firewall_change"
+  - "branch_delete"
+  - "do_mutation"
+
+phase_status:
+  phase_2a_node_registry: "completed"
+  phase_2b_dispatch_protocol: "in_progress"
+  ready_for_multi_node_dry_run: false
+  next_recommended_phase: "Phase 2C Worker Capability Matrix V0.1"

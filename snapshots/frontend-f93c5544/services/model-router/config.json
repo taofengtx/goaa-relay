@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-05-10",
+  "routing_weights": {
+    "deepseek-v4-flash": 0.85,
+    "claude-sonnet-4-6": 0.05,
+    "ollama-qwen-32b": 0.10
+  },
+  "models": {
+    "claude-sonnet-4-6": {
+      "enabled": true,
+      "max_priority": 1,
+      "min_risk_level": 3,
+      "input_per_1k_usd": 0.003,
+      "output_per_1k_usd": 0.015,
+      "api_url": "https://api.anthropic.com/v1/messages"
+    },
+    "deepseek-v4-flash": {
+      "enabled": true,
+      "max_priority": 4,
+      "input_per_1k_usd": 0.00014,
+      "output_per_1k_usd": 0.00028,
+      "api_url": "https://api.deepseek.com/v1/chat/completions"
+    },
+    "ollama-qwen-32b": {
+      "enabled": true,
+      "note": "Local fallback on AiKa-1 (192.168.1.207:11434)",
+      "max_priority": 4,
+      "input_per_1k_usd": 0.0,
+      "output_per_1k_usd": 0.0,
+      "api_url": "http://192.168.1.207:11434/api/chat"
+    }
+  },
+  "circuit_breaker": {
+    "hourly_cost_limit_usd": 2.0,
+    "single_call_review_usd": 0.05,
+    "daily_cost_limit_usd": 10.0,
+    "fallback_model": "ollama-qwen-32b"
+  },
+  "budget": {
+    "daily_limit_usd": 10.0,
+    "monthly_limit_usd": 100.0,
+    "alert_email": "tao@goaa.ai"
+  }
+}
