@@ -1,0 +1,47 @@
+From 129b60a2b8385c24e951b1e9dd96911362b771ae Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 16:43:23 +0000
+Subject: [PATCH] round C1.7b: /client-login/ must not be rewritten to
+ /goaa-clerk-login/
+
+C1.7 run-all on C2 (next 14.2.35): 103/104. The new middleware test
+feeds /client-login/ and got a rewrite to /goaa-clerk-login/ instead of
+/goaa-clerk-login. Aika traced it: NextURL keeps a trailing-slash flag
+from the request path (analyze() stores info.trailingSlash) and
+formatNextPathnameInfo() re-appends it to href, so assigning .pathname
+on request.nextUrl.clone() does not drop the slash.
+
+middleware.ts: build the rewrite target as a plain URL from
+request.nextUrl.href. Same origin, same query handling, no slash memory.
+One line plus a comment; tests unchanged. Browsers rarely reach this
+case (Next's own trailing-slash redirect runs before middleware), but the
+rewrite target is now exact either way.
+
+Expected on C2: run-all 104/0 (middleware 16/16); 31 test-*.cjs green.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ middleware.ts | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/middleware.ts b/middleware.ts
+index 9b9c2f1..1c376af 100644
+--- a/middleware.ts
++++ b/middleware.ts
+@@ -258,7 +258,11 @@ function entryTransition(request: NextRequest): NextResponse {
+     // is kept; a missing or rejected one becomes /planning. Every other query
+     // parameter (resume, reason, order, google...) is dropped: the retired
+     // form was the only reader of those.
+-    const target = request.nextUrl.clone()
++    // A plain URL, not request.nextUrl.clone(): Next 14.2's NextURL remembers
++    // that the request path ended in "/" and re-appends it to href even after
++    // the pathname is replaced, so /client-login/ would be rewritten to
++    // /goaa-clerk-login/ (Round C1.7 run-all, reproduced on next 14.2.35).
++    const target = new URL(request.nextUrl.href)
+     target.pathname = CLERK_ENTRY_PATH
+     target.search = ""
+     target.searchParams.set("next", unifiedEntryNext(request.nextUrl.searchParams.get("next")))
+-- 
+2.43.0
+
