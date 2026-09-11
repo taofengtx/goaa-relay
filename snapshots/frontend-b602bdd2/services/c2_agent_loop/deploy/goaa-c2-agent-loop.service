@@ -1,0 +1,63 @@
+[Unit]
+Description=goaa C2 agent application backend (isolated env, loopback only)
+Documentation=file:/opt/goaa-test/backend/README.md
+# This unit is part of the isolated C2 test environment. It must never be
+# enabled on, or depend on, the C1 production host.
+Requires=postgresql@16-goaa_c2test.service
+After=network-online.target postgresql@16-goaa_c2test.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=goaa-c2loop
+Group=goaa-c2loop
+WorkingDirectory=/opt/goaa-test/backend
+EnvironmentFile=/opt/goaa-test/env/goaa-c2-backend.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/goaa-test/venv/bin/python -m uvicorn app.main:app \
+    --host 127.0.0.1 --port 3101 --no-server-header --log-level info
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=20
+KillSignal=SIGTERM
+
+# ---------------------------------------------------------------------------
+# sandboxing: a loopback-only, non-privileged, read-only-root process
+# ---------------------------------------------------------------------------
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+
+# the service may only reach loopback; the PostgreSQL cluster is on 127.0.0.1:5433
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+# explicit writable surface (everything else under / is read-only)
+ReadWritePaths=/opt/goaa-test/private-files /opt/goaa-test/log /opt/goaa-test/run
+ReadOnlyPaths=/opt/goaa-test/backend /opt/goaa-test/venv /opt/goaa-test/env /opt/goaa-test/wheels
+
+[Install]
+WantedBy=multi-user.target

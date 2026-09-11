@@ -1,0 +1,560 @@
+plan_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-MAINLINE-BATON-1-CONVERSATION-TASK-FLOW-20260622-129"
+phase: "V5.5 Mainline Baton 1"
+created_at_utc: "2026-06-22"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+status: "design_spec"
+
+# =============================================================================
+# GOAA AI Workspace — Conversation → Task Execution Protocol V0.1
+# =============================================================================
+# Purpose: Freeze the spec for the "conversation → task execution" pipeline
+# in the AI Workspace. This covers the full lifecycle from user chat input
+# through intent detection, task dispatch, approval gate, readonly execution,
+# and evidence return — all within the local two-node environment.
+# =============================================================================
+
+summary:
+  aim: "Enable the AI Workspace chat in local Console to detect user intents that map to structured tasks, dispatch them through an allowlist-controlled /tasks/run endpoint, pass through risk classification and approval gates, execute in readonly simulation mode, and return structured evidence to the conversation thread."
+  scope: "local-aika-core-01 (console + control) + local-aika-2 (repo readonly verify)"
+  do_scope: false
+  worker_start_scope: false
+  executor_enable_scope: false
+  two_week_deadline: true
+  default_nodes:
+    - "local-aika-core-01"
+    - "local-aika-2"
+
+# ────────────────────────────────────────────────────────────
+# 1. Conversation Input Schema
+# ────────────────────────────────────────────────────────────
+
+conversation_input_schema:
+  description: "Schema for user messages entering the AI Workspace chat. The /ai/chat endpoint already accepts a prompt string and session_id. This spec extends it with an optional intent context."
+  existing_endpoint: "/ai/chat"
+  existing_endpoint_version: "V5.2.C-2 Console (aika-core-01:5188)"
+  extended_fields:
+    - field: "prompt"
+      type: "string"
+      required: true
+      max_length: 4096
+      description: "Free-form user message. No secret, no raw RAG text."
+    - field: "session_id"
+      type: "string"
+      required: false
+      description: "Existing conversation session. Auto-generated if omitted."
+    - field: "intent_hint"
+      type: "string"
+      required: false
+      enum: ["embed", "topk_verify", "memory_fetch", "task_status", "approve_task", "reject_task", "auto"]
+      description: "Optional user-side intent hint for faster classification. 'auto' = let the backend decide."
+      default: "auto"
+    - field: "task_params"
+      type: "object"
+      required: false
+      description: "Optional structured parameters for the dispatched task. Schema depends on intent."
+      safe_guard: "No secret, no raw RAG text, no private key path."
+  response_format:
+    type: "object"
+    fields:
+      - "ok"           # bool — overall success
+      - "answer"       # string — LLM-generated chat response
+      - "session_id"   # string — conversation session
+      - "model"        # string — model used (e.g. deepseek-v4-flash)
+      - "intent"       # string — detected intent
+      - "tasks"        # array of task objects — tasks dispatched as a side-effect of this turn
+      - "duration_ms"  # int — round-trip time
+
+# ────────────────────────────────────────────────────────────
+# 2. Intent Detection
+# ────────────────────────────────────────────────────────────
+
+intent_detection:
+  description: "After the LLM generates a chat response, an intent classification step runs to determine if the user's message implies a task dispatch. This is a post-generation side-effect, not a pre-routing gate."
+  overview: "MVP uses rule_based_local_first (keyword/pattern matching on aika-core-01 with no cloud egress). LLM-guided classification is post-MVP only and requires Tao separate approval for provider/cloud routing before enabling."
+  mvp_mode: "rule_based_local_first"
+  rule_based_triggers:
+    - intent: "embed"
+      trigger_pattern: "embed, save, file, store corpus data"
+      description: "User wants to embed new corpus data into the vector DB"
+    - intent: "topk_verify"
+      trigger_pattern: "verify, search, lookup, query, find"
+      description: "User wants to verify or search the vector DB with a query"
+    - intent: "memory_fetch"
+      trigger_pattern: "remember, recall, what did, prior context"
+      description: "User wants Aika to recall prior context (internal only)"
+    - intent: "task_status"
+      trigger_pattern: "status, progress, envelope, task"
+      description: "User asks about the status of a previously dispatched task"
+    - intent: "approve_task"
+      trigger_pattern: "approve, yes, go ahead"
+      description: "User approves a pending task"
+    - intent: "reject_task"
+      trigger_pattern: "reject, deny, no, cancel"
+      description: "User rejects a pending task"
+    - intent: "none"
+      trigger_pattern: "default — no keyword match"
+      description: "No task dispatch needed — pure conversation only"
+  llm_guided:
+    enabled: false
+    scope: "post-MVP only — requires Tao separate approval for provider/cloud routing before enabling"
+    note: "LLM-guided classification is a post-MVP enhancement. Current MVP must not egress any data to external LLM providers for intent classification. If and when Tao approves provider/cloud routing, llm_guided mode can replace rule_based_local_first for improved accuracy on ambiguous intents."
+  override: "If intent_hint was explicitly set by the caller (not 'auto'), use the hint directly without re-classification."
+  safe_guard: "Intent detection runs in-memory on aika-core-01. No secrets, no raw RAG text, no cloud egress."
+
+# ────────────────────────────────────────────────────────────
+# 3. Task Envelope Schema
+# ────────────────────────────────────────────────────────────
+
+task_envelope_schema:
+  description: "When an intent is classified as a task, a dispatch envelope is constructed and sent to /tasks/run (or queued for approval)."
+  envelope_fields:
+    - field: "envelope_id"
+      type: "string"
+      format: "GOAA-CONV-TASK-{YYYYMMDD}-{NNN}"
+      required: true
+    - field: "source_conversation_session"
+      type: "string"
+      required: true
+      description: "The session_id from the /ai/chat request that triggered this task."
+    - field: "intent"
+      type: "string"
+      required: true
+      enum: ["embed", "topk_verify", "memory_fetch", "task_status", "approve_task", "reject_task"]
+    - field: "detection_method"
+      type: "string"
+      enum: ["rule_based", "user_hint", "override", "llm_guided_post_mvp"]
+      required: true
+    - field: "confidence"
+      type: "float"
+      min: 0.0
+      max: 1.0
+      required: true
+    - field: "params"
+      type: "object"
+      required: false
+      description: "Task-specific parameters (e.g. query text for topk, source document for embed)."
+    - field: "risk_level"
+      type: "integer"
+      min: 0
+      max: 4
+      description: "Computed by risk classification step before dispatch. 0=no risk, 4=requires Tao approval."
+      required: true
+    - field: "status"
+      type: "string"
+      enum: ["pending", "awaiting_approval", "approved_envelope_only", "approved", "rejected", "running", "completed", "failed"]
+      required: true
+    - field: "approval_required"
+      type: "boolean"
+      description: "True only if risk_level >= 4. risk_level 3 is role-gated/admin-gated, not Tao approval by default."
+    - field: "target_node"
+      type: "string"
+      description: "local-aika-core-01 (tasks/results reader) or local-aika-2 (repo verify)"
+      default: "local-aika-core-01"
+  example:
+    envelope_id: "GOAA-CONV-TASK-20260622-001"
+    source_conversation_session: "console-abc123"
+    intent: "topk_verify"
+    detection_method: "rule_based"
+    confidence: 0.89
+    params:
+      query: "GOAA multi-node dispatch protocol"
+    risk_level: 1
+    status: "pending"
+    approval_required: false
+    target_node: "local-aika-core-01"
+
+# ────────────────────────────────────────────────────────────
+# 4. Risk Classification
+# ────────────────────────────────────────────────────────────
+
+risk_classification:
+  description: "Each task dispatch is classified for risk before execution. Aligned with the existing Router risk_level (1-4) and Authorization Kernel effect-based governance."
+  levels:
+    - level: 0
+      label: "information_only"
+      description: "Status check, read-only task result fetch. No side effects."
+      requires_approval: false
+    - level: 1
+      label: "readonly_query"
+      description: "Read-only vector DB query (topk). No data mutation."
+      requires_approval: false
+    - level: 2
+      label: "internal_memory"
+      description: "Internal memory context fetch. No user-visible side effects, no cloud egress."
+      requires_approval: false
+    - level: 3
+      label: "admin_action"
+      description: "Admin-scoped action (approve/reject a pending task). Requires admin role. NOT Tao-approval-gated by default."
+      requires_approval: false  # Role-gated, not approval-gated. Level 3 does NOT require Tao approval.
+      required_role: "admin"
+      note: "approval_required = true ONLY if risk_level >= 4. Level 3 is admin-role-gated, not Tao-approval-gated."
+    - level: 4
+      label: "mutation"
+      description: "Data mutation (embed new corpus, delete data). Requires Tao approval."
+      requires_approval: true
+      required_role: "admin"
+      note: "Envelope creation for embed can flow through the approval gate (risk_level=4 → awaiting_approval), but actual mutation EXECUTION is post-MVP. Envelope can reach 'approved' status in MVP, but the execution handler for mutation tasks is not wired until post-MVP implementation."
+  default_risk: 0
+  escalation_rules:
+    - if: "intent == 'embed'"
+      then: "risk_level = 4"
+    - if: "intent == 'topk_verify'"
+      then: "risk_level = 1"
+    - if: "intent == 'memory_fetch'"
+      then: "risk_level = 2"
+    - if: "intent == 'task_status'"
+      then: "risk_level = 0"
+    - if: "intent == 'approve_task' || intent == 'reject_task'"
+      then: "risk_level = 3"
+    - if: "params contains path-like or secret-like patterns"
+      then: "risk_level = 4 (blocked by Pre-Action Gate)"
+
+# ────────────────────────────────────────────────────────────
+# 5. Tao Approval Gate
+# ────────────────────────────────────────────────────────────
+
+tao_approval_gate:
+  description: "When risk_level >= 4, the task is held in 'awaiting_approval' status. The calling agent (Aika) must explicitly prompt Tao for approval before dispatch. This is a human-in-the-loop gate, not an automated approval."
+  flow:
+    - "1. Intent detection produces envelope with risk_level >= 4."
+    - "2. Envelope status is set to 'awaiting_approval'."
+    - "3. Envelope is persisted to /opt/goaa/task_results/ as a JSON file."
+    - "4. Aika presents the envelope to Tao with: intent, params, risk_level, and recommended action."
+    - "5. Tao responds with 'approve' or 'reject'."
+    - "6. If approved: status -> 'approved_envelope_only'; no mutation is executed in MVP; actual mutation execution remains post-MVP and requires separate Tao authorization."
+    - "7. If rejected: status -> 'rejected', reason recorded."
+  mvp_scope:
+    approval_channel: "Conversation (Tao explicitly says approve/reject to Aika)"
+    approval_ui: "post-MVP (Local Console task approval UI is Phase D of H section)"
+    approval_auto_gate: false
+  safe_guard: "No automated approval bypass. No token-based approval proxy. No cloud callback."
+
+# ────────────────────────────────────────────────────────────
+# 6. Readonly Execution (Allowlist)
+# ────────────────────────────────────────────────────────────
+
+readonly_execution:
+  description: "The /tasks/run endpoint in local Console dispatches tasks through the existing task_runner allowlist. Phase 2J demonstrated that only readonly repo_verify commands are authorized without Tao approval."
+  allowlist_schema:
+    - task_type: "topk_verify"
+      executor: "task_runner.exec_topk_query_verify"
+      execution_target: "local"
+      allowed_without_approval: true
+      max_concurrency: 1
+      output: "Structured evidence (no raw RAG text)"
+    - task_type: "memory_fetch"
+      executor: "task_runner.exec_memory_context_fetch"
+      execution_target: "local"
+      allowed_without_approval: true
+      max_concurrency: 1
+      output: "In-memory context only (no disk, no frontend)"
+    - task_type: "task_status"
+      executor: "local_console.read_task_results"
+      execution_target: "local"
+      allowed_without_approval: true
+      max_concurrency: 5
+      output: "Task result summary (no secret, no raw RAG text)"
+    - task_type: "embed"
+      executor: "task_runner.exec_embed_corpus_full"
+      execution_target: "local"
+      allowed_without_approval: false  # Envelope creation is allowed (awaiting_approval), but actual embed execution is post-MVP
+      mvp_status: "envelope_only"  # MVP scope: envelope CAN be created and enter awaiting_approval, but actual mutation execution is NOT in readonly MVP scope
+      note: "embed CAN produce an awaiting_approval envelope through the conversation flow (risk_level=4 triggers approval gate). However, actual embed execution via task_runner.exec_embed_corpus_full is NOT in readonly MVP scope. Actual mutation execution requires separate Tao authorization and post-MVP implementation."
+      max_concurrency: 0  # Serial only
+      output: "Embedding completion evidence (chunk count, duration, dims)"
+  forbidden_execution_modes:
+    - "direct_shell_execution"
+    - "remote_worker_activation"
+    - "do_node_connection"
+    - "secret_or_token_read"
+    - "runtime_mutation"
+    - "service_restart"
+    - "deploy"
+    - "commit_or_push"
+    - "merge"
+    - "private_key_content_access"
+
+# ────────────────────────────────────────────────────────────
+# 7. Evidence Package Schema
+# ────────────────────────────────────────────────────────────
+
+evidence_package_schema:
+  description: "After task execution, a structured evidence package is returned. This follows the Phase 2H evidence_schema_v0_1 pattern."
+  fields:
+    - "task_id"
+    - "envelope_id"
+    - "source_session"
+    - "intent"
+    - "executor"
+    - "status"
+    - "started_at_utc"
+    - "completed_at_utc"
+    - "duration_ms"
+    - "output_summary"
+    - "evidence_sha256"
+    - "safety_flags"
+    - "final_marker"
+  safety_flags_required:
+    repo_or_source_file_modified: false  # Repo/source files must not be modified. Task envelope JSON written to /opt/goaa/task_results/ is NOT a repo or source file modification.
+    task_envelope_persisted_allowed: true  # Writing task envelope JSON to /opt/goaa/task_results/ is explicitly allowed in MVP. This is distinct from repo_or_source_file_modified.
+    commit_performed: false
+    push_performed: false
+    merge_performed: false
+    do_connected: false
+    secret_read_attempted: false
+    private_key_content_read_attempted: false
+    worker_started: false
+    executor_enabled: false
+    service_restarted: false
+    deploy_performed: false
+    runtime_mutated: false
+  evidence_return_channel: "Inline in /ai/chat response (tasks array field). Aika also echoes the structured evidence in the conversation."
+  file_output: "Optional — evidence may be written to /opt/goaa/task_results/ if Tao separately approves; MVP scope is console-only output."
+
+# ────────────────────────────────────────────────────────────
+# 8. UI Lifecycle (AI Workspace Chat)
+# ────────────────────────────────────────────────────────────
+
+ui_lifecycle:
+  description: "The AI Workspace page in local Console (port 5188) is the primary UI for the conversation→task flow. The existing page already has chat + task results sections. This spec adds the task dispatch lifecycle integration."
+  existing_ui_components:
+    - "Chat input box (#p-workspace .chat .inp input)"
+    - "Chat send button (#p-workspace .chat .btn-send)"
+    - "Chat message body (#p-workspace .chat .body)"
+    - "Task results list (table from /tasks/results)"
+    - "Task detail view (/tasks/results/{task_id})"
+  mvp_additions:
+    - "After sending a chat message, if intent detection produces a task, show a 'Task Dispatch' card in the message thread."
+    - "Task card shows: intent, risk_level, status, and a link to /tasks/results/{task_id}."
+    - "If status is 'awaiting_approval', show '⏳ Awaiting Tao Approval' badge."
+    - "If status is 'approved_envelope_only', show 'Approved for post-MVP execution; no mutation executed in MVP.'"
+    - "If status is 'approved' or 'running', show a spinner + status poll."
+    - "If status is 'completed', show the evidence summary inline."
+    - "If status is 'rejected', show the rejection reason."
+  post_mvp_additions:
+    - "Approve/Reject buttons for admin role users (replaces conversation-based approval)."
+    - "Task history view with filtering by intent, status, date."
+    - "Evidence file download link (if file output is later approved)."
+  safe_guard: "No raw RAG text or secret appears in the UI at any lifecycle stage."
+
+# ────────────────────────────────────────────────────────────
+# 9. Backend Landing Points
+# ────────────────────────────────────────────────────────────
+
+backend_landing_points:
+  description: "Mapping of spec components to existing or new code locations in the repo."
+  landing_points:
+    - component: "Conversation input /ai/chat endpoint"
+      existing_location: "local-console/main.py (function: ai_chat, line ~420)"
+      modification: "Extend to return 'intent' and 'tasks' fields in response."
+      mvp_scope: true
+
+    - component: "Intent detection logic"
+      new_location: "local-console/main.py (new function: detect_intent)"
+      design: "Rule-based local-first classification in local-console/main.py; no cloud egress in MVP. llm_guided classification is post-MVP only and requires Tao separate provider/cloud routing approval."
+      mvp_scope: true
+
+    - component: "Task envelope dispatch /tasks/run"
+      existing_location: "local-console/main.py (endpoint placeholder, currently returns 501 Not Implemented)"
+      modification: "Implement POST /tasks/run with allowlist, risk classification, and approval gate."
+      mvp_scope: true
+
+    - component: "Risk classification"
+      new_location: "local-console/main.py (new function: classify_risk, or inline in /tasks/run)"
+      design: "Simple rule-based — risk_level from intent + params patterns."
+      mvp_scope: true
+
+    - component: "Task persistence (awaiting_approval JSON)"
+      existing_location: "/opt/goaa/task_results/ (existing directory)"
+      modification: "Write task envelope JSON to task_results directory with 'awaiting_approval' status."
+      mvp_scope: true
+
+    - component: "Evidence package assembly"
+      new_location: "local-console/main.py (new function: assemble_evidence)"
+      design: "Wrap task result into evidence schema with safety flags."
+      mvp_scope: true
+
+    - component: "UI lifecycle (task card in chat)"
+      existing_location: "local-console/main.py (inline HTML/JS in index() function, ~line 800)"
+      modification: "Add task card rendering logic to the JavaScript chat handler."
+      mvp_scope: true
+
+    - component: "exec_memory_context_fetch worker"
+      existing_location: "services/rag/workers/task_runner.py (wrapper); workers/memory_context_fetch.py (design)"
+      status: "design stage — needs implementation"
+      mvp_scope: true
+
+    - component: "exec_topk_query_verify / exec_embed_corpus_full"
+      existing_location: "services/rag/workers/task_runner.py"
+      status: "existing, landed in task_runner"
+      mvp_scope: true
+
+    - component: "Authorization Kernel Pre-Action Gate"
+      existing_location: "services/rag/workers/authorization_kernel/pre_action_gate.py"
+      integration: "Task dispatch should pass through AK-4 Pre-Action Gate for effect-based authorization."
+      mvp_scope: false
+      note: "post-MVP — current gate is allowlist + risk, not yet AK-integrated"
+
+# ────────────────────────────────────────────────────────────
+# 9b. Safety Boundary (MVP Hard Constraints)
+# ────────────────────────────────────────────────────────────
+
+safety_boundary:
+  description: "Explicit safety boundary markers for MVP. These are hard constraints enforced at the task envelope gate level. Any envelope attempting to cross these boundaries must be blocked pre-dispatch, irrespective of risk level or approval status."
+  markers:
+    - key: "do_connection_allowed"
+      value: false
+      note: "DigitalOcean node connections are blocked in MVP. No dispatch may target any DO node."
+    - key: "executor_enable_allowed"
+      value: false
+      note: "Enabling the task executor for remote workers is blocked in MVP."
+    - key: "worker_start_allowed"
+      value: false
+      note: "Starting new workers on any node is blocked in MVP."
+    - key: "runtime_mutation_allowed"
+      value: false
+      note: "Runtime state mutation (service config, env, etc.) is blocked in MVP."
+    - key: "deploy_allowed"
+      value: false
+      note: "Deployment to any environment is blocked in MVP."
+    - key: "secret_access_allowed"
+      value: false
+      note: "Reading or accessing secrets/tokens is blocked in MVP."
+    - key: "private_key_access_allowed"
+      value: false
+      note: "Reading or accessing private key content is blocked in MVP."
+    - key: "commit_allowed"
+      value: false
+      note: "Git commit operations are blocked in MVP."
+    - key: "push_allowed"
+      value: false
+      note: "Git push operations are blocked in MVP."
+    - key: "merge_allowed"
+      value: false
+      note: "Git merge operations are blocked in MVP."
+
+# ────────────────────────────────────────────────────────────
+# 10. MVP Acceptance Criteria
+# ────────────────────────────────────────────────────────────
+
+mvp_acceptance_criteria:
+  description: "The minimal viable set of criteria for the conversation→task flow to be considered complete and ready for Tao sign-off."
+  criteria:
+    - id: "AC-01"
+      title: "Intent detection works for topk_verify"
+      test: "User types 'search for GOAA dispatch protocol' → intent detected as topk_verify → task created."
+      required: true
+
+    - id: "AC-02"
+      title: "Intent detection works for memory_fetch"
+      test: "User types 'what did we discuss about DO nodes' → intent detected as memory_fetch → task created."
+      required: true
+
+    - id: "AC-03"
+      title: "Intent detection returns 'none' for pure chat"
+      test: "User types 'hello, how are you today' → intent is 'none' → no task created, normal chat response."
+      required: true
+
+    - id: "AC-04"
+      title: "Allowlist dispatch for risk 0-2"
+      test: "topk_verify task (risk 1) → no approval needed → dispatched directly → evidence returned."
+      required: true
+
+    - id: "AC-05"
+      title: "Approval gate for risk 4"
+      test: "embed task (risk 4) → status='awaiting_approval' → Aika presents to Tao → Tao approves → envelope status becomes 'approved_envelope_only' → no mutation executed in MVP → evidence records post-MVP execution intent."
+      required: true
+
+    - id: "AC-06"
+      title: "Evidence package completeness"
+      test: "After task completion, the evidence package contains: task_id, status, safety_flags all NO, final_marker."
+      required: true
+
+    - id: "AC-07"
+      title: "UI shows task card inline"
+      test: "After a dispatched task, the AI Workspace chat displays a task card with intent, status, and detail link."
+      required: true
+
+    - id: "AC-08"
+      title: "No raw RAG text in chat UI"
+      test: "All task outputs are summaries/evidence packages. Raw RAG text never appears in the chat body."
+      required: true
+
+    - id: "AC-09"
+      title: "No secret / private key access"
+      test: "The pipeline never reads or prints secrets, private keys, tokens, or env files."
+      required: true
+
+    - id: "AC-10"
+      title: "No DO connection"
+      test: "All execution stays within local-aika-core-01 and local-aika-2. No DO node is connected or triggered."
+      required: true
+
+    - id: "AC-11"
+      title: "No worker start / executor enable"
+      test: "Tasks use the existing task_runner allowlist. No new worker daemons are started. No executor is enabled."
+      required: true
+
+    - id: "AC-12"
+      title: "Intent detection is idempotent"
+      test: "Same user message → same intent classification (within confidence threshold)."
+      required: false
+      note: "desirable, not strictly MVP"
+
+    - id: "AC-13"
+      title: "aika-2 repo readonly verify remains independent"
+      test: "aika-2 continues to serve repo readonly verification. The conversation→task pipeline does not disrupt aika-2's role."
+      required: true
+
+    - id: "AC-14"
+      title: "Documentation truth matches runtime truth"
+      test: "After implementation, verify that this spec file (docs/runtime/) aligns with the actual endpoints and behavior. Git truth ≥ Documentation truth."
+      required: true
+
+  post_mvp_criteria:
+    - "AK-4 Pre-Action Gate integration for effect-based authorization."
+    - "Local Console task approval UI (approve/reject buttons for admin)."
+    - "Task history filtering and search."
+    - "Evidence file download."
+    - "DO node support (separate governance task)."
+    - "Cloud task dispatch (V5.3+ scope)."
+
+# ────────────────────────────────────────────────────────────
+# 11. Stop Rules and Safety Boundaries
+# ────────────────────────────────────────────────────────────
+
+stop_rules:
+  description: "Rules that, if triggered, must immediately halt task dispatch and escalate to Tao."
+  immediate_stop:
+    - "secret_or_token_read_attempted"
+    - "private_key_content_accessed"
+    - "do_connection_attempted"
+    - "worker_daemon_started"
+    - "executor_enabled"
+    - "runtime_mutated_without_approval"
+    - "deploy_attempted"
+    - "push_or_commit_attempted_without_authorization"
+    - "merge_attempted_without_authorization"
+    - "raw_rag_text_written_to_ui_or_log"
+    - "cloud_egress_of_conversation_or_task_data"
+  record_and_continue:
+    - "task_dispatch_failed_intent_low_confidence"
+    - "task_dispatch_failed_allowlist_reject"
+    - "task_timeout"
+    - "task_result_already_exists"
+    - "optional_probe_unavailable"
+
+# ────────────────────────────────────────────────────────────
+# 12. Version History
+# ────────────────────────────────────────────────────────────
+
+version_history:
+  - version: "0.1"
+    date: "2026-06-22"
+    author: "Aika"
+    changes: "Initial specification. Covers conversation input, intent detection, task envelope, risk classification, approval gate, readonly execution, evidence package, UI lifecycle, backend landing points, MVP acceptance criteria."
+    review_status: "ChatGPT reviewed 2026-06-22. Minor fixes applied per ChatGPT request (intent mode, embed semantics, approval rules, safety boundary, version history update). Real Claude Code CLI review (v2.1.179) and Antigravity CLI review (agy v1.0.10) completed 2026-06-22. Both requested changes before commit. Baton 8 fixes applied (detection_method enum, approval_required threshold, approval gate flow, file_modified safety flag, backend_landing_points intent detection, merge safety marker). V5.5 Mainline Baton 1 spec — awaiting ChatGPT download review."

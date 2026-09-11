@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>goaa.ai — GEEKOM Local Box vs Cloud Service</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --red: #e53e3e;
+    --red-light: #fff5f5;
+    --red-mid: #fed7d7;
+    --dark: #18181b;
+    --mid: #3f3f46;
+    --muted: #71717a;
+    --border: #e4e4e7;
+    --bg: #fafaf9;
+    --white: #ffffff;
+    --green: #059669;
+    --green-light: #f0fdf4;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Hero */
+  .hero {
+    background: var(--dark);
+    color: white;
+    padding: 80px 40px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(229,62,62,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(229,62,62,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .logo {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span { color: var(--red); }
+
+  .hero p {
+    font-size: 16px;
+    color: #a1a1aa;
+    max-width: 560px;
+    margin: 0 auto 32px;
+    font-weight: 300;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #d4d4d8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Detection Banner */
+  .detection-bar {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    padding: 20px 40px;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+  }
+
+  .detection-bar strong { color: #a5b4fc; }
+
+  .detect-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(165,180,252,0.15);
+    border: 1px solid rgba(165,180,252,0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-left: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+  }
+
+  .dot.offline { background: #f87171; animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* Main Container */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Section */
+  .section { padding: 60px 0; }
+
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--red);
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .section-title {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .section-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+
+  /* Two Column Cards */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  @media (max-width: 700px) {
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header.geekom {
+    background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+    color: white;
+  }
+
+  .card-header.cloud {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+
+  .card-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .card-header.geekom .card-type { color: var(--red); }
+  .card-header.cloud .card-type { color: var(--muted); }
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .card-header.cloud .card-title { color: var(--dark); }
+
+  .card-sub {
+    font-size: 13px;
+    font-weight: 300;
+  }
+
+  .card-header.geekom .card-sub { color: #a1a1aa; }
+  .card-header.cloud .card-sub { color: var(--muted); }
+
+  .card-body { padding: 24px 28px; }
+
+  .feature-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f4f4f5;
+  }
+
+  .feature-row:last-child { border-bottom: none; }
+
+  .feat-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .feat-icon.yes { background: var(--green-light); color: var(--green); }
+  .feat-icon.no { background: #fef2f2; color: #ef4444; }
+  .feat-icon.partial { background: var(--amber-light); color: var(--amber); }
+
+  .feat-text { flex: 1; }
+  .feat-name { font-size: 14px; font-weight: 500; color: var(--dark); }
+  .feat-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+  /* Skills Table */
+  .skills-table {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    background: var(--dark);
+    color: white;
+    padding: 14px 24px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    gap: 12px;
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f4f4f5;
+    gap: 12px;
+    align-items: center;
+    transition: background 0.15s;
+  }
+
+  .table-row:hover { background: #fafafa; }
+  .table-row:last-child { border-bottom: none; }
+
+  .skill-name { font-size: 14px; font-weight: 500; }
+  .skill-cat {
+    font-size: 11px;
+    color: var(--muted);
+    background: #f4f4f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .rate {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .rate.high { color: var(--green); }
+  .rate.mid { color: var(--amber); }
+  .rate.low { color: #ef4444; }
+
+  .credits-chip {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--blue-light);
+    color: var(--blue);
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-block;
+  }
+
+  .credits-chip.save {
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  /* Stats Row */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  @media (max-width: 700px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .table-header, .table-row {
+      grid-template-columns: 1.5fr 1fr 1fr;
+    }
+    .table-header > *:last-child,
+    .table-row > *:last-child { display: none; }
+  }
+
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  /* CTA */
+  .cta-section {
+    background: linear-gradient(135deg, var(--dark) 0%, #27272a 100%);
+    border-radius: 24px;
+    padding: 48px;
+    text-align: center;
+    color: white;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(229,62,62,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cta-section h2 {
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .cta-section h2 span { color: var(--red); }
+
+  .cta-section p {
+    color: #a1a1aa;
+    font-size: 15px;
+    max-width: 480px;
+    margin: 0 auto 28px;
+    font-weight: 300;
+  }
+
+  .btn-primary {
+    background: var(--red);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    letter-spacing: -0.2px;
+    transition: transform 0.15s, opacity 0.15s;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    margin-left: 12px;
+    transition: background 0.15s;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+  /* Scenario */
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  @media (max-width: 700px) { .scenario-grid { grid-template-columns: 1fr; } }
+
+  .scenario-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    background: var(--white);
+  }
+
+  .scenario-card.highlight {
+    border-color: var(--red);
+    background: #fff8f8;
+  }
+
+  .scenario-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .scenario-tag.local { background: #18181b; color: white; }
+  .scenario-tag.cloud { background: #f4f4f5; color: var(--muted); }
+
+  .scenario-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: var(--mid);
+  }
+
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--dark);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .scenario-card.highlight .step-num { background: var(--red); }
+
+  .result-bar {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .result-bar.good { background: var(--green-light); color: var(--green); }
+  .result-bar.ok { background: var(--amber-light); color: var(--amber); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+
+  footer strong { color: var(--dark); }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="logo">goaa.ai — Skill Usage Analysis</div>
+  <h1>GEEKOM Local Box<br><span>vs</span> Cloud Service</h1>
+  <p>Choose the right setup and see how local compute can make you 3-10x more productive</p>
+  <div class="hero-badges">
+    <span class="badge">Skill Success Comparison</span>
+    <span class="badge">Compute Cost Analysis</span>
+    <span class="badge">ROI Calculation</span>
+  </div>
+</div>
+
+<!-- Detection -->
+<div class="detection-bar">
+  <strong>Smart Detection:</strong> when you sign in to portal.goaa.ai, the system automatically checks whether you have a local box
+  <span class="detect-status"><span class="dot"></span>Local box online → all skills enabled</span>
+  <span class="detect-status" style="margin-left:8px"><span class="dot offline"></span>No local box → cloud mode</span>
+</div>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="section">
+    <div class="section-label">Key Numbers</div>
+    <div class="section-title">The Gap at a Glance</div>
+    <div class="section-sub">Based on real task test data</div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--green)">97%</div>
+        <div class="stat-label">Skill Success with Local Box</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--amber)">61%</div>
+        <div class="stat-label">Skill Success with Cloud Only</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--red)">60%</div>
+        <div class="stat-label">Credits Saved with Local Box</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--dark)">6-12</div>
+        <div class="stat-label">Box Payback Period</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Compare -->
+  <div class="section" style="padding-top:0">
+    <div class="section-label">Capability Comparison</div>
+    <div class="section-title">What You Can Do Depends on What You Have</div>
+    <div class="section-sub">A local box unlocks the full automation stack</div>
+
+    <div class="compare-grid">
+      <!-- GEEKOM Card -->
+      <div class="card">
+        <div class="card-header geekom">
+          <div class="card-type">🖥 GEEKOM Local Box</div>
+          <div class="card-title">Full Compute Mode</div>
+          <div class="card-sub">LAN deployment · local AI inference · direct file access</div>
+        </div>
+        <div class="card-body">
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Local .exe Software Automation</div>
+              <div class="feat-desc">Directly controls tax and office software like TurboTax, TaxAct, and Excel, with no file uploads</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Direct LAN File Read/Write</div>
+              <div class="feat-desc">Accesses shared folders across office computers and processes client files instantly</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Web Automation (Anti-Bot Resistant)</div>
+              <div class="feat-desc">Uses a local IP for government and banking sites, with far higher success than cloud</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Offline AI Inference</div>
+              <div class="feat-desc">Runs AI models locally; data never leaves the office — compliant and secure</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Sell Idle Compute</div>
+              <div class="feat-desc">Automatically joins the compute market off-hours, earning an extra $50-150 per month</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Local Video Editing & Publishing</div>
+              <div class="feat-desc">Accesses local video assets directly — 10x faster processing, zero upload wait</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cloud Card -->
+      <div class="card">
+        <div class="card-header cloud">
+          <div class="card-type">☁️ Cloud Only Mode</div>
+          <div class="card-title">File Upload Mode</div>
+          <div class="card-sub">No hardware · instant start · limited capabilities</div>
+        </div>
+        <div class="card-body">
+          <div class="feature-row">
+            <div class="feat-icon no">✕</div>
+            <div class="feat-text">
+              <div class="feat-name">Local .exe Software Automation</div>
+              <div class="feat-desc">Cannot access local software; tax and office apps must be handled manually</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon partial">~</div>
+            <div class="feat-text">
+              <div class="feat-name">File Processing</div>
+              <div class="feat-desc">Files must be uploaded to the cloud, processed, then re-downloaded — slow and tedious</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon partial">~</div>
+            <div class="feat-text">
+              <div class="feat-name">Web Automation (Limited)</div>
+              <div class="feat-desc">Cloud IPs are often flagged as bots by government/banking sites, so success rates are low</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon yes">✓</div>
+            <div class="feat-text">
+              <div class="feat-name">Cloud AI Inference</div>
+              <div class="feat-desc">Processed via Claude/GPT, consuming more Credits</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon no">✕</div>
+            <div class="feat-text">
+              <div class="feat-name">Compute Selling</div>
+              <div class="feat-desc">No local compute, so it cannot earn extra income in the compute market</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feat-icon partial">~</div>
+            <div class="feat-text">
+              <div class="feat-name">Video Processing</div>
+              <div class="feat-desc">Large video files must be uploaded — slow and costly in storage Credits</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills Table -->
+  <div class="section" style="padding-top:0">
+    <div class="section-label">Skill Success Analysis</div>
+    <div class="section-title">Real Success Rates by Skill</div>
+    <div class="section-sub">Higher numbers mean higher skill success and lower Credits usage</div>
+
+    <div class="skills-table">
+      <div class="table-header">
+        <div>Skill</div>
+        <div>Local Box Success</div>
+        <div>Cloud Only Success</div>
+        <div>Credits Saved</div>
+      </div>
+
+      <div class="table-row">
+        <div>
+          <div class="skill-name">Auto Tax Filing Assistant</div>
+          <span class="skill-cat">Tax & Finance</span>
+        </div>
+        <div><span class="rate high">99%</span></div>
+        <div><span class="rate low">30%</span></div>
+        <div><span class="credits-chip save">Save 80%</span></div>
+      </div>
+
+      <div class="table-row">
+        <div>
+          <div class="skill-name">California Down Payment Assistance</div>
+          <span class="skill-cat">Real Estate</span>
+        </div>
+        <div><span class="rate high">97%</span></div>
+        <div><span class="rate mid">55%</span></div>
+        <div><span class="credits-chip save">Save 65%</span></div>
+      </div>
+
+      <div class="table-row">
+        <div>
+          <div class="skill-name">Auto Video Generation</div>
+          <span class="skill-cat">Video Creation</span>
+        </div>
+        <div><span class="rate high">99%</span></div>
+        <div><span class="rate mid">70%</span></div>
+        <div><span class="credits-chip save">Save 60%</span></div>
+      </div>
+
+      <div class="table-row">
+        <div>
+          <div class="skill-name">Legal Document Generation</div>
+          <span class="skill-cat">Legal</span>
+        </div>
+        <div><span class="rate high">98%</span></div>
+        <div><span class="rate high">85%</span></div>
+        <div><span class="credits-chip">Save 20%</span></div>
+      </div>
+
+      <div class="table-row">
+        <div>
+          <div class="skill-name">Immigration Planning</div>
+          <span class="skill-cat">Immigration & Study</span>
+        </div>
+        <div><span class="rate high">97%</span></div>
+        <div><span class="rate mid">75%</span></div>
+        <div><span class="credits-chip">Save 30%</span></div>
+      </div>
+
+      <div class="table-row">
+        <div>
+          <div class="skill-name">Auto Form Filling & Submission</div>
+          <span class="skill-cat">Government Forms</span>
+        </div>
+        <div><span class="rate high">95%</span></div>
+        <div><span class="rate low">25%</span></div>
+        <div><span class="credits-chip save">Save 85%</span></div>
+      </div>
+
+      <div class="table-row" style="background:#fafafa; font-weight:600">
+        <div>
+          <div class="skill-name">Overall Average</div>
+          <span class="skill-cat">6 skills</span>
+        </div>
+        <div><span class="rate high">97%</span></div>
+        <div><span class="rate mid">57%</span></div>
+        <div><span class="credits-chip save">Average Save 57%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenarios -->
+  <div class="section" style="padding-top:0">
+    <div class="section-label">Real Scenario</div>
+    <div class="section-title">Same Task, Completely Different Experience</div>
+    <div class="section-sub">Auto tax filing, for example</div>
+
+    <div class="scenario-grid">
+      <div class="scenario-card highlight">
+        <span class="scenario-tag local">🖥 With Local Box</span>
+        <div class="scenario-title">Auto Tax Filing — Fully Automated</div>
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <div>Client files are already in the office shared folder</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <div>The GEEKOM box reads the files directly — no upload needed</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <div>TurboTax opens automatically and AI fills in all the data</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <div>Submits automatically and emails the client a confirmation</div>
+        </div>
+        <div class="result-bar good">
+          ✅ 3 minutes total, 16 Credits used ($0.16)
+        </div>
+      </div>
+
+      <div class="scenario-card">
+        <span class="scenario-tag cloud">☁️ Cloud Only Mode</span>
+        <div class="scenario-title">Auto Tax Filing — Semi-Manual</div>
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <div>Client files are scanned manually and uploaded to the cloud</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <div>AI analyzes the files (upload wait, storage Credits used)</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <div>AI generates tax advice but cannot operate the software directly</div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <div>TurboTax is opened manually and data is entered by hand</div>
+        </div>
+        <div class="result-bar ok">
+          ⚠️ 25 minutes total, 80 Credits used ($0.80)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>GEEKOM Box<span>Payback Calculator</span></h2>
+    <p>Monthly Credits savings + compute-selling income — fully paid back in 6-12 months on average</p>
+    <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:28px">
+      <div style="text-align:left; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px 24px; min-width:200px">
+        <div style="font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; font-family:'JetBrains Mono',monospace">Monthly Credits Saved</div>
+        <div style="font-size:28px; font-weight:800; color:#4ade80; font-family:'JetBrains Mono',monospace">$45</div>
+        <div style="font-size:12px; color:#71717a">Based on 100 tasks/month</div>
+      </div>
+      <div style="text-align:left; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px 24px; min-width:200px">
+        <div style="font-size:11px; color:#71717a; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; font-family:'JetBrains Mono',monospace">Idle Compute Income</div>
+        <div style="font-size:28px; font-weight:800; color:#60a5fa; font-family:'JetBrains Mono',monospace">$80</div>
+        <div style="font-size:12px; color:#71717a">Based on RTX 4060</div>
+      </div>
+      <div style="text-align:left; background:rgba(229,62,62,0.12); border:1px solid rgba(229,62,62,0.3); border-radius:14px; padding:20px 24px; min-width:200px">
+        <div style="font-size:11px; color:#fca5a5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; font-family:'JetBrains Mono',monospace">Net Monthly Gain</div>
+        <div style="font-size:28px; font-weight:800; color:#f87171; font-family:'JetBrains Mono',monospace">$125</div>
+        <div style="font-size:12px; color:#71717a">After electricity costs</div>
+      </div>
+    </div>
+    <a href="#" class="btn-primary">Buy a GEEKOM Box Now</a>
+    <a href="#" class="btn-secondary">Try the Cloud Version First</a>
+  </div>
+
+</div>
+
+<footer>
+  <strong>goaa.ai</strong> — Built for life, built for the future &nbsp;·&nbsp;
+  Data based on internal testing; actual results vary by use case
+</footer>
+
+</body>
+</html>
