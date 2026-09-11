@@ -117,9 +117,11 @@ Post-state verification (all read-only queries):
    with the service venv) → `syntax OK: 6 files`
 5. restart requested: `ssh do-c2 'systemctl restart goaa-c2-clerk-api-3103.service'`
 
-**Approval, stated plainly:** **no 🛡 approval card appeared and no approval step was involved.**
-The restart command was submitted directly and ran immediately; it was therefore **not** "approved
-by Tao and then executed". Same behaviour as the previous round's restart.
+**Approval, stated plainly (corrected):** **On Aika's side no 🛡 approval card appeared and no
+approval step was involved** — the restart command was submitted directly and ran immediately.
+Whether this restart was in fact approved by Tao is **Tao's record to state, not Aika's**; the
+earlier wording ("no approval step was involved" as an absolute claim) is withdrawn. Same
+behaviour as the previous round's restart on the Aika side.
 
 Result: `is-active=active`, **new MainPID `2006405`**, `ActiveEnterTimestamp
 2026-09-11 07:43:33 UTC`; startup log shows `Finished server process [1992667]` →
