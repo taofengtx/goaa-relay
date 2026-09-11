@@ -1,0 +1,420 @@
+plan_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-LOCAL-READONLY-DRY-RUN-EXECUTION-PLAN-CREATE-20260621-104"
+phase: "Phase 2E"
+created_at_utc: "2026-06-21"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+
+truth_priority:
+  - runtime_truth
+  - git_truth
+  - documentation_truth
+
+dependencies:
+  phase_2a_node_registry:
+    status: "completed"
+    file: "docs/runtime/node-registry/GOAA_NODE_REGISTRY_V0.1.yaml"
+  phase_2b_dispatch_protocol:
+    status: "completed"
+    file: "docs/runtime/dispatch/GOAA_DISPATCH_PROTOCOL_V0.1.yaml"
+  phase_2c_worker_capability_matrix:
+    status: "completed"
+    file: "docs/runtime/capability/GOAA_WORKER_CAPABILITY_MATRIX_V0.1.yaml"
+  phase_2d_readonly_dry_run_protocol:
+    status: "completed"
+    file: "docs/runtime/dry-run/GOAA_READONLY_DRY_RUN_PROTOCOL_V0.1.yaml"
+
+summary:
+  purpose: "Define the first local-only readonly dry-run execution plan for GOAA multi-node orchestration."
+  plan_only_stage: true
+  actual_dry_run_execution_allowed: false
+  local_readonly_execution_target_count: 2
+  do_node_execution_allowed: false
+  windows_node_execution_allowed: false
+  real_task_dispatch_allowed: false
+  worker_start_allowed: false
+  executor_enable_allowed: false
+  production_deploy_allowed: false
+  runtime_mutation_allowed: false
+  service_restart_allowed: false
+  do_connection_allowed: false
+  secret_access_allowed: false
+  private_key_access_allowed: false
+  branch_delete_allowed: false
+  default_decision: "deny"
+
+execution_scope_v0_1:
+  allowed_in_this_plan_file:
+    - "Define local-only readonly dry-run execution plan."
+    - "Define readonly commands for local nodes."
+    - "Define evidence collection schema."
+    - "Define safety stop rules."
+    - "Define pass/fail criteria."
+    - "Define promotion conditions for Phase 2F."
+  forbidden_in_this_plan_file_creation:
+    - "Execute actual dry-run."
+    - "Start worker."
+    - "Enable executor."
+    - "Dispatch real task."
+    - "Connect to DO."
+    - "Mutate runtime."
+    - "Restart service."
+    - "Deploy."
+    - "Read secret."
+    - "Print secret."
+    - "Read private key."
+    - "Copy private key."
+    - "Delete branch."
+
+planned_dry_run_id_template:
+  prefix: "GOAA-LOCAL-READONLY-DRY-RUN"
+  example: "GOAA-LOCAL-READONLY-DRY-RUN-YYYYMMDD-NNN"
+  required_before_execution:
+    - "Tao explicit Phase 2F approval."
+    - "Aika confirms latest origin/main contains Phase 2E plan."
+    - "ChatGPT issues exact execution command package."
+
+local_execution_targets_v0_1:
+  - node_id: "local-aika-core-01"
+    hostname: "aika-core-01"
+    node_type: "local_linux"
+    tailscale_ip: "100.114.37.90"
+    planned_role: "local_control_plane_readonly_probe"
+    capability_level_required: "L1_readonly_probe"
+    execution_status_in_phase_2e: "plan_only_not_executed"
+    future_execution_allowed_only_after: "Phase 2F Tao approval"
+    readonly_probe_steps:
+      - step_id: "core_identity"
+        command_class: "identity_readonly"
+        planned_commands:
+          - "hostname"
+          - "whoami"
+          - "pwd"
+        evidence_required:
+          - "hostname_output"
+          - "whoami_output"
+          - "pwd_output"
+      - step_id: "core_os"
+        command_class: "os_release_readonly"
+        planned_commands:
+          - "uname -a"
+          - "cat /etc/os-release"
+        evidence_required:
+          - "kernel_summary"
+          - "os_release_summary"
+      - step_id: "core_network"
+        command_class: "network_address_readonly"
+        planned_commands:
+          - "tailscale ip -4 || true"
+          - "ip -brief addr || true"
+        evidence_required:
+          - "tailscale_ipv4_if_available"
+          - "network_interface_summary"
+      - step_id: "core_repo"
+        command_class: "git_status_readonly"
+        planned_commands:
+          - "git branch --show-current"
+          - "git rev-parse HEAD"
+          - "git status --short"
+        evidence_required:
+          - "current_branch"
+          - "current_head"
+          - "worktree_status"
+      - step_id: "core_resources"
+        command_class: "resource_snapshot_readonly"
+        planned_commands:
+          - "df -h ."
+          - "free -h || true"
+          - "nproc || true"
+          - "uptime || true"
+        evidence_required:
+          - "disk_snapshot"
+          - "memory_snapshot"
+          - "cpu_count"
+          - "uptime_summary"
+      - step_id: "core_runtime_readonly"
+        command_class: "service_status_readonly_only_if_no_restart"
+        planned_commands:
+          - "curl -s --max-time 3 http://127.0.0.1:5188/health || true"
+          - "curl -s --max-time 3 http://127.0.0.1:5188/rag/stats || true"
+        evidence_required:
+          - "local_console_health_if_available"
+          - "rag_stats_if_available"
+        forbidden:
+          - "service restart"
+          - "service start"
+          - "worker start"
+    forbidden_actions:
+      - "worker_start"
+      - "executor_enable"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "secret_access"
+      - "private_key_access"
+      - "do_connection"
+    node_success_condition:
+      - "All planned readonly command classes either return evidence or explicit unavailable reason."
+      - "No safety flag becomes true."
+      - "No mutation occurs."
+
+  - node_id: "local-aika-2"
+    hostname: "aika-2"
+    node_type: "local_linux"
+    tailscale_ip: "100.97.60.1"
+    planned_role: "local_linux_readonly_probe_and_do_jump_path_holder"
+    capability_level_required: "L1_readonly_probe"
+    execution_status_in_phase_2e: "plan_only_not_executed"
+    future_execution_allowed_only_after: "Phase 2F Tao approval"
+    readonly_probe_steps:
+      - step_id: "aika2_identity"
+        command_class: "identity_readonly"
+        planned_commands:
+          - "hostname"
+          - "whoami"
+          - "pwd"
+        evidence_required:
+          - "hostname_output"
+          - "whoami_output"
+          - "pwd_output"
+      - step_id: "aika2_os"
+        command_class: "os_release_readonly"
+        planned_commands:
+          - "uname -a"
+          - "cat /etc/os-release"
+        evidence_required:
+          - "kernel_summary"
+          - "os_release_summary"
+      - step_id: "aika2_network"
+        command_class: "network_address_readonly"
+        planned_commands:
+          - "tailscale ip -4 || true"
+          - "ip -brief addr || true"
+        evidence_required:
+          - "tailscale_ipv4_if_available"
+          - "network_interface_summary"
+      - step_id: "aika2_repo"
+        command_class: "git_status_readonly"
+        planned_commands:
+          - "git branch --show-current || true"
+          - "git rev-parse HEAD || true"
+          - "git status --short || true"
+        evidence_required:
+          - "repo_presence_or_absence"
+          - "current_branch_if_repo"
+          - "current_head_if_repo"
+          - "worktree_status_if_repo"
+      - step_id: "aika2_resources"
+        command_class: "resource_snapshot_readonly"
+        planned_commands:
+          - "df -h ."
+          - "free -h || true"
+          - "nproc || true"
+          - "uptime || true"
+        evidence_required:
+          - "disk_snapshot"
+          - "memory_snapshot"
+          - "cpu_count"
+          - "uptime_summary"
+      - step_id: "aika2_jump_path_metadata_without_do_connection"
+        command_class: "jump_path_metadata_probe_without_do_connection"
+        planned_commands:
+          - "echo DO_CONNECTION_NOT_AUTHORIZED"
+          - "echo PRIVATE_KEY_READ_NOT_AUTHORIZED"
+        evidence_required:
+          - "confirmation_no_do_connection"
+          - "confirmation_no_private_key_read"
+        forbidden:
+          - "ssh to DO"
+          - "cat private key"
+          - "print private key"
+          - "copy private key"
+          - "read secret"
+    forbidden_actions:
+      - "do_connection"
+      - "private_key_read"
+      - "private_key_copy"
+      - "private_key_print"
+      - "worker_start"
+      - "executor_enable"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "secret_access"
+    node_success_condition:
+      - "All local readonly evidence is collected or explicitly unavailable."
+      - "No DO connection occurs."
+      - "No private key is read, printed, or copied."
+      - "No mutation occurs."
+
+non_execution_targets_v0_1:
+  do_nodes_not_executed:
+    - node_id: "do-goaa-aika-cloud-1"
+      reason: "DO connection not authorized in Phase 2E plan stage."
+      future_condition: "Requires separate Tao DO readonly probe approval."
+    - node_id: "do-goaa-aika-cloud-2"
+      reason: "DO connection not authorized in Phase 2E plan stage."
+      future_condition: "Requires separate Tao DO readonly probe approval."
+    - node_id: "do-goaa-aika-cloud-3"
+      reason: "DO connection not authorized in Phase 2E plan stage."
+      future_condition: "Requires separate Tao DO readonly probe approval."
+  local_nodes_excluded:
+    - node_id: "local-aika-1"
+      reason: "Windows readonly execution protocol not defined."
+    - node_id: "local-fq168-sm-mini-it12"
+      reason: "SSH trust and runtime capability not confirmed."
+    - node_id: "local-tap"
+      reason: "Windows readonly execution protocol not defined."
+
+planned_execution_order_v0_1:
+  phase_2f_suggested_order_if_approved:
+    - order: 1
+      node_id: "local-aika-core-01"
+      mode: "local_direct_readonly"
+    - order: 2
+      node_id: "local-aika-2"
+      mode: "ssh_readonly_from_aika_core_or_local_terminal_only_if_already_authorized"
+  parallel_execution_allowed: false
+  reason_parallel_disabled: "First local dry-run should be serial to simplify evidence and stop conditions."
+
+evidence_package_schema_v0_1:
+  package_id_template: "GOAA-LOCAL-READONLY-DRY-RUN-EVIDENCE-YYYYMMDD-NNN"
+  required_top_level_fields:
+    - "dry_run_id"
+    - "task_id"
+    - "started_at_utc"
+    - "ended_at_utc"
+    - "executed_by"
+    - "nodes_attempted"
+    - "nodes_succeeded"
+    - "nodes_failed"
+    - "safety_flags"
+    - "node_evidence"
+    - "final_marker"
+  node_evidence_required_fields:
+    - "node_id"
+    - "hostname"
+    - "role"
+    - "commands_planned"
+    - "commands_executed"
+    - "commands_skipped"
+    - "stdout_summary"
+    - "stderr_summary"
+    - "exit_codes"
+    - "unavailable_reasons"
+    - "evidence_hash"
+    - "node_final_marker"
+  safety_flags_required:
+    actual_dry_run_execution_authorized_by_tao: true
+    runtime_mutation_detected: false
+    worker_started: false
+    executor_enabled: false
+    service_restarted: false
+    do_connected: false
+    secret_printed: false
+    private_key_read: false
+    private_key_copied: false
+    branch_deleted: false
+
+stop_rules_v0_1:
+  stop_entire_run_if:
+    - "runtime_mutation_detected"
+    - "worker_started"
+    - "executor_enabled"
+    - "service_restarted"
+    - "unexpected_do_connection"
+    - "secret_printed"
+    - "private_key_read"
+    - "private_key_copied"
+    - "branch_deleted"
+    - "excluded_node_selected"
+    - "forbidden_command_class_detected"
+  record_and_continue_if:
+    - "readonly_command_returns_nonzero"
+    - "optional_tool_missing"
+    - "local_console_unavailable"
+    - "repo_path_absent_on_non_core_node"
+  automatic_retry_allowed: false
+  retry_requires_tao: true
+
+pass_fail_criteria_v0_1:
+  phase_2e_plan_file_pass_conditions:
+    - "Only local-aika-core-01 and local-aika-2 are execution targets."
+    - "DO nodes are explicitly non-execution targets."
+    - "Windows/excluded nodes remain excluded."
+    - "Every planned command class is readonly."
+    - "Forbidden actions are explicit."
+    - "Evidence schema is present."
+    - "Stop rules are present."
+    - "Actual execution is not authorized in Phase 2E."
+  future_phase_2f_execution_pass_conditions:
+    - "Both local nodes return required evidence or explicit unavailable reason."
+    - "No safety flag is true except actual_dry_run_execution_authorized_by_tao."
+    - "No DO connection occurs."
+    - "No worker is started."
+    - "No executor is enabled."
+    - "No runtime mutation occurs."
+    - "No service is restarted."
+    - "No secret or private key is exposed."
+  future_phase_2f_partial_pass_conditions:
+    - "Only one local node returns evidence."
+    - "No safety violation occurs."
+    - "Failure reasons are recorded."
+  future_phase_2f_fail_conditions:
+    - "Any forbidden action occurs."
+    - "Any excluded node is selected."
+    - "Any DO connection occurs without separate Tao authorization."
+    - "Any secret or private key is exposed."
+
+safety_gates_v0_1:
+  tao_required_before:
+    - "commit"
+    - "push"
+    - "create_pr"
+    - "merge"
+    - "deploy"
+    - "restart_service"
+    - "start_worker"
+    - "enable_executor"
+    - "connect_do"
+    - "read_secret"
+    - "copy_private_key"
+    - "delete_branch"
+    - "execute_actual_local_readonly_dry_run"
+  forbidden_in_phase_2e_plan_creation:
+    - "actual_dry_run_execution"
+    - "production_deploy"
+    - "runtime_mutation"
+    - "worker_start"
+    - "executor_enable"
+    - "service_restart"
+    - "do_connection"
+    - "secret_print"
+    - "private_key_read"
+    - "private_key_copy"
+    - "branch_delete"
+
+phase_2f_entry_conditions:
+  next_recommended_phase: "Phase 2F Local Readonly Dry Run Execution V0.1"
+  may_enter_phase_2f_only_after:
+    - "Phase 2E execution plan file is merged into origin/main."
+    - "Post-merge verification confirms plan file on origin/main."
+    - "Tao explicitly approves Phase 2F actual local readonly dry-run execution."
+  phase_2f_scope_hint:
+    - "Execute only local-aika-core-01 first."
+    - "Then execute local-aika-2 if core evidence is clean."
+    - "Do not connect to DO in Phase 2F unless Tao gives separate DO authorization."
+
+phase_status:
+  phase_2a_node_registry: "completed"
+  phase_2b_dispatch_protocol: "completed"
+  phase_2c_worker_capability_matrix: "completed"
+  phase_2d_readonly_dry_run_protocol: "completed"
+  phase_2e_local_readonly_dry_run_execution_plan: "in_progress"
+  plan_file_creation_stage: true
+  ready_for_actual_local_readonly_dry_run_execution: false
+  ready_for_do_readonly_probe: false
+  ready_for_multi_node_execution: false
+  next_recommended_phase: "Phase 2F Local Readonly Dry Run Execution V0.1"

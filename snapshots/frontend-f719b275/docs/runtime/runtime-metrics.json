@@ -1,0 +1,137 @@
+{
+  "runtime_metrics_dashboard": {
+    "version": "2.1",
+    "timestamp": "2026-05-09T11:35:00Z",
+    "snapshot_id": "METRICS-20260509-001",
+    "cluster_metrics": {
+      "active_nodes": {
+        "total": 3,
+        "online": 2,
+        "initializing": 1,
+        "offline": 0
+      },
+      "task_metrics": {
+        "total_tasks": 21,
+        "completed_today": 7,
+        "pending": 12,
+        "running": 2,
+        "failed": 0,
+        "success_rate": "100%"
+      },
+      "queue_metrics": {
+        "queue_depth": 12,
+        "average_wait_time_sec": 180,
+        "queue_saturation": "12%",
+        "health_status": "excellent"
+      },
+      "performance_metrics": {
+        "avg_task_runtime_sec": 420,
+        "median_task_runtime_sec": 360,
+        "min_runtime_sec": 45,
+        "max_runtime_sec": 1200,
+        "p95_runtime_sec": 900
+      },
+      "credits_metrics": {
+        "total_credits_generated": 1247,
+        "credits_today": 207,
+        "avg_credits_per_task": 29.6,
+        "pending_credits": 45,
+        "top_earning_node": "AKC-001"
+      },
+      "uptime_metrics": {
+        "aika_1_uptime_percent": 99.8,
+        "aika_2_uptime_percent": 0.0,
+        "akc_001_uptime_percent": 99.95,
+        "cluster_uptime_percent": 99.58
+      },
+      "system_health": {
+        "overall_score": 94,
+        "api_health": "green",
+        "github_health": "green",
+        "queue_health": "green",
+        "node_health": "yellow",
+        "docs_health": "green"
+      }
+    },
+    "per_node_metrics": {
+      "aika-1": {
+        "status": "online",
+        "ip": "192.168.1.207",
+        "uptime_hours": 48,
+        "tasks_completed_today": 4,
+        "current_load": "40%",
+        "cpu_usage": "45%",
+        "memory_usage": "62%",
+        "credits_earned_today": 65,
+        "reliability_score": 98,
+        "role": "primary-coordinator"
+      },
+      "aika-2": {
+        "status": "initializing",
+        "ip": "192.168.1.208",
+        "uptime_hours": 0,
+        "tasks_completed_today": 0,
+        "current_load": "0%",
+        "cpu_usage": "N/A",
+        "memory_usage": "N/A",
+        "credits_earned_today": 0,
+        "reliability_score": 0,
+        "role": "secondary-worker",
+        "bootstrap_eta": "pending-approval"
+      },
+      "akc-001": {
+        "status": "online",
+        "ip": "5.78.76.21",
+        "uptime_hours": 720,
+        "tasks_completed_today": 3,
+        "current_load": "35%",
+        "cpu_usage": "38%",
+        "memory_usage": "55%",
+        "credits_earned_today": 142,
+        "reliability_score": 96,
+        "role": "cloud-node"
+      }
+    },
+    "trend_analysis": {
+      "last_hour": {
+        "tasks_completed": 2,
+        "avg_response_time_sec": 390,
+        "error_rate": "0%"
+      },
+      "last_24_hours": {
+        "tasks_completed": 7,
+        "avg_response_time_sec": 420,
+        "error_rate": "0%",
+        "uptime_percent": 99.7
+      },
+      "last_7_days": {
+        "tasks_completed": 28,
+        "avg_response_time_sec": 450,
+        "error_rate": "0.1%",
+        "uptime_percent": 99.9
+      }
+    },
+    "alerts": [
+      {
+        "id": "ALERT-001",
+        "severity": "info",
+        "message": "AiKa-2 bootstrap initialization in progress",
+        "timestamp": "2026-05-09T11:35:00Z"
+      },
+      {
+        "id": "ALERT-002",
+        "severity": "info",
+        "message": "Continuous Runtime Mode active - Idle Task Pool enabled",
+        "timestamp": "2026-05-09T11:25:00Z"
+      }
+    ],
+    "predictions": {
+      "next_hour_tasks": 5,
+      "projected_credits_today": 250,
+      "queue_saturation_in_1h": "15%",
+      "aika_2_ready_in": "2-4 hours"
+    },
+    "last_update": "2026-05-09T11:35:00Z",
+    "next_update": "2026-05-09T11:40:00Z"
+  }
+}

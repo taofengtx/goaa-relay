@@ -1,0 +1,67 @@
+{
+  "skills": [
+    {
+      "skill_id": "exec_embed_corpus_full",
+      "skill_name": "Embed Corpus (Full)",
+      "executor": "goaa_task_runner",
+      "supported_execution_targets": [
+        "local"
+      ],
+      "permission_level": "admin",
+      "billing_mode": "local_compute",
+      "enabled": true,
+      "audit_required": true
+    },
+    {
+      "skill_id": "exec_topk_query_verify",
+      "skill_name": "Top-K Retrieval Verify",
+      "executor": "goaa_task_runner",
+      "supported_execution_targets": [
+        "local"
+      ],
+      "permission_level": "provider",
+      "billing_mode": "local_compute",
+      "enabled": true,
+      "audit_required": true
+    },
+    {
+      "skill_id": "ocr_placeholder",
+      "skill_name": "OCR (placeholder)",
+      "executor": "comfyui_adapter",
+      "supported_execution_targets": [
+        "local",
+        "cloud"
+      ],
+      "permission_level": "provider",
+      "billing_mode": "local_compute",
+      "enabled": false,
+      "audit_required": true
+    },
+    {
+      "skill_id": "video_gen_placeholder",
+      "skill_name": "Video Generation (placeholder)",
+      "executor": "external_api_adapter",
+      "supported_execution_targets": [
+        "cloud"
+      ],
+      "permission_level": "provider",
+      "billing_mode": "credits placeholder",
+      "enabled": false,
+      "audit_required": true
+    },
+    {
+      "skill_id": "exec_memory_context_fetch",
+      "skill_name": "Aika Memory Context Fetch (internal)",
+      "executor": "goaa_task_runner",
+      "supported_execution_targets": [
+        "local"
+      ],
+      "permission_level": "internal",
+      "billing_mode": "local_compute",
+      "enabled": false,
+      "audit_required": true,
+      "user_facing": false,
+      "note": "C2 memory hydration for Aika; local-only; raw text in-memory only; not /rag/chat; design stage"
+    }
+  ]
+}

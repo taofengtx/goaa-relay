@@ -1,0 +1,226 @@
+plan_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-LOCAL-TWO-NODE-READONLY-DISPATCH-SIM-PLAN-CREATE-20260621-117"
+phase: "Phase 2I"
+created_at_utc: "2026-06-21"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+
+truth_priority:
+  - runtime_truth
+  - git_truth
+  - documentation_truth
+
+summary:
+  purpose: "Define a local two-node readonly dispatch simulation plan using local-aika-core-01 as control node and local-aika-2 as readonly repo verification node."
+  plan_only_stage: true
+  real_dispatch_execution_allowed: false
+  worker_start_allowed: false
+  executor_enable_allowed: false
+  do_connection_allowed: false
+  runtime_mutation_allowed: false
+  service_restart_allowed: false
+  deploy_allowed: false
+  secret_access_allowed: false
+  private_key_access_allowed: false
+  default_decision: "deny"
+
+dependencies:
+  phase_2a_node_registry:
+    status: "completed"
+    file: "docs/runtime/node-registry/GOAA_NODE_REGISTRY_V0.1.yaml"
+  phase_2b_dispatch_protocol:
+    status: "completed"
+    file: "docs/runtime/dispatch/GOAA_DISPATCH_PROTOCOL_V0.1.yaml"
+  phase_2c_worker_capability_matrix:
+    status: "completed"
+    file: "docs/runtime/capability/GOAA_WORKER_CAPABILITY_MATRIX_V0.1.yaml"
+  phase_2d_readonly_dry_run_protocol:
+    status: "completed"
+    file: "docs/runtime/dry-run/GOAA_READONLY_DRY_RUN_PROTOCOL_V0.1.yaml"
+  phase_2e_local_readonly_dry_run_execution_plan:
+    status: "completed"
+    file: "docs/runtime/dry-run/GOAA_LOCAL_READONLY_DRY_RUN_EXECUTION_PLAN_V0.1.yaml"
+  phase_2f_1_core01_readonly_dry_run:
+    status: "closed_pass"
+    target_node: "local-aika-core-01"
+  phase_2f_2_aika2_readonly_dry_run:
+    status: "closed_pass"
+    target_node: "local-aika-2"
+  phase_2g_aika2_repo_bootstrap:
+    status: "closed_pass"
+    auth_method: "readonly_deploy_key"
+  phase_2h_two_node_summary:
+    status: "closed_pass"
+    local_two_node_readonly_ready: true
+
+local_two_node_roles:
+  control_node:
+    node_id: "local-aika-core-01"
+    hostname: "aika-core-01"
+    tailscale_ip: "100.114.37.90"
+    role: "readonly_dispatch_simulation_controller"
+    responsibilities:
+      - "Generate simulated dispatch envelope."
+      - "Record simulated routing decision."
+      - "Do not start worker."
+      - "Do not enable executor."
+      - "Do not mutate runtime."
+  verification_node:
+    node_id: "local-aika-2"
+    hostname: "aika-2"
+    tailscale_ip: "100.97.60.1"
+    role: "readonly_repo_verification_node"
+    repo_path: "/home/tao/goaa-collaboration/repos/goaa-ai-frontend"
+    responsibilities:
+      - "Verify repo exists."
+      - "Fetch origin/main in readonly mode."
+      - "Verify HEAD and origin/main."
+      - "Verify Phase 2 files."
+      - "Do not push."
+      - "Do not connect to DO."
+      - "Do not read private key content."
+
+simulation_lifecycle_v0_1:
+  step_1_prepare_envelope:
+    actor: "local-aika-core-01"
+    action: "Create simulated dispatch envelope as console output only."
+    file_write_allowed: false
+  step_2_route_decision:
+    actor: "local-aika-core-01"
+    action: "Select local-aika-2 as verification target based on Phase 2H readiness."
+    real_dispatch_allowed: false
+  step_3_aika2_repo_verification:
+    actor: "local-aika-2"
+    action: "Perform readonly repo verification commands only."
+    allowed_command_classes:
+      - "git_fetch_origin_main"
+      - "git_status"
+      - "git_rev_parse"
+      - "git_log"
+      - "git_ls_tree"
+      - "du_readonly"
+  step_4_evidence_return:
+    actor: "local-aika-2"
+    action: "Return structured evidence to control node / ChatGPT."
+  step_5_review_gate:
+    actor: "ChatGPT"
+    action: "Review evidence and recommend whether Phase 2J execution can be approved."
+  step_6_tao_decision:
+    actor: "Tao"
+    action: "Approve or reject Phase 2J actual readonly simulation execution."
+
+simulated_dispatch_envelope_schema:
+  envelope_id_template: "GOAA-LOCAL-2NODE-READONLY-SIM-YYYYMMDD-NNN"
+  required_fields:
+    - "envelope_id"
+    - "simulation_phase"
+    - "created_by"
+    - "control_node"
+    - "target_node"
+    - "authorized_command_classes"
+    - "forbidden_actions"
+    - "expected_evidence"
+    - "stop_rules"
+    - "safety_flags"
+  example:
+    envelope_id: "GOAA-LOCAL-2NODE-READONLY-SIM-20260621-001"
+    simulation_phase: "Phase 2J candidate"
+    control_node: "local-aika-core-01"
+    target_node: "local-aika-2"
+    authorized_command_classes:
+      - "repo_readonly_verify"
+      - "phase_file_verify"
+    forbidden_actions:
+      - "real_worker_start"
+      - "executor_enable"
+      - "do_connection"
+      - "runtime_mutation"
+      - "secret_read"
+      - "private_key_content_read"
+      - "push"
+      - "deploy"
+
+evidence_schema_v0_1:
+  required_top_level_fields:
+    - "simulation_id"
+    - "control_node"
+    - "target_node"
+    - "repo_path_present"
+    - "current_head"
+    - "origin_main_head"
+    - "head_matches_origin_main"
+    - "phase_files_present"
+    - "worktree_status"
+    - "safety_flags"
+    - "final_marker"
+  required_safety_flags:
+    file_modified: false
+    commit_performed: false
+    push_performed: false
+    pr_created: false
+    merge_performed: false
+    deploy_performed: false
+    worker_started: false
+    executor_enabled: false
+    service_restarted: false
+    do_connected: false
+    secret_read_attempted: false
+    private_key_content_read_attempted: false
+    branch_delete_performed: false
+
+stop_rules_v0_1:
+  stop_immediately_if:
+    - "worker_started"
+    - "executor_enabled"
+    - "do_connected"
+    - "runtime_mutation_detected"
+    - "service_restarted"
+    - "secret_read_attempted"
+    - "private_key_content_read_attempted"
+    - "push_attempted"
+    - "deploy_attempted"
+    - "branch_delete_attempted"
+  record_and_continue_if:
+    - "git_fetch_returns_no_new_commits"
+    - "repo_already_up_to_date"
+    - "optional_probe_unavailable"
+  retry_allowed_without_tao: false
+
+phase_2j_entry_conditions:
+  next_recommended_phase: "Phase 2J Local Two-Node Readonly Dispatch Simulation Execution V0.1"
+  may_enter_phase_2j_only_after:
+    - "Phase 2I plan file is created and reviewed."
+    - "Phase 2I plan file is committed, PR reviewed, merged, and post-merge verified."
+    - "Tao explicitly approves Phase 2J actual local two-node readonly simulation execution."
+  phase_2j_scope_hint:
+    - "No worker start."
+    - "No executor enable."
+    - "No DO connection."
+    - "No runtime mutation."
+    - "Console output evidence only unless Tao later approves evidence file creation."
+
+excluded_scope:
+  do_nodes:
+    - node_id: "do-goaa-aika-cloud-1"
+      status: "not_authorized"
+    - node_id: "do-goaa-aika-cloud-2"
+      status: "not_authorized"
+    - node_id: "do-goaa-aika-cloud-3"
+      status: "not_authorized"
+  windows_nodes:
+    - node_id: "local-aika-1"
+      status: "not_in_phase_2i"
+    - node_id: "local-tap"
+      status: "not_in_phase_2i"
+  untrusted_or_unverified_nodes:
+    - node_id: "local-fq168-sm-mini-it12"
+      status: "not_in_phase_2i"
+
+phase_status:
+  phase_2i_plan_file_creation_stage: true
+  ready_for_real_dispatch_simulation_execution: false
+  local_two_node_readonly_ready: true
+  do_nodes_ready: false
+  next_recommended_phase: "Phase 2J Local Two-Node Readonly Dispatch Simulation Execution V0.1"

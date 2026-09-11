@@ -1,0 +1,438 @@
+protocol_version: "0.1"
+standard: "GOAA_12_BATON_COLLABORATION_STANDARD_V1.1"
+task_id: "GOAA-READONLY-DRY-RUN-PROTOCOL-CREATE-20260621-098"
+phase: "Phase 2D"
+created_at_utc: "2026-06-21"
+final_approver: "Tao"
+architecture_lead: "ChatGPT"
+executor: "Aika"
+
+truth_priority:
+  - runtime_truth
+  - git_truth
+  - documentation_truth
+
+dependencies:
+  phase_2a_node_registry:
+    status: "completed"
+    file: "docs/runtime/node-registry/GOAA_NODE_REGISTRY_V0.1.yaml"
+  phase_2b_dispatch_protocol:
+    status: "completed"
+    file: "docs/runtime/dispatch/GOAA_DISPATCH_PROTOCOL_V0.1.yaml"
+  phase_2c_worker_capability_matrix:
+    status: "completed"
+    file: "docs/runtime/capability/GOAA_WORKER_CAPABILITY_MATRIX_V0.1.yaml"
+
+summary:
+  purpose: "Define the first GOAA multi-node readonly dry-run protocol."
+  target_node_count_total: 8
+  candidate_node_count_for_readonly_dry_run: 5
+  excluded_node_count: 3
+  protocol_only_stage: true
+  actual_dry_run_execution_allowed: false
+  real_task_dispatch_allowed: false
+  worker_start_allowed: false
+  production_deploy_allowed: false
+  runtime_mutation_allowed: false
+  service_restart_allowed: false
+  do_connection_allowed: false
+  secret_access_allowed: false
+  private_key_access_allowed: false
+  branch_delete_allowed: false
+  default_decision: "deny"
+
+dry_run_objectives_v0_1:
+  - "Confirm that the 5 eligible nodes can be represented in a dry-run task graph without starting real workers."
+  - "Confirm that each eligible node has an explicit readonly probe checklist."
+  - "Confirm that evidence collection is structured and comparable across nodes."
+  - "Confirm that excluded nodes remain excluded until their blockers are resolved."
+  - "Confirm that failure handling is defined before any real multi-node execution."
+
+scope_boundaries_v0_1:
+  allowed:
+    - "Define readonly dry-run protocol."
+    - "Define node participation policy."
+    - "Define readonly evidence collection schema."
+    - "Define failure handling policy."
+    - "Define pass/fail criteria."
+    - "Define promotion conditions for Phase 2E."
+  forbidden:
+    - "Execute actual dry-run."
+    - "Start worker."
+    - "Enable executor."
+    - "Dispatch real task."
+    - "Connect to DO."
+    - "Mutate runtime."
+    - "Restart service."
+    - "Deploy."
+    - "Read secret."
+    - "Print secret."
+    - "Read private key."
+    - "Copy private key."
+    - "Delete branch."
+
+eligible_nodes_v0_1:
+  - node_id: "local-aika-core-01"
+    hostname: "aika-core-01"
+    node_type: "local_linux"
+    tailscale_ip: "100.114.37.90"
+    dry_run_role: "local_control_plane_readonly_probe"
+    capability_level_required: "L1_readonly_probe"
+    participation_status: "eligible_for_future_readonly_dry_run"
+    allowed_probe_categories:
+      - "identity_probe"
+      - "os_probe"
+      - "network_probe"
+      - "repo_presence_probe"
+      - "runtime_status_probe"
+      - "resource_snapshot_probe"
+    forbidden_probe_categories:
+      - "worker_start"
+      - "executor_enable"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "secret_access"
+    expected_evidence:
+      - "hostname"
+      - "whoami"
+      - "pwd"
+      - "uname_or_os_release"
+      - "tailscale_ip_presence"
+      - "repo_path_presence"
+      - "git_branch_and_head_if_repo_exists"
+      - "disk_memory_cpu_snapshot"
+      - "service_status_readonly_if_available"
+    failure_policy: "record_failure_and_continue"
+
+  - node_id: "local-aika-2"
+    hostname: "aika-2"
+    node_type: "local_linux"
+    tailscale_ip: "100.97.60.1"
+    dry_run_role: "local_linux_readonly_probe_and_do_jump_path_holder"
+    capability_level_required: "L1_readonly_probe"
+    participation_status: "eligible_for_future_readonly_dry_run"
+    allowed_probe_categories:
+      - "identity_probe"
+      - "os_probe"
+      - "network_probe"
+      - "repo_presence_probe"
+      - "resource_snapshot_probe"
+      - "jump_path_metadata_probe_without_do_connection"
+    forbidden_probe_categories:
+      - "do_connection"
+      - "private_key_read"
+      - "private_key_copy"
+      - "private_key_print"
+      - "worker_start"
+      - "executor_enable"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "secret_access"
+    expected_evidence:
+      - "hostname"
+      - "whoami"
+      - "pwd"
+      - "uname_or_os_release"
+      - "tailscale_ip_presence"
+      - "repo_path_presence"
+      - "git_branch_and_head_if_repo_exists"
+      - "disk_memory_cpu_snapshot"
+      - "confirmation_no_private_key_read"
+      - "confirmation_no_do_connection"
+    failure_policy: "record_failure_and_continue"
+
+  - node_id: "do-goaa-aika-cloud-1"
+    hostname: "goaa-aika-cloud-1"
+    node_type: "do_linux"
+    public_ip: "134.199.227.108"
+    dry_run_role: "primary_do_control_plane_candidate_readonly_definition_only"
+    capability_level_required: "L1_readonly_probe"
+    participation_status: "eligible_for_future_readonly_dry_run_after_separate_tao_do_authorization"
+    allowed_probe_categories:
+      - "planned_identity_probe"
+      - "planned_os_probe"
+      - "planned_network_probe"
+      - "planned_resource_snapshot_probe"
+      - "planned_runtime_status_probe"
+    forbidden_probe_categories:
+      - "do_connection_without_tao"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "worker_start"
+      - "executor_enable"
+      - "secret_access"
+      - "private_key_access"
+    expected_evidence:
+      - "future_hostname"
+      - "future_whoami"
+      - "future_uname_or_os_release"
+      - "future_disk_memory_cpu_snapshot"
+      - "future_runtime_status_readonly_if_available"
+    failure_policy: "not_executed_in_protocol_stage"
+
+  - node_id: "do-goaa-aika-cloud-2"
+    hostname: "goaa-aika-cloud-2"
+    node_type: "do_linux"
+    public_ip: "143.198.224.71"
+    dry_run_role: "light_worker_candidate_readonly_definition_only"
+    capability_level_required: "L1_readonly_probe"
+    participation_status: "eligible_for_future_readonly_dry_run_after_separate_tao_do_authorization"
+    allowed_probe_categories:
+      - "planned_identity_probe"
+      - "planned_os_probe"
+      - "planned_network_probe"
+      - "planned_resource_snapshot_probe"
+    forbidden_probe_categories:
+      - "do_connection_without_tao"
+      - "build_task"
+      - "heavy_task"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "worker_start"
+      - "executor_enable"
+      - "secret_access"
+      - "private_key_access"
+    expected_evidence:
+      - "future_hostname"
+      - "future_whoami"
+      - "future_uname_or_os_release"
+      - "future_disk_memory_cpu_snapshot"
+    failure_policy: "not_executed_in_protocol_stage"
+
+  - node_id: "do-goaa-aika-cloud-3"
+    hostname: "goaa-aika-cloud-3"
+    node_type: "do_linux"
+    public_ip: "64.23.166.121"
+    dry_run_role: "light_worker_or_standby_candidate_readonly_definition_only"
+    capability_level_required: "L1_readonly_probe"
+    participation_status: "eligible_for_future_readonly_dry_run_after_separate_tao_do_authorization"
+    allowed_probe_categories:
+      - "planned_identity_probe"
+      - "planned_os_probe"
+      - "planned_network_probe"
+      - "planned_resource_snapshot_probe"
+    forbidden_probe_categories:
+      - "do_connection_without_tao"
+      - "build_task"
+      - "heavy_task"
+      - "runtime_mutation"
+      - "service_restart"
+      - "production_deploy"
+      - "worker_start"
+      - "executor_enable"
+      - "secret_access"
+      - "private_key_access"
+    expected_evidence:
+      - "future_hostname"
+      - "future_whoami"
+      - "future_uname_or_os_release"
+      - "future_disk_memory_cpu_snapshot"
+    failure_policy: "not_executed_in_protocol_stage"
+
+excluded_nodes_v0_1:
+  - node_id: "local-aika-1"
+    hostname: "aika-1"
+    node_type: "windows"
+    tailscale_ip: "100.109.7.85"
+    exclusion_status: "excluded_from_phase_2d_readonly_dry_run"
+    exclusion_reasons:
+      - "Windows worker protocol not defined."
+      - "No GOAA process evidence."
+      - "No L1 readonly probe execution protocol for Windows yet."
+    reentry_conditions:
+      - "Define Windows readonly probe protocol."
+      - "Confirm runtime or repo evidence."
+      - "Receive separate Tao approval."
+
+  - node_id: "local-fq168-sm-mini-it12"
+    hostname: "fq168-sm-mini-it12"
+    node_type: "local_linux"
+    tailscale_ip: "100.114.251.87"
+    exclusion_status: "excluded_from_phase_2d_readonly_dry_run"
+    exclusion_reasons:
+      - "SSH trust not established."
+      - "Runtime capability not confirmed."
+      - "No safe probe path confirmed."
+    reentry_conditions:
+      - "Establish SSH trust or approved access path."
+      - "Confirm runtime capability."
+      - "Receive separate Tao approval."
+
+  - node_id: "local-tap"
+    hostname: "tap"
+    node_type: "windows"
+    tailscale_ip: "100.123.248.87"
+    exclusion_status: "excluded_from_phase_2d_readonly_dry_run"
+    exclusion_reasons:
+      - "Windows worker protocol not defined."
+      - "Standby/UI candidate only."
+      - "No L1 readonly probe execution protocol for Windows yet."
+    reentry_conditions:
+      - "Define Windows readonly probe protocol."
+      - "Confirm runtime or repo evidence."
+      - "Receive separate Tao approval."
+
+readonly_probe_command_policy_v0_1:
+  linux_allowed_command_classes:
+    - "identity_readonly"
+    - "hostname_readonly"
+    - "os_release_readonly"
+    - "kernel_version_readonly"
+    - "pwd_readonly"
+    - "directory_listing_readonly"
+    - "git_status_readonly"
+    - "git_head_readonly"
+    - "disk_usage_readonly"
+    - "memory_snapshot_readonly"
+    - "cpu_snapshot_readonly"
+    - "network_address_readonly"
+    - "service_status_readonly_only_if_no_restart"
+  linux_forbidden_command_classes:
+    - "package_install"
+    - "package_remove"
+    - "service_restart"
+    - "service_start"
+    - "service_stop"
+    - "worker_start"
+    - "executor_enable"
+    - "runtime_mutation"
+    - "file_write"
+    - "file_delete"
+    - "secret_read"
+    - "private_key_read"
+    - "private_key_copy"
+    - "ssh_to_do_without_tao"
+    - "deploy"
+  do_node_policy:
+    protocol_stage_do_connection_allowed: false
+    future_dry_run_do_connection_requires_separate_tao_approval: true
+    private_key_print_allowed: false
+    private_key_copy_allowed: false
+
+evidence_schema_v0_1:
+  required_fields:
+    - "task_id"
+    - "dry_run_id"
+    - "node_id"
+    - "node_role"
+    - "started_at_utc"
+    - "ended_at_utc"
+    - "probe_status"
+    - "commands_executed"
+    - "stdout_summary"
+    - "stderr_summary"
+    - "exit_codes"
+    - "runtime_mutation_detected"
+    - "worker_started"
+    - "service_restarted"
+    - "do_connected"
+    - "secret_printed"
+    - "private_key_read"
+    - "private_key_copied"
+    - "evidence_hash"
+    - "final_marker"
+  required_safety_flags:
+    runtime_mutation_detected: false
+    worker_started: false
+    service_restarted: false
+    do_connected: false
+    secret_printed: false
+    private_key_read: false
+    private_key_copied: false
+
+failure_handling_v0_1:
+  default_policy: "record_failure_and_continue"
+  stop_entire_dry_run_if:
+    - "secret_printed"
+    - "private_key_read"
+    - "private_key_copied"
+    - "runtime_mutation_detected"
+    - "worker_started"
+    - "service_restarted"
+    - "unexpected_do_connection"
+  node_failure_policy:
+    local_linux_node_failure: "mark_node_failed_continue_with_remaining_nodes"
+    do_node_unreachable: "mark_node_unreachable_continue_no_retry_without_tao"
+    windows_node_attempted: "stop_and_report_protocol_violation"
+    excluded_node_selected: "stop_and_report_protocol_violation"
+  retry_policy:
+    automatic_retry_allowed: false
+    manual_retry_requires_tao: true
+    maximum_retry_without_tao: 0
+
+pass_fail_criteria_v0_1:
+  protocol_document_pass_conditions:
+    - "All 5 eligible nodes are listed."
+    - "All 3 excluded nodes are listed with reasons."
+    - "All safety gates are explicit."
+    - "Evidence schema is present."
+    - "Failure handling is present."
+    - "No actual dry-run execution is authorized."
+    - "No DO connection is authorized."
+    - "No worker start is authorized."
+  future_dry_run_pass_conditions:
+    - "All selected eligible nodes return required evidence."
+    - "No forbidden command class is executed."
+    - "No runtime mutation is detected."
+    - "No worker is started."
+    - "No service is restarted."
+    - "No secret is printed."
+    - "No private key is read or copied."
+    - "All evidence hashes are recorded."
+  future_dry_run_fail_conditions:
+    - "Any safety flag is true."
+    - "Any excluded node is selected."
+    - "Any forbidden command class is executed."
+    - "Any unapproved DO connection occurs."
+    - "Any secret or private key is exposed."
+
+safety_gates_v0_1:
+  tao_required_before:
+    - "commit"
+    - "push"
+    - "create_pr"
+    - "merge"
+    - "deploy"
+    - "restart_service"
+    - "start_worker"
+    - "enable_executor"
+    - "connect_do"
+    - "read_secret"
+    - "copy_private_key"
+    - "delete_branch"
+    - "execute_actual_dry_run"
+  forbidden_in_phase_2d_protocol_creation:
+    - "actual_dry_run_execution"
+    - "production_deploy"
+    - "runtime_mutation"
+    - "worker_start"
+    - "service_restart"
+    - "do_connection"
+    - "secret_print"
+    - "private_key_read"
+    - "private_key_copy"
+    - "branch_delete"
+
+phase_2e_entry_conditions:
+  next_recommended_phase: "Phase 2E Local Readonly Dry Run Execution Plan V0.1"
+  may_enter_phase_2e_only_after:
+    - "Phase 2D protocol file is merged into origin/main."
+    - "Post-merge verification confirms protocol file on origin/main."
+    - "Tao explicitly approves Phase 2E."
+  phase_2e_scope_hint:
+    - "Start with local-aika-core-01 and local-aika-2 only unless Tao separately approves DO readonly probes."
+    - "DO nodes remain protocol-defined candidates but not execution targets without separate Tao DO authorization."
+
+phase_status:
+  phase_2a_node_registry: "completed"
+  phase_2b_dispatch_protocol: "completed"
+  phase_2c_worker_capability_matrix: "completed"
+  phase_2d_readonly_dry_run_protocol: "in_progress"
+  protocol_file_creation_stage: true
+  ready_for_actual_readonly_dry_run_execution: false
+  ready_for_multi_node_execution: false
+  next_recommended_phase: "Phase 2E Local Readonly Dry Run Execution Plan V0.1"

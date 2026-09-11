@@ -1,0 +1,42 @@
+﻿name: GOAA.AI CI Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  hard-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python Syntax Check
+        run: find ./services -name "*.py" -not -path "*/__pycache__/*" -print0 | xargs -0 -r python -m py_compile && echo "Python OK"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci --include=optional
+      - name: Install Tailwind Oxide Linux native binding
+        run: npm install @tailwindcss/oxide-linux-x64-gnu@4.2.4 --no-save
+      - name: Node and npm diagnostics
+        run: |
+          node --version
+          npm --version
+      - name: Tailwind Oxide diagnostics
+        run: |
+          npm ls @tailwindcss/oxide 2>&1 || true
+          npm ls @tailwindcss/oxide-linux-x64-gnu 2>&1 || true
+      - run: npm run build
+
+  audit-trigger:
+    runs-on: ubuntu-latest
+    needs: hard-checks
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: AiKa-Test Audit Notification
+        run: echo "Hard checks passed - AiKa-Test audit trigger point"

@@ -1,0 +1,120 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-05-10",
+  "governance_policy": "docs/runtime/runtime-governance.md",
+  "services": [
+    {
+      "service_name": "openclaw",
+      "layer": "L0",
+      "persistent": true,
+      "node": "AKC-001",
+      "port": 18789,
+      "cpu_limit": "50%",
+      "memory_limit": "512M",
+      "restart_policy": "always",
+      "restart_sec": 10,
+      "criticality": "critical",
+      "justification": "API Gateway，所有流量入口，必須24/7"
+    },
+    {
+      "service_name": "qwenpaw",
+      "layer": "L0",
+      "persistent": true,
+      "node": "AKC-001",
+      "port": 8088,
+      "cpu_limit": "50%",
+      "memory_limit": "512M",
+      "restart_policy": "always",
+      "restart_sec": 10,
+      "criticality": "critical",
+      "justification": "Agent Engine，處理所有AI任務，必須24/7"
+    },
+    {
+      "service_name": "cloudflared",
+      "layer": "L0",
+      "persistent": true,
+      "node": "AKC-001",
+      "port": null,
+      "cpu_limit": "10%",
+      "memory_limit": "128M",
+      "restart_policy": "always",
+      "restart_sec": 10,
+      "criticality": "critical",
+      "justification": "公網隧道，斷線即服務中斷"
+    },
+    {
+      "service_name": "aika-heartbeat",
+      "layer": "L1",
+      "persistent": true,
+      "node": "COORD-002",
+      "port": null,
+      "cpu_limit": "5%",
+      "memory_limit": "64M",
+      "restart_policy": "always",
+      "restart_sec": 30,
+      "criticality": "high",
+      "justification": "節點存活監控，需要連續心跳"
+    },
+    {
+      "service_name": "aika-watchdog",
+      "layer": "L1",
+      "persistent": true,
+      "node": "COORD-002",
+      "port": null,
+      "cpu_limit": "5%",
+      "memory_limit": "64M",
+      "restart_policy": "always",
+      "restart_sec": 10,
+      "criticality": "high",
+      "justification": "雲端連通性監控"
+    },
+    {
+      "service_name": "github-sync",
+      "layer": "L3",
+      "persistent": false,
+      "node": "COORD-002",
+      "cron": "0 * * * *",
+      "cpu_limit": "10%",
+      "memory_limit": "128M",
+      "restart_policy": "on-failure",
+      "criticality": "medium",
+      "justification": "每小時同步一次已足夠，無需persistent"
+    },
+    {
+      "service_name": "daily-cleanup",
+      "layer": "L3",
+      "persistent": false,
+      "node": "AKC-001",
+      "cron": "0 3 * * *",
+      "cpu_limit": "20%",
+      "memory_limit": "128M",
+      "restart_policy": "no",
+      "criticality": "low",
+      "justification": "每日清理，timer足夠"
+    },
+    {
+      "service_name": "report-generation",
+      "layer": "L3",
+      "persistent": false,
+      "node": "COORD-001",
+      "cron": "0 22 * * *",
+      "cpu_limit": "20%",
+      "memory_limit": "256M",
+      "restart_policy": "no",
+      "criticality": "low",
+      "justification": "每日收工自動生成，timer足夠"
+    }
+  ],
+  "health_policy": {
+    "cpu_threshold": 90,
+    "memory_threshold": 90,
+    "degraded_window_minutes": 10,
+    "auto_restart_after_minutes": 30,
+    "alert_email": "tao@goaa.ai"
+  },
+  "cleanup_policy": {
+    "log_retention_days": 7,
+    "metrics_retention_days": 30,
+    "temp_retention_hours": 24
+  }
+}

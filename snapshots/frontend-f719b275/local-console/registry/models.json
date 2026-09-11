@@ -1,0 +1,8 @@
+{
+  "models": [
+    {"model_id": "ollama-nomic-embed-text", "provider": "Ollama", "model_name": "nomic-embed-text", "runtime": "local", "capability": "embedding", "supported_execution_targets": ["local"], "enabled": true, "cost_profile": "local_compute"},
+    {"model_id": "ollama-qwen2.5-3b", "provider": "Ollama", "model_name": "qwen2.5:3b", "runtime": "local", "capability": "chat", "supported_execution_targets": ["local"], "enabled": true, "cost_profile": "local_compute"},
+    {"model_id": "deepseek-chat", "provider": "DeepSeek", "model_name": "deepseek-chat", "runtime": "cloud", "capability": "chat", "supported_execution_targets": ["cloud"], "enabled": false, "cost_profile": "api_cost"},
+    {"model_id": "claude", "provider": "Anthropic", "model_name": "claude", "runtime": "cloud", "capability": "chat", "supported_execution_targets": ["cloud"], "enabled": false, "cost_profile": "api_cost"}
+  ]
+}
