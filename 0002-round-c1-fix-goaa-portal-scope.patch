@@ -1,0 +1,278 @@
+From 1da75b947c49637b26ceb9f5ad980672492add2e Mon Sep 17 00:00:00 2001
+From: c <c@x>
+Date: Fri, 11 Sep 2026 05:39:04 +0000
+Subject: [PATCH] Round C1 fix: scope token sheets to .goaa-portal (golden chat
+ avatar already uses class goaa)
+
+---
+ app/components/agent-loop/AuthPanel.tsx |  2 +-
+ app/components/agent-loop/Gate.tsx      |  2 +-
+ app/components/portal/PortalShell.tsx   |  2 +-
+ app/styles/goaa-pp-compat.css           | 90 ++++++++++++-------------
+ app/styles/goaa-tokens.css              | 86 +++++++++++------------
+ scripts/test-portal-shell.cjs           |  9 +++
+ 6 files changed, 100 insertions(+), 91 deletions(-)
+
+diff --git a/app/components/agent-loop/AuthPanel.tsx b/app/components/agent-loop/AuthPanel.tsx
+index f6420b0..97dadc0 100644
+--- a/app/components/agent-loop/AuthPanel.tsx
++++ b/app/components/agent-loop/AuthPanel.tsx
+@@ -64,7 +64,7 @@ export default function AuthPanel() {
+   }
+ 
+   return (
+-    <div className="goaa goaa-auth">
++    <div className="goaa-portal goaa-auth">
+       <main style={{ width: 'min(100%, 520px)' }}>
+         <div className="goaa-card-2">
+           <div className="pp-tabs">
+diff --git a/app/components/agent-loop/Gate.tsx b/app/components/agent-loop/Gate.tsx
+index b0436bd..6d37357 100644
+--- a/app/components/agent-loop/Gate.tsx
++++ b/app/components/agent-loop/Gate.tsx
+@@ -22,7 +22,7 @@ export default function Gate({
+   back?: { href: string; label: string }
+ }) {
+   return (
+-    <div className="goaa" style={{ display: 'grid', placeItems: 'center', padding: 24 }}>
++    <div className="goaa-portal" style={{ display: 'grid', placeItems: 'center', padding: 24 }}>
+       <section className="goaa-card" data-testid="access-gate" data-gate-code={code} style={{ maxWidth: 640, width: '100%' }}>
+         <span className="goaa-pill outline">{code}</span>
+         <h1 className="goaa-h1" style={{ marginTop: 12 }}>{title}</h1>
+diff --git a/app/components/portal/PortalShell.tsx b/app/components/portal/PortalShell.tsx
+index 497383f..6d19d2e 100644
+--- a/app/components/portal/PortalShell.tsx
++++ b/app/components/portal/PortalShell.tsx
+@@ -55,7 +55,7 @@ export default function PortalShell(p: PortalShellProps) {
+   const withAside = Boolean(p.aside);
+   const brand = PORTAL_BRAND[p.portal];
+   return (
+-    <div className="goaa" data-portal={p.portal}>
++    <div className="goaa-portal" data-portal={p.portal}>
+       <header className="goaa-header">
+         <Link className="goaa-brand" href={p.brandHref ?? '/planning'} aria-label={`${brand} home`}>
+           <img src="/goaa-logo.svg" alt="" />
+diff --git a/app/styles/goaa-pp-compat.css b/app/styles/goaa-pp-compat.css
+index 048b1d7..4b4438f 100644
+--- a/app/styles/goaa-pp-compat.css
++++ b/app/styles/goaa-pp-compat.css
+@@ -2,48 +2,48 @@
+  * real /agent-loop panels onto goaa tokens, so those panels render in the
+  * planning.goaa.ai look without a rewrite. Scoped to .goaa; /portal-preview
+  * keeps its own stylesheet and is unaffected. */
+-.goaa .pp-stack { display: grid; gap: 16px; }
+-.goaa .pp-panel { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
+-.goaa .pp-panel-inner { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: 12px; padding: 16px; }
+-.goaa .pp-section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+-.goaa .pp-h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.01em; }
+-.goaa .pp-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+-.goaa .pp-h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+-.goaa .pp-body { margin: 0 0 14px; line-height: 1.6; }
+-.goaa .pp-muted { color: var(--goaa-muted); }
+-.goaa .pp-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+-.goaa .pp-label { font-size: var(--goaa-fs-eyebrow); letter-spacing: .08em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 12px 0 4px; }
+-.goaa .pp-inline-label { font-size: 13px; color: var(--goaa-muted); }
+-.goaa .pp-inline-hint, .goaa .pp-footnote { font-size: 13px; color: var(--goaa-muted-2); }
+-.goaa .pp-note { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
+-.goaa .pp-warn-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(245,181,68,.35); border-radius: 10px; background: rgba(245,181,68,.08); color: #f5d38a; font-size: 14px; }
+-.goaa .pp-good-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(168,231,203,.3); border-radius: 10px; background: var(--goaa-ok-bg); color: var(--goaa-ok-text); font-size: 14px; }
+-.goaa .pp-err { color: var(--goaa-danger); }
+-.goaa .pp-ok { color: var(--goaa-ok-text); }
+-.goaa .pp-flag { color: var(--goaa-warn); }
+-.goaa .pp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+-.goaa .pp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; text-decoration: none; }
+-.goaa .pp-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
+-.goaa .pp-btn-secondary, .goaa .pp-btn-ghost { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
+-.goaa .pp-btn-ghost { background: transparent; }
+-.goaa .pp-btn-danger { background: rgba(252,165,165,.08); border: 1px solid rgba(252,165,165,.35); color: var(--goaa-danger); }
+-.goaa .pp-btn[disabled] { opacity: .45; cursor: not-allowed; }
+-.goaa .pp-status, .goaa .pp-chip { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
+-.goaa .pp-status-good { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
+-.goaa .pp-status-warn { background: #3a2d12; color: #f5d38a; }
+-.goaa .pp-status-review { background: var(--goaa-accent-bg); color: var(--goaa-accent-soft); }
+-.goaa .pp-status-muted { background: transparent; border: 1px solid var(--goaa-border-strong); color: var(--goaa-muted); }
+-.goaa .pp-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+-.goaa .pp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
+-.goaa .pp-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
+-.goaa .pp-tab.pp-active { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
+-.goaa .pp-field { display: grid; gap: 6px; margin-bottom: 12px; }
+-.goaa .pp-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+-.goaa .pp-input, .goaa .pp-select, .goaa .pp-textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
+-.goaa .pp-textarea { min-height: 96px; resize: vertical; }
+-.goaa .pp-toggle-row { display: flex; align-items: center; gap: 10px; }
+-.goaa .pp-kv { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--goaa-border); font-size: 14px; }
+-.goaa .pp-list { margin: 0; padding-left: 18px; line-height: 1.7; }
+-.goaa .pp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+-.goaa .pp-table th { text-align: left; color: var(--goaa-muted-2); font-weight: 500; font-size: 12px; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--goaa-border); }
+-.goaa .pp-table td { padding: 12px 10px; border-bottom: 1px solid var(--goaa-border); vertical-align: top; }
++.goaa-portal .pp-stack { display: grid; gap: 16px; }
++.goaa-portal .pp-panel { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
++.goaa-portal .pp-panel-inner { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: 12px; padding: 16px; }
++.goaa-portal .pp-section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
++.goaa-portal .pp-h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.01em; }
++.goaa-portal .pp-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
++.goaa-portal .pp-h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
++.goaa-portal .pp-body { margin: 0 0 14px; line-height: 1.6; }
++.goaa-portal .pp-muted { color: var(--goaa-muted); }
++.goaa-portal .pp-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
++.goaa-portal .pp-label { font-size: var(--goaa-fs-eyebrow); letter-spacing: .08em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 12px 0 4px; }
++.goaa-portal .pp-inline-label { font-size: 13px; color: var(--goaa-muted); }
++.goaa-portal .pp-inline-hint, .goaa-portal .pp-footnote { font-size: 13px; color: var(--goaa-muted-2); }
++.goaa-portal .pp-note { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
++.goaa-portal .pp-warn-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(245,181,68,.35); border-radius: 10px; background: rgba(245,181,68,.08); color: #f5d38a; font-size: 14px; }
++.goaa-portal .pp-good-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(168,231,203,.3); border-radius: 10px; background: var(--goaa-ok-bg); color: var(--goaa-ok-text); font-size: 14px; }
++.goaa-portal .pp-err { color: var(--goaa-danger); }
++.goaa-portal .pp-ok { color: var(--goaa-ok-text); }
++.goaa-portal .pp-flag { color: var(--goaa-warn); }
++.goaa-portal .pp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
++.goaa-portal .pp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; text-decoration: none; }
++.goaa-portal .pp-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
++.goaa-portal .pp-btn-secondary, .goaa-portal .pp-btn-ghost { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
++.goaa-portal .pp-btn-ghost { background: transparent; }
++.goaa-portal .pp-btn-danger { background: rgba(252,165,165,.08); border: 1px solid rgba(252,165,165,.35); color: var(--goaa-danger); }
++.goaa-portal .pp-btn[disabled] { opacity: .45; cursor: not-allowed; }
++.goaa-portal .pp-status, .goaa-portal .pp-chip { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
++.goaa-portal .pp-status-good { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
++.goaa-portal .pp-status-warn { background: #3a2d12; color: #f5d38a; }
++.goaa-portal .pp-status-review { background: var(--goaa-accent-bg); color: var(--goaa-accent-soft); }
++.goaa-portal .pp-status-muted { background: transparent; border: 1px solid var(--goaa-border-strong); color: var(--goaa-muted); }
++.goaa-portal .pp-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
++.goaa-portal .pp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
++.goaa-portal .pp-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
++.goaa-portal .pp-tab.pp-active { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
++.goaa-portal .pp-field { display: grid; gap: 6px; margin-bottom: 12px; }
++.goaa-portal .pp-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
++.goaa-portal .pp-input, .goaa-portal .pp-select, .goaa-portal .pp-textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
++.goaa-portal .pp-textarea { min-height: 96px; resize: vertical; }
++.goaa-portal .pp-toggle-row { display: flex; align-items: center; gap: 10px; }
++.goaa-portal .pp-kv { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--goaa-border); font-size: 14px; }
++.goaa-portal .pp-list { margin: 0; padding-left: 18px; line-height: 1.7; }
++.goaa-portal .pp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
++.goaa-portal .pp-table th { text-align: left; color: var(--goaa-muted-2); font-weight: 500; font-size: 12px; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--goaa-border); }
++.goaa-portal .pp-table td { padding: 12px 10px; border-bottom: 1px solid var(--goaa-border); vertical-align: top; }
+diff --git a/app/styles/goaa-tokens.css b/app/styles/goaa-tokens.css
+index 6d9f0e7..3a50034 100644
+--- a/app/styles/goaa-tokens.css
++++ b/app/styles/goaa-tokens.css
+@@ -56,57 +56,57 @@
+   --goaa-page-pad: 24px;
+ }
+ 
+-.goaa { background: var(--goaa-bg); color: var(--goaa-text); font-family: var(--goaa-font); font-size: var(--goaa-fs-body); line-height: 1.55; min-height: 100vh; }
+-.goaa a { color: var(--goaa-accent-soft); }
+-.goaa .goaa-eyebrow { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); }
+-.goaa .goaa-h1 { font-size: 28px; font-weight: 700; margin: 4px 0 0; letter-spacing: -.01em; }
+-.goaa .goaa-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+-.goaa .goaa-muted { color: var(--goaa-muted); }
++.goaa-portal { background: var(--goaa-bg); color: var(--goaa-text); font-family: var(--goaa-font); font-size: var(--goaa-fs-body); line-height: 1.55; min-height: 100vh; }
++.goaa-portal a { color: var(--goaa-accent-soft); }
++.goaa-portal .goaa-eyebrow { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); }
++.goaa-portal .goaa-h1 { font-size: 28px; font-weight: 700; margin: 4px 0 0; letter-spacing: -.01em; }
++.goaa-portal .goaa-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
++.goaa-portal .goaa-muted { color: var(--goaa-muted); }
+ 
+ /* header */
+-.goaa .goaa-header { height: var(--goaa-header-h); margin: 16px var(--goaa-page-pad) 0; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; background: var(--goaa-bg-elev); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card-lg); }
+-.goaa .goaa-brand { display: flex; align-items: center; gap: 14px; color: var(--goaa-text); text-decoration: none; }
+-.goaa .goaa-brand img { width: 44px; height: 44px; border-radius: 50%; }
+-.goaa .goaa-brand-text { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
++.goaa-portal .goaa-header { height: var(--goaa-header-h); margin: 16px var(--goaa-page-pad) 0; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; background: var(--goaa-bg-elev); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card-lg); }
++.goaa-portal .goaa-brand { display: flex; align-items: center; gap: 14px; color: var(--goaa-text); text-decoration: none; }
++.goaa-portal .goaa-brand img { width: 44px; height: 44px; border-radius: 50%; }
++.goaa-portal .goaa-brand-text { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+ 
+ /* layout */
+-.goaa .goaa-layout { display: grid; grid-template-columns: var(--goaa-rail-w) minmax(0, 1fr); gap: var(--goaa-gap); margin: var(--goaa-gap) var(--goaa-page-pad) 40px; }
+-.goaa .goaa-layout.goaa-with-aside { grid-template-columns: var(--goaa-rail-w) minmax(0, 1fr) 380px; }
+-.goaa .goaa-rail, .goaa .goaa-main, .goaa .goaa-aside { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card-lg); }
+-.goaa .goaa-rail { padding: 20px 14px; align-self: start; position: sticky; top: 16px; }
+-.goaa .goaa-main { padding: 24px 28px; min-height: 60vh; }
+-.goaa .goaa-aside { padding: 24px; align-self: start; }
+-@media (max-width: 1100px) { .goaa .goaa-layout, .goaa .goaa-layout.goaa-with-aside { grid-template-columns: 1fr; } .goaa .goaa-rail { position: static; } }
++.goaa-portal .goaa-layout { display: grid; grid-template-columns: var(--goaa-rail-w) minmax(0, 1fr); gap: var(--goaa-gap); margin: var(--goaa-gap) var(--goaa-page-pad) 40px; }
++.goaa-portal .goaa-layout.goaa-with-aside { grid-template-columns: var(--goaa-rail-w) minmax(0, 1fr) 380px; }
++.goaa-portal .goaa-rail, .goaa-portal .goaa-main, .goaa-portal .goaa-aside { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card-lg); }
++.goaa-portal .goaa-rail { padding: 20px 14px; align-self: start; position: sticky; top: 16px; }
++.goaa-portal .goaa-main { padding: 24px 28px; min-height: 60vh; }
++.goaa-portal .goaa-aside { padding: 24px; align-self: start; }
++@media (max-width: 1100px) { .goaa-portal .goaa-layout, .goaa-portal .goaa-layout.goaa-with-aside { grid-template-columns: 1fr; } .goaa-portal .goaa-rail { position: static; } }
+ 
+ /* rail */
+-.goaa .goaa-rail-cta { display: block; width: 100%; padding: 14px 16px; margin-bottom: 18px; text-align: left; font: inherit; font-size: 17px; color: var(--goaa-text); background: var(--goaa-accent-bg); border: 1px solid var(--goaa-accent-bg-border); border-radius: 12px; cursor: pointer; }
+-.goaa .goaa-rail-section { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 8px 8px 10px; }
+-.goaa .goaa-rail-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin: 2px 0; font: inherit; font-size: 16px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: 12px; cursor: pointer; text-align: left; text-decoration: none; }
+-.goaa .goaa-rail-item:hover { color: var(--goaa-text-2); background: rgba(255,255,255,.04); }
+-.goaa .goaa-rail-item[aria-current="page"] { color: var(--goaa-text); background: #17131e; border-color: var(--goaa-border); }
+-.goaa .goaa-rail-divider { height: 1px; background: var(--goaa-border); margin: 12px 8px; }
+-.goaa .goaa-rail-tag { margin-left: auto; font-size: 10px; letter-spacing: .06em; padding: 2px 7px; border-radius: var(--goaa-r-pill); background: var(--goaa-accent); color: #fff; }
++.goaa-portal .goaa-rail-cta { display: block; width: 100%; padding: 14px 16px; margin-bottom: 18px; text-align: left; font: inherit; font-size: 17px; color: var(--goaa-text); background: var(--goaa-accent-bg); border: 1px solid var(--goaa-accent-bg-border); border-radius: 12px; cursor: pointer; }
++.goaa-portal .goaa-rail-section { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 8px 8px 10px; }
++.goaa-portal .goaa-rail-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin: 2px 0; font: inherit; font-size: 16px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: 12px; cursor: pointer; text-align: left; text-decoration: none; }
++.goaa-portal .goaa-rail-item:hover { color: var(--goaa-text-2); background: rgba(255,255,255,.04); }
++.goaa-portal .goaa-rail-item[aria-current="page"] { color: var(--goaa-text); background: #17131e; border-color: var(--goaa-border); }
++.goaa-portal .goaa-rail-divider { height: 1px; background: var(--goaa-border); margin: 12px 8px; }
++.goaa-portal .goaa-rail-tag { margin-left: auto; font-size: 10px; letter-spacing: .06em; padding: 2px 7px; border-radius: var(--goaa-r-pill); background: var(--goaa-accent); color: #fff; }
+ 
+ /* cards, buttons, pills, forms */
+-.goaa .goaa-card { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
+-.goaa .goaa-card-2 { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
+-.goaa .goaa-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; }
+-.goaa .goaa-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
+-.goaa .goaa-btn-secondary { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
+-.goaa .goaa-btn[disabled] { opacity: .45; cursor: not-allowed; }
+-.goaa .goaa-pill { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
+-.goaa .goaa-pill.ok { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
+-.goaa .goaa-pill.outline { background: transparent; border: 1px solid var(--goaa-accent-bg-border); color: var(--goaa-accent-soft); }
+-.goaa .goaa-input { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
+-.goaa .goaa-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
+-.goaa .goaa-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
+-.goaa .goaa-tab[aria-pressed="true"] { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
+-.goaa .goaa-notice { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
+-.goaa .goaa-step { display: grid; grid-template-columns: 40px 1fr 20px; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); background: var(--goaa-card); }
+-.goaa .goaa-step.active { background: #16122a; border-color: var(--goaa-accent-bg-border); }
+-.goaa .goaa-step-n { font-size: 13px; color: var(--goaa-muted-2); }
+-.goaa .goaa-step-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--goaa-accent-soft); }
+-.goaa .goaa-step.active .goaa-step-dot { background: var(--goaa-accent-soft); }
++.goaa-portal .goaa-card { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
++.goaa-portal .goaa-card-2 { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
++.goaa-portal .goaa-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; }
++.goaa-portal .goaa-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
++.goaa-portal .goaa-btn-secondary { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
++.goaa-portal .goaa-btn[disabled] { opacity: .45; cursor: not-allowed; }
++.goaa-portal .goaa-pill { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
++.goaa-portal .goaa-pill.ok { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
++.goaa-portal .goaa-pill.outline { background: transparent; border: 1px solid var(--goaa-accent-bg-border); color: var(--goaa-accent-soft); }
++.goaa-portal .goaa-input { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
++.goaa-portal .goaa-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
++.goaa-portal .goaa-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
++.goaa-portal .goaa-tab[aria-pressed="true"] { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
++.goaa-portal .goaa-notice { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
++.goaa-portal .goaa-step { display: grid; grid-template-columns: 40px 1fr 20px; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); background: var(--goaa-card); }
++.goaa-portal .goaa-step.active { background: #16122a; border-color: var(--goaa-accent-bg-border); }
++.goaa-portal .goaa-step-n { font-size: 13px; color: var(--goaa-muted-2); }
++.goaa-portal .goaa-step-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--goaa-accent-soft); }
++.goaa-portal .goaa-step.active .goaa-step-dot { background: var(--goaa-accent-soft); }
+ 
+ /* auth card (mirrors /client-login) */
+ .goaa-auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--goaa-auth-bg); color: #fff; font-family: var(--goaa-font-auth); }
+diff --git a/scripts/test-portal-shell.cjs b/scripts/test-portal-shell.cjs
+index 71bf909..5774434 100644
+--- a/scripts/test-portal-shell.cjs
++++ b/scripts/test-portal-shell.cjs
+@@ -74,4 +74,13 @@ test('golden customer rail: growth links present, old two entries hidden in butl
+   assert.ok(r.includes("{!butlerMode && <button className={`workspace-nav-item ${viewMode === 'execution' ? 'active' : ''}`}"), 'Professional Execution only outside butler mode')
+ })
+ 
++test('token sheets scope to .goaa-portal, never bare .goaa (golden chat avatar uses class "goaa")', () => {
++  for (const f of ['app/styles/goaa-tokens.css', 'app/styles/goaa-pp-compat.css']) {
++    const css = read(f)
++    assert.ok(!/\.goaa[\s{,]/.test(css), `${f} has a bare .goaa selector`)
++    assert.ok(!/\.goaa\s*\{/.test(css))
++  }
++  assert.ok(shell.includes('className="goaa-portal"'))
++})
++
+ console.log(`\nALL ${passed} PORTAL SHELL TESTS PASSED`)
+-- 
+2.43.0
+
