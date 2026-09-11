@@ -1,0 +1,98 @@
+From addc6c2c69302423eb38e487e2158db3eedc39b6 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 07:35:10 +0000
+Subject: [PATCH] round C1.3c: root layout is never prerendered (Clerk switch
+ is a runtime decision)
+
+c1-2-diag (relay a1f9adb): `/`, `/planning` and `/client-login` are in the
+prerender manifest; the served /planning HTML carries `clerkAuth:false`, no
+clerk-js, and GoldenSessionBridge is a no-op there. The layout computes
+clerkAuth from clerkAuthState() at render time, but a prerendered route is
+rendered on the build host, which has no Clerk variables - and must not,
+since the switch also requires CLERK_SECRET_KEY to be present. Dynamic
+routes (/client-login?next=, /agent-loop/*) already get the runtime value.
+
+Fix: `export const dynamic = "force-dynamic"` on the root layout. Nothing
+else changes: same gate, same provider placement, same bridge mount, pages
+stay client components. Cost: `/`, `/planning`, `/client-login` render per
+request instead of being served from the prerender cache.
+
+This alone does not produce a client_token: the deployed 3103 backend has no
+/golden/session routes yet (404), which is a separate backend deployment.
+
+Test: scripts/test-root-layout-dynamic.cjs (4); c2-clerk
+test-candidate-shape still passes.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/layout.tsx                       | 11 +++++++++
+ scripts/test-root-layout-dynamic.cjs | 34 ++++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+)
+ create mode 100644 scripts/test-root-layout-dynamic.cjs
+
+diff --git a/app/layout.tsx b/app/layout.tsx
+index cd4bc95..952cd6a 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -9,6 +9,17 @@ import SignedInCookieSync from "./components/SignedInCookieSync"
+ import GoldenSessionBridge from "./components/GoldenSessionBridge"
+ import { clerkAuthState } from "./lib/clerk-entry"
+ 
++/**
++ * Round C1.3c: this layout decides at *render* time whether Clerk is in charge
++ * (clerkAuthState() reads the runtime switch and keys). A statically
++ * prerendered route would freeze whatever the build host had — c1-2-diag found
++ * `/`, `/planning` and `/client-login` prerendered with `clerkAuth: false`
++ * because the build shell has no Clerk variables (and must not: the switch
++ * requires the secret key to be present, which never belongs on a build host).
++ * So no route under this layout may be prerendered.
++ */
++export const dynamic = "force-dynamic"
++
+ export const metadata: Metadata = {
+   title: "GOAA.ai",
+   description: "AI planning and professional execution platform",
+diff --git a/scripts/test-root-layout-dynamic.cjs b/scripts/test-root-layout-dynamic.cjs
+new file mode 100644
+index 0000000..1eb0b9b
+--- /dev/null
++++ b/scripts/test-root-layout-dynamic.cjs
+@@ -0,0 +1,34 @@
++#!/usr/bin/env node
++// Round C1.3c — the root layout reads the Clerk switch at render time, so it must
++// never be prerendered (c1-2-diag: /planning froze clerkAuth=false at build time).
++// Static, offline: reads source files only.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++const layout = read('app/layout.tsx')
++
++test('root layout opts out of static prerendering', () => {
++  assert.ok(/^export const dynamic = ["']force-dynamic["']$/m.test(layout))
++})
++test('no route re-enables static rendering underneath it', () => {
++  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)])
++  for (const f of walk(path.join(ROOT, 'app')).filter((f) => /\.(tsx?|jsx?)$/.test(f))) {
++    const s = fs.readFileSync(f, 'utf8')
++    assert.ok(!/export const dynamic = ["']force-static["']/.test(s), `${path.relative(ROOT, f)} forces static`)
++    assert.ok(!/export (async )?function generateStaticParams/.test(s), `${path.relative(ROOT, f)} generates static params`)
++  }
++})
++test('the Clerk gate and the bridge mount are unchanged', () => {
++  assert.ok(/const clerkAuth = clerkState === "enabled" && Boolean\(publishableKey\)/.test(layout))
++  assert.ok(layout.includes('<GoldenSessionBridge clerkAuth={clerkAuth} />'))
++  assert.ok(layout.indexOf('if (!clerkAuth) return page') < layout.indexOf('<ClerkProvider'))
++  assert.ok(!layout.includes('CLERK_SECRET_KEY'))
++})
++test('golden entry pages stay client components (only rendering mode changes)', () => {
++  for (const f of ['app/page.tsx', 'app/planning/page.tsx']) assert.ok(read(f).startsWith("'use client'"), f)
++})
++console.log(`\nALL ${passed} ROOT LAYOUT DYNAMIC TESTS PASSED`)
+-- 
+2.43.0
+

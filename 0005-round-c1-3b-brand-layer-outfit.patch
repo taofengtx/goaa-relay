@@ -1,0 +1,154 @@
+From 170a8b53e4b57199773309fc66e42619905edcd2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 07:23:53 +0000
+Subject: [PATCH 5/5] round C1.3b: one brand layer in Outfit for the portal and
+ golden /planning
+
+Tao, 2026-09-11: unify the brand layer only; body text stays as it is.
+
+- New tokens: --goaa-font-display (= --goaa-font, Outfit first) and
+  --goaa-font-body (exactly the golden globals.css body stack).
+- Portal: .goaa-portal body text moves from Outfit back to the body stack;
+  brand text, eyebrow, h1/h2, rail items/CTA/tag, buttons, tabs and
+  pp-h1/h2/h3/pp-btn/pp-tab use the display font.
+- Golden /planning: .goaa-brand, + New, rail label/items/NEW tag, kickers,
+  workspace section/plan titles and the Matters heading use the display
+  font. Chat bubbles, composer, plan text and footer are unchanged.
+- globals.css and butler-workspace.css are untouched; the rules live at the
+  end of the token sheets so they win over the existing `font: inherit`
+  resets. Reverting this commit restores the C1.2 look exactly.
+
+Measured in Chromium with the shipped woff2: Outfit and the current stack
+are within 1-3px on every rail label at 14-16px ("Skills Marketplace"
+113 vs 113 at 14px), so the 190px golden rail gains no new wrapping; mock
+render shows all five rail items at one line (40px).
+
+Test: scripts/test-brand-font.cjs (5).
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/styles/goaa-pp-compat.css |  3 +++
+ app/styles/goaa-tokens.css    | 31 +++++++++++++++++++++++-
+ scripts/test-brand-font.cjs   | 45 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 78 insertions(+), 1 deletion(-)
+ create mode 100644 scripts/test-brand-font.cjs
+
+diff --git a/app/styles/goaa-pp-compat.css b/app/styles/goaa-pp-compat.css
+index ea763ef..f90cc65 100644
+--- a/app/styles/goaa-pp-compat.css
++++ b/app/styles/goaa-pp-compat.css
+@@ -48,3 +48,6 @@
+ .goaa-portal .pp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+ .goaa-portal .pp-table th { text-align: left; color: var(--goaa-muted-2); font-weight: 500; font-size: 12px; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--goaa-border); }
+ .goaa-portal .pp-table td { padding: 12px 10px; border-bottom: 1px solid var(--goaa-border); vertical-align: top; }
++/* C1.3 brand layer (see goaa-tokens.css); kept here because this sheet loads
++ * after the tokens and .pp-btn resets `font: inherit`. */
++.goaa-portal .pp-h1, .goaa-portal .pp-h2, .goaa-portal .pp-h3, .goaa-portal .pp-btn, .goaa-portal .pp-tab { font-family: var(--goaa-font-display); }
+diff --git a/app/styles/goaa-tokens.css b/app/styles/goaa-tokens.css
+index 895cbfd..b728ff9 100644
+--- a/app/styles/goaa-tokens.css
++++ b/app/styles/goaa-tokens.css
+@@ -51,6 +51,10 @@
+   --goaa-auth-hairline: rgba(255,255,255,.14);
+ 
+   --goaa-font: Outfit, Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
++  /* C1.3: brand layer (brand, rails, titles, buttons) = Outfit; body text keeps the
++   * golden planning stack so long reading stays as it is today. */
++  --goaa-font-display: var(--goaa-font);
++  --goaa-font-body: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+   --goaa-font-auth: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+   --goaa-fs-body: 15px;
+   --goaa-fs-small: 13px;
+@@ -69,7 +73,7 @@
+   --goaa-page-pad: 24px;
+ }
+ 
+-.goaa-portal { background: var(--goaa-bg); color: var(--goaa-text); font-family: var(--goaa-font); font-size: var(--goaa-fs-body); line-height: 1.55; min-height: 100vh; }
++.goaa-portal { background: var(--goaa-bg); color: var(--goaa-text); font-family: var(--goaa-font-body); font-size: var(--goaa-fs-body); line-height: 1.55; min-height: 100vh; }
+ .goaa-portal a { color: var(--goaa-accent-soft); }
+ .goaa-portal .goaa-eyebrow { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); }
+ .goaa-portal .goaa-h1 { font-size: 28px; font-weight: 700; margin: 4px 0 0; letter-spacing: -.01em; }
+@@ -136,3 +140,28 @@
+ .goaa-auth-or span { height: 1px; flex: 1; background: var(--goaa-auth-hairline); }
+ .goaa-auth-link { background: transparent; border: 0; padding: 0; color: #fff; font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+ .goaa-auth-foot { margin: 22px 0 0; text-align: center; font-size: 12px; color: rgba(255,255,255,.45); }
++
++/* ---------------------------------------------------------------------------
++ * C1.3 brand layer — one rule for both surfaces, so the portal shell and the
++ * golden /planning workspace read as one product. Only brand, rails, titles
++ * and buttons switch to Outfit; chat bubbles, inputs, plan text and footers
++ * keep the body stack. Placed last so it wins over `font: inherit` resets.
++ * Golden selectors are listed by their own class names only. */
++.goaa-portal .goaa-brand-text,
++.goaa-portal .goaa-eyebrow,
++.goaa-portal .goaa-h1,
++.goaa-portal .goaa-h2,
++.goaa-portal .goaa-rail-item,
++.goaa-portal .goaa-rail-cta,
++.goaa-portal .goaa-rail-tag,
++.goaa-portal .goaa-btn,
++.goaa-portal .goaa-tab,
++.goaa-brand,
++.workspace-new,
++.workspace-nav-label,
++.workspace-nav-item,
++.workspace-nav-tag,
++.workspace-kicker,
++.workspace-section-head h2,
++.workspace-plan-head h3,
++.butler-view-heading h2 { font-family: var(--goaa-font-display); }
+diff --git a/scripts/test-brand-font.cjs b/scripts/test-brand-font.cjs
+new file mode 100644
+index 0000000..78569a4
+--- /dev/null
++++ b/scripts/test-brand-font.cjs
+@@ -0,0 +1,45 @@
++#!/usr/bin/env node
++// Round C1.3 — brand layer in Outfit on BOTH surfaces; body text keeps the golden stack.
++// Static, offline: reads source files only.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++
++const tokens = read('app/styles/goaa-tokens.css')
++const compat = read('app/styles/goaa-pp-compat.css')
++const globals = read('app/globals.css')
++const lastRule = (css) => css.slice(css.lastIndexOf('*/') + 2)
++
++test('display = Outfit stack, body = the golden planning stack', () => {
++  assert.ok(tokens.includes('--goaa-font-display: var(--goaa-font);'))
++  const body = tokens.match(/--goaa-font-body: ([^;]+);/)
++  assert.ok(body, 'body token')
++  assert.ok(globals.includes(`font-family:${body[1].replace(/, /g, ',').replace(/'/g, '"')}`), 'body token equals globals.css body stack')
++  assert.ok(tokens.includes('.goaa-portal { background: var(--goaa-bg); color: var(--goaa-text); font-family: var(--goaa-font-body);'))
++})
++test('golden brand layer: brand, rail, kicker, section titles use the display font', () => {
++  const rule = lastRule(tokens)
++  for (const sel of ['.goaa-brand,', '.workspace-new,', '.workspace-nav-label,', '.workspace-nav-item,', '.workspace-nav-tag,', '.workspace-kicker,', '.workspace-section-head h2,', '.workspace-plan-head h3,', '.butler-view-heading h2 {']) assert.ok(rule.includes(sel), sel)
++  assert.ok(rule.trim().endsWith('{ font-family: var(--goaa-font-display); }'))
++})
++test('golden body text is NOT switched (chat, composer, plan text, footer)', () => {
++  const rule = lastRule(tokens)
++  for (const sel of ['.chat-bubble', 'textarea', '.workspace-plan-summary', '.workspace-plan-item', '.goaa-footer', 'body']) assert.ok(!rule.includes(sel), sel)
++})
++test('portal brand layer, placed after the font:inherit resets', () => {
++  const rule = lastRule(tokens)
++  for (const sel of ['.goaa-portal .goaa-brand-text', '.goaa-portal .goaa-h1', '.goaa-portal .goaa-h2', '.goaa-portal .goaa-rail-item', '.goaa-portal .goaa-btn']) assert.ok(rule.includes(sel), sel)
++  assert.ok(tokens.lastIndexOf('.goaa-portal .goaa-btn {') < tokens.lastIndexOf('.goaa-portal .goaa-btn,'), 'display rule after .goaa-btn reset')
++  const pp = compat.slice(compat.lastIndexOf('*/') + 2)
++  assert.ok(pp.includes('.goaa-portal .pp-btn') && pp.includes('font-family: var(--goaa-font-display)'))
++  assert.ok(compat.indexOf('.goaa-portal .pp-btn {') < compat.lastIndexOf('.goaa-portal .pp-btn,'), 'after .pp-btn reset')
++})
++test('golden source files untouched by this change', () => {
++  assert.ok(!/Outfit/.test(globals), 'globals.css does not name Outfit')
++  assert.ok(!/Outfit/.test(read('app/components/butler-workspace.css')))
++})
++console.log(`\nALL ${passed} BRAND FONT TESTS PASSED`)
+-- 
+2.43.0
+

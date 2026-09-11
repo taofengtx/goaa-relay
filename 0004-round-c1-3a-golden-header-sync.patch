@@ -1,0 +1,94 @@
+From 7c73dcc70964462cf0564b4fde2dd84f477a67ca Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 07:21:53 +0000
+Subject: [PATCH 4/5] round C1.3a: golden header re-syncs when the bridge
+ starts a session in this tab
+
+ChatComponent decided "signed in" only on mount and on storage / focus /
+pageshow. GoldenSessionBridge writes client_token asynchronously in the SAME
+tab after ChatComponent has mounted, and `storage` never fires in the tab
+that wrote the value, so the header could keep showing LOGIN / REGISTER
+until the window regained focus (a headless browser may never do that).
+
+Also listen for the bridge's ready event ('goaa:golden-session',
+GOLDEN_SESSION_READY_EVENT) inside the existing session-display effect.
+No new state, no Clerk import, no change to the bridge (Aika-owned).
+
+This does not by itself explain c1-2 B6 (client_token was absent in
+localStorage); that is under diagnosis separately. It removes the second,
+independent reason the header could lag.
+
+Test: scripts/test-golden-header-sync.cjs (2).
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/components/ChatComponent.tsx    |  7 ++++++
+ scripts/test-golden-header-sync.cjs | 33 +++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+)
+ create mode 100644 scripts/test-golden-header-sync.cjs
+
+diff --git a/app/components/ChatComponent.tsx b/app/components/ChatComponent.tsx
+index 7e3b578..c1532f2 100644
+--- a/app/components/ChatComponent.tsx
++++ b/app/components/ChatComponent.tsx
+@@ -158,10 +158,17 @@ export default function ChatComponent({ butlerMode = false }: { butlerMode?: boo
+     window.addEventListener('storage', onStorage)
+     window.addEventListener('focus', syncSessionDisplay)
+     window.addEventListener('pageshow', syncSessionDisplay)
++    // Round C1.3: the golden session bridge writes client_token in THIS tab
++    // after this component has mounted; 'storage' only fires in other tabs, so
++    // also re-sync on the bridge's ready event (GOLDEN_SESSION_READY_EVENT in
++    // components/GoldenSessionBridge.tsx; literal kept here to avoid pulling the
++    // Clerk client into this module).
++    window.addEventListener('goaa:golden-session', syncSessionDisplay)
+     return () => {
+       window.removeEventListener('storage', onStorage)
+       window.removeEventListener('focus', syncSessionDisplay)
+       window.removeEventListener('pageshow', syncSessionDisplay)
++      window.removeEventListener('goaa:golden-session', syncSessionDisplay)
+     }
+   }, [])
+   // Consume /planning?logged_out=1 once: show the one-time sign-out banner,
+diff --git a/scripts/test-golden-header-sync.cjs b/scripts/test-golden-header-sync.cjs
+new file mode 100644
+index 0000000..b25f49a
+--- /dev/null
++++ b/scripts/test-golden-header-sync.cjs
+@@ -0,0 +1,33 @@
++#!/usr/bin/env node
++// Round C1.3 — golden header must notice a business session created in the SAME tab.
++// Static, offline: reads source files only.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++
++const chat = read('app/components/ChatComponent.tsx')
++const bridge = read('app/components/GoldenSessionBridge.tsx')
++
++test('ChatComponent listens for the literal the bridge actually dispatches', () => {
++  const m = bridge.match(/export const GOLDEN_SESSION_READY_EVENT = '([^']+)'/)
++  assert.ok(m, 'bridge exports GOLDEN_SESSION_READY_EVENT')
++  assert.equal(m[1], 'goaa:golden-session')
++  assert.ok(chat.includes(`window.addEventListener('${m[1]}', syncSessionDisplay)`))
++  assert.ok(chat.includes(`window.removeEventListener('${m[1]}', syncSessionDisplay)`))
++})
++test('listener lives in the existing session-display effect (no new state, no Clerk import)', () => {
++  const start = chat.indexOf('const syncSessionDisplay = () => {')
++  const end = chat.indexOf('}, [])', start)
++  const block = chat.slice(start, end)
++  for (const ev of ["'storage', onStorage", "'focus', syncSessionDisplay", "'pageshow', syncSessionDisplay", "'goaa:golden-session', syncSessionDisplay"]) {
++    assert.ok(block.includes(`addEventListener(${ev})`), `add ${ev}`)
++    assert.ok(block.includes(`removeEventListener(${ev})`), `remove ${ev}`)
++  }
++  assert.ok(!/from ['"]@clerk\//.test(chat), 'ChatComponent must not import Clerk')
++  assert.ok(!/from ['"][^'"]*GoldenSessionBridge['"]/.test(chat), 'no import of the bridge module')
++})
++console.log(`\nALL ${passed} GOLDEN HEADER SYNC TESTS PASSED`)
+-- 
+2.43.0
+
