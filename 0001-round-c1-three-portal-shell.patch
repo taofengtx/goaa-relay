@@ -1,0 +1,2115 @@
+From 2cca2366fce325786cac8e3d8fb606b3b639ce78 Mon Sep 17 00:00:00 2001
+From: c <c@x>
+Date: Fri, 11 Sep 2026 04:54:25 +0000
+Subject: [PATCH] Round C1: three-portal shell, growth pages, golden sign-out
+ wiring, tests
+
+---
+ app/agent-loop/admin/applications/page.tsx    |   5 +
+ app/agent-loop/admin/content/page.tsx         |  17 ++
+ app/agent-loop/admin/finance/page.tsx         |  17 ++
+ app/agent-loop/admin/page.tsx                 |   1 -
+ app/agent-loop/admin/support/page.tsx         |  17 ++
+ app/agent-loop/admin/system/page.tsx          |  17 ++
+ app/agent-loop/agent/knowledge/page.tsx       |  17 ++
+ app/agent-loop/agent/my-ai/page.tsx           |  17 ++
+ app/agent-loop/agent/opportunities/page.tsx   |  17 ++
+ app/agent-loop/agent/orders/page.tsx          |  17 ++
+ app/agent-loop/agent/page.tsx                 |   1 -
+ app/agent-loop/apply/page.tsx                 |   1 -
+ app/agent-loop/customer/earning/page.tsx      |  28 +++
+ app/agent-loop/customer/get-licensed/page.tsx |  29 +++
+ app/agent-loop/customer/page.tsx              |   1 -
+ app/agent-loop/customer/skills/page.tsx       |  31 +++
+ app/agent-loop/login/page.tsx                 |   1 -
+ app/agent-loop/page.tsx                       |   1 -
+ app/components/ChatComponent.tsx              |  22 +-
+ app/components/LoginMenu.tsx                  |   8 +
+ app/components/agent-loop/AdminReview.tsx     |  28 +--
+ app/components/agent-loop/AgentPanel.tsx      |  18 +-
+ app/components/agent-loop/ApplicationForm.tsx |  27 +--
+ app/components/agent-loop/AuthPanel.tsx       |  16 +-
+ app/components/agent-loop/CustomerPanel.tsx   |  61 +-----
+ app/components/agent-loop/Gate.tsx            |  42 ++--
+ app/components/agent-loop/GrowthPage.tsx      |  47 ++++
+ app/components/agent-loop/Shell.tsx           | 201 +++++-------------
+ app/components/butler-workspace.css           |   5 +
+ app/components/portal/PortalShell.tsx         | 188 ++++++++++++++++
+ app/components/portal/clerk-appearance.ts     |  99 +++++++++
+ app/goaa-clerk-login/page.tsx                 |  16 +-
+ app/layout.tsx                                |   2 +
+ app/lib/golden-signout.ts                     |  52 +++++
+ app/styles/goaa-pp-compat.css                 |  49 +++++
+ app/styles/goaa-tokens.css                    | 125 +++++++++++
+ scripts/test-client-logout-cal.cjs            |   3 +
+ scripts/test-customer-growth-pages.cjs        |  46 ++++
+ scripts/test-customer-signout.cjs             |   2 +-
+ scripts/test-header-login-menu.cjs            |   1 +
+ scripts/test-logo-nav.cjs                     |   1 +
+ scripts/test-portal-preview-isolation.cjs     |  29 ++-
+ scripts/test-portal-shell.cjs                 |  77 +++++++
+ scripts/test-product-handoff.cjs              |   1 +
+ scripts/test-signout-wiring.cjs               |  56 +++++
+ scripts/test-workspace-english.cjs            |   1 +
+ 46 files changed, 1123 insertions(+), 335 deletions(-)
+ create mode 100644 app/agent-loop/admin/applications/page.tsx
+ create mode 100644 app/agent-loop/admin/content/page.tsx
+ create mode 100644 app/agent-loop/admin/finance/page.tsx
+ create mode 100644 app/agent-loop/admin/support/page.tsx
+ create mode 100644 app/agent-loop/admin/system/page.tsx
+ create mode 100644 app/agent-loop/agent/knowledge/page.tsx
+ create mode 100644 app/agent-loop/agent/my-ai/page.tsx
+ create mode 100644 app/agent-loop/agent/opportunities/page.tsx
+ create mode 100644 app/agent-loop/agent/orders/page.tsx
+ create mode 100644 app/agent-loop/customer/earning/page.tsx
+ create mode 100644 app/agent-loop/customer/get-licensed/page.tsx
+ create mode 100644 app/agent-loop/customer/skills/page.tsx
+ create mode 100644 app/components/agent-loop/GrowthPage.tsx
+ create mode 100644 app/components/portal/PortalShell.tsx
+ create mode 100644 app/components/portal/clerk-appearance.ts
+ create mode 100644 app/lib/golden-signout.ts
+ create mode 100644 app/styles/goaa-pp-compat.css
+ create mode 100644 app/styles/goaa-tokens.css
+ create mode 100644 scripts/test-customer-growth-pages.cjs
+ create mode 100644 scripts/test-portal-shell.cjs
+ create mode 100644 scripts/test-signout-wiring.cjs
+
+diff --git a/app/agent-loop/admin/applications/page.tsx b/app/agent-loop/admin/applications/page.tsx
+new file mode 100644
+index 0000000..2525d21
+--- /dev/null
++++ b/app/agent-loop/admin/applications/page.tsx
+@@ -0,0 +1,5 @@
++import { redirect } from 'next/navigation'
++
++export default function Page() {
++  redirect('/agent-loop/admin')
++}
+diff --git a/app/agent-loop/admin/content/page.tsx b/app/agent-loop/admin/content/page.tsx
+new file mode 100644
+index 0000000..76f599a
+--- /dev/null
++++ b/app/agent-loop/admin/content/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/admin/content')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="admin" activeId="content" eyebrow="Admin" title="Content">
++      <ComingSoon what="Content" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/admin/finance/page.tsx b/app/agent-loop/admin/finance/page.tsx
+new file mode 100644
+index 0000000..7d93ad1
+--- /dev/null
++++ b/app/agent-loop/admin/finance/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/admin/finance')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="admin" activeId="finance" eyebrow="Admin" title="Finance">
++      <ComingSoon what="Finance" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/admin/page.tsx b/app/agent-loop/admin/page.tsx
+index 4814f07..4a5f3df 100644
+--- a/app/agent-loop/admin/page.tsx
++++ b/app/agent-loop/admin/page.tsx
+@@ -4,7 +4,6 @@ import Gate from '@/app/components/agent-loop/Gate'
+ import { getSession, requestToken, upstreamFetch } from '@/app/lib/agent-loop/server'
+ import { clerkAuthState } from '@/app/lib/clerk-entry'
+ import type { Application } from '@/app/lib/agent-loop/api'
+-import '../../portal-preview/portal-preview.css'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+diff --git a/app/agent-loop/admin/support/page.tsx b/app/agent-loop/admin/support/page.tsx
+new file mode 100644
+index 0000000..cd34dc1
+--- /dev/null
++++ b/app/agent-loop/admin/support/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/admin/support')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="admin" activeId="support" eyebrow="Admin" title="Support">
++      <ComingSoon what="Support" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/admin/system/page.tsx b/app/agent-loop/admin/system/page.tsx
+new file mode 100644
+index 0000000..c0fb3b0
+--- /dev/null
++++ b/app/agent-loop/admin/system/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/admin/system')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="admin" activeId="system" eyebrow="Admin" title="System">
++      <ComingSoon what="System" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/agent/knowledge/page.tsx b/app/agent-loop/agent/knowledge/page.tsx
+new file mode 100644
+index 0000000..110a303
+--- /dev/null
++++ b/app/agent-loop/agent/knowledge/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/agent/knowledge')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="agent" activeId="knowledge" eyebrow="Agent Portal" title="Knowledge Base">
++      <ComingSoon what="Knowledge Base" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/agent/my-ai/page.tsx b/app/agent-loop/agent/my-ai/page.tsx
+new file mode 100644
+index 0000000..50cbdc0
+--- /dev/null
++++ b/app/agent-loop/agent/my-ai/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/agent/my-ai')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="agent" activeId="my-ai" eyebrow="Agent Portal" title="My AI">
++      <ComingSoon what="My AI" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/agent/opportunities/page.tsx b/app/agent-loop/agent/opportunities/page.tsx
+new file mode 100644
+index 0000000..953df5a
+--- /dev/null
++++ b/app/agent-loop/agent/opportunities/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/agent/opportunities')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="agent" activeId="opportunities" eyebrow="Agent Portal" title="Opportunities">
++      <ComingSoon what="Opportunities" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/agent/orders/page.tsx b/app/agent-loop/agent/orders/page.tsx
+new file mode 100644
+index 0000000..e7d173c
+--- /dev/null
++++ b/app/agent-loop/agent/orders/page.tsx
+@@ -0,0 +1,17 @@
++import { redirect } from 'next/navigation'
++import GrowthPage, { ComingSoon } from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/agent/orders')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="agent" activeId="orders" eyebrow="Agent Portal" title="Service Orders">
++      <ComingSoon what="Service Orders" />
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/agent/page.tsx b/app/agent-loop/agent/page.tsx
+index 5570557..33a1303 100644
+--- a/app/agent-loop/agent/page.tsx
++++ b/app/agent-loop/agent/page.tsx
+@@ -4,7 +4,6 @@ import Gate from '@/app/components/agent-loop/Gate'
+ import { getSession, requestToken, upstreamFetch } from '@/app/lib/agent-loop/server'
+ import type { License } from '@/app/lib/agent-loop/api'
+ import { clerkAuthState } from '@/app/lib/clerk-entry'
+-import '../../portal-preview/portal-preview.css'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+diff --git a/app/agent-loop/apply/page.tsx b/app/agent-loop/apply/page.tsx
+index d8aeac6..0c924de 100644
+--- a/app/agent-loop/apply/page.tsx
++++ b/app/agent-loop/apply/page.tsx
+@@ -3,7 +3,6 @@ import ApplicationForm from '@/app/components/agent-loop/ApplicationForm'
+ import { getSession, requestToken, upstreamFetch } from '@/app/lib/agent-loop/server'
+ import { clerkAuthState } from '@/app/lib/clerk-entry'
+ import type { Application } from '@/app/lib/agent-loop/api'
+-import '../../portal-preview/portal-preview.css'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+diff --git a/app/agent-loop/customer/earning/page.tsx b/app/agent-loop/customer/earning/page.tsx
+new file mode 100644
+index 0000000..f6f6f2c
+--- /dev/null
++++ b/app/agent-loop/customer/earning/page.tsx
+@@ -0,0 +1,28 @@
++import { redirect } from 'next/navigation'
++import GrowthPage from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/customer/earning')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="customer" activeId="earning" eyebrow="Earning Opportunities" title="Ways to earn with GOAA">
++      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
++        <div className="goaa-card-2">
++          <h2 className="goaa-h2">Become a licensed agent</h2>
++          <p className="goaa-muted">Take client orders through GOAA with an approved licence.</p>
++          <a className="goaa-btn goaa-btn-primary" href="/agent-loop/customer/get-licensed">See how</a>
++        </div>
++        <div className="goaa-card-2">
++          <h2 className="goaa-h2">Refer a member</h2>
++          <p className="goaa-muted">Rewards apply to GOAA membership fees only — never to insurance premiums or commissions.</p>
++          <button type="button" className="goaa-btn goaa-btn-secondary" disabled>Coming soon</button>
++        </div>
++      </div>
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/customer/get-licensed/page.tsx b/app/agent-loop/customer/get-licensed/page.tsx
+new file mode 100644
+index 0000000..ef8ed6f
+--- /dev/null
++++ b/app/agent-loop/customer/get-licensed/page.tsx
+@@ -0,0 +1,29 @@
++import { redirect } from 'next/navigation'
++import GrowthPage from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/customer/get-licensed')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="customer" activeId="licensed" eyebrow="Get Licensed" title="Two paths to the same application">
++      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
++        <div className="goaa-card-2">
++          <h2 className="goaa-h2">Learn first</h2>
++          <p className="goaa-muted">Partner courses prepare you for the licence exam. Course access opens when the partner connection is live.</p>
++          <button type="button" className="goaa-btn goaa-btn-secondary" disabled>Coming soon</button>
++        </div>
++        <div className="goaa-card-2">
++          <h2 className="goaa-h2">Apply now</h2>
++          <p className="goaa-muted">Already hold a licence? Submit it for review. Approval opens the Agent Portal on this same account.</p>
++          <a className="goaa-btn goaa-btn-primary" data-testid="apply-now" href="/agent-loop/apply">Start application</a>
++        </div>
++      </div>
++      <p className="goaa-muted" style={{ fontSize: 13, marginTop: 16 }}>Review is manual. AI only suggests; photos never count as official validity.</p>
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/customer/page.tsx b/app/agent-loop/customer/page.tsx
+index 5ac52c8..a33a3eb 100644
+--- a/app/agent-loop/customer/page.tsx
++++ b/app/agent-loop/customer/page.tsx
+@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
+ import CustomerPanel from '@/app/components/agent-loop/CustomerPanel'
+ import { getSession, hasRole } from '@/app/lib/agent-loop/server'
+ import { clerkAuthState } from '@/app/lib/clerk-entry'
+-import '../../portal-preview/portal-preview.css'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+diff --git a/app/agent-loop/customer/skills/page.tsx b/app/agent-loop/customer/skills/page.tsx
+new file mode 100644
+index 0000000..5566f0d
+--- /dev/null
++++ b/app/agent-loop/customer/skills/page.tsx
+@@ -0,0 +1,31 @@
++import { redirect } from 'next/navigation'
++import GrowthPage from '@/app/components/agent-loop/GrowthPage'
++import { getSession, hasRole } from '@/app/lib/agent-loop/server'
++import { clerkAuthState } from '@/app/lib/clerk-entry'
++
++export const dynamic = 'force-dynamic'
++
++export default async function Page() {
++  const session = await getSession()
++  if (!session) redirect('/agent-loop/login?next=/agent-loop/customer/skills')
++  const canEnterAgent = hasRole(session.user, 'agent') && session.application?.status === 'approved'
++  return (
++    <GrowthPage user={session.user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuthState() === 'enabled'} portal="customer" activeId="skills" eyebrow="Skills Marketplace" title="Capabilities you can add to your AI Butler">
++      <div className="goaa-notice" data-testid="skills-partner-pending">Partner setup pending — the catalog goes live once Pipedream Connect is configured.</div>
++      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
++        {[
++          ['Tax & income', 'Model filing status and deductions before decisions.'],
++          ['Insurance & risk', 'See what coverage your life needs and where you are over- or under-insured.'],
++          ['Housing & relocation', 'Rent, buy or move with tax, schooling and timing in one plan.'],
++          ['Education & family', 'Plan schooling, savings and residency together.'],
++        ].map(([name, blurb]) => (
++          <div key={name} className="goaa-card">
++            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}><b>{name}</b><span className="goaa-pill ok">Free</span></div>
++            <p className="goaa-muted" style={{ fontSize: 13, margin: '8px 0 12px' }}>{blurb}</p>
++            <a className="goaa-btn goaa-btn-secondary" href={`/planning?q=${encodeURIComponent('Help me with ' + name.toLowerCase())}`}>Use this skill</a>
++          </div>
++        ))}
++      </div>
++    </GrowthPage>
++  )
++}
+diff --git a/app/agent-loop/login/page.tsx b/app/agent-loop/login/page.tsx
+index 4c99d84..25c50c3 100644
+--- a/app/agent-loop/login/page.tsx
++++ b/app/agent-loop/login/page.tsx
+@@ -2,7 +2,6 @@ import { Suspense } from 'react'
+ import { redirect } from 'next/navigation'
+ import AuthPanel from '@/app/components/agent-loop/AuthPanel'
+ import { getSession } from '@/app/lib/agent-loop/server'
+-import '../../portal-preview/portal-preview.css'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+diff --git a/app/agent-loop/page.tsx b/app/agent-loop/page.tsx
+index 523cf44..3ed04cb 100644
+--- a/app/agent-loop/page.tsx
++++ b/app/agent-loop/page.tsx
+@@ -1,6 +1,5 @@
+ import { redirect } from 'next/navigation'
+ import { getSession } from '@/app/lib/agent-loop/server'
+-import '../portal-preview/portal-preview.css'
+ 
+ export const dynamic = 'force-dynamic'
+ 
+diff --git a/app/components/ChatComponent.tsx b/app/components/ChatComponent.tsx
+index e497182..12db91e 100644
+--- a/app/components/ChatComponent.tsx
++++ b/app/components/ChatComponent.tsx
+@@ -10,6 +10,7 @@ import PersonalAgentKnowledge from './PersonalAgentKnowledge'
+ import AgentProblemSolvingModel from './AgentProblemSolvingModel'
+ import AgentMattersOverview from './AgentMattersOverview'
+ import LoginMenu from './LoginMenu'
++import { decideGoldenSignOut } from '../lib/golden-signout'
+ import { LEGACY_WORKSPACE_KEY, MATTER_RESTORE_EVENT, archiveCurrentWorkspace } from '../lib/personal-agent-matter'
+ import { clearCustomerSession } from '../lib/customer-signout'
+ 
+@@ -245,8 +246,17 @@ export default function ChatComponent({ butlerMode = false }: { butlerMode?: boo
+   // The butler nickname is migrated to the guest key first, the planning draft
+   // (goaa_planning_workspace_v1) and agent-role/other preferences stay. This
+   // performs NO network request — no order/match/checkout/payment/delete call.
+-  function handleCustomerSignOut() {
++  const [signOutError, setSignOutError] = useState<string | null>(null)
++  async function handleCustomerSignOut() {
+     if (typeof window === 'undefined') return
++    setSignOutError(null)
++    // Golden session bridge (Clerk builds): revoke -> clear -> Clerk sign-out.
++    // 'failed' must stay visible and must not clear local credentials.
++    const outcome = await decideGoldenSignOut(window, '/planning?logged_out=1')
++    if (outcome.status === 'failed') {
++      setSignOutError(outcome.message)
++      return
++    }
+     try {
+       clearCustomerSession(window.localStorage, window.sessionStorage)
+     } catch { /* never let a storage edge case block navigation */ }
+@@ -425,7 +435,7 @@ export default function ChatComponent({ butlerMode = false }: { butlerMode?: boo
+     <div className={`goaa-shell${butlerMode ? ' butler-workspace' : ''}`}>
+       <header className="goaa-nav">
+         <a className="goaa-brand" href="https://goaa.ai/" aria-label="AI Butler home"><span className="goaa-mark">G</span><span className="goaa-brand-text">AI Butler</span></a>
+-        <nav className="goaa-nav-actions" aria-label="Primary navigation"><LoginMenu variant="ghost" signedIn={sessionVisible} onLogout={handleCustomerSignOut} />{!showWorkspace && <a href="#start" className="goaa-start-link">Start Planning <span>→</span></a>}</nav>
++        <nav className="goaa-nav-actions" aria-label="Primary navigation"><LoginMenu variant="ghost" signedIn={sessionVisible} onLogout={handleCustomerSignOut} error={signOutError} />{!showWorkspace && <a href="#start" className="goaa-start-link">Start Planning <span>→</span></a>}</nav>
+       </header>
+       {signOutNotice && (
+         <div className="goaa-signout-notice" role="status">
+@@ -476,8 +486,12 @@ export default function ChatComponent({ butlerMode = false }: { butlerMode?: boo
+             <div className="workspace-nav-label">{butlerMode ? 'MY AI BUTLER' : 'Planning workspace'}</div>
+             <button className={`workspace-nav-item ${viewMode === 'conversation' ? 'active' : ''}`} onClick={() => setViewMode('conversation')}>Chat</button>
+             {butlerMode && <button className={`workspace-nav-item ${viewMode === 'matters' ? 'active' : ''}`} onClick={() => setViewMode('matters')}>Matters</button>}
+-            <button className={`workspace-nav-item ${viewMode === 'plan' ? 'active' : ''}`} onClick={() => setViewMode('plan')}>Plan Result</button>
+-            <button className={`workspace-nav-item ${viewMode === 'execution' ? 'active' : ''}`} onClick={() => setViewMode('execution')}>Professional Execution</button>
++            {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/skills">Skills Marketplace</a>}
++            {butlerMode && <div className="workspace-rail-divider" />}
++            {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/get-licensed">Get Licensed <span className="workspace-nav-tag">NEW</span></a>}
++            {butlerMode && <a className="workspace-nav-item" href="/agent-loop/customer/earning">Earning Opportunities <span className="workspace-nav-tag">NEW</span></a>}
++            {!butlerMode && <button className={`workspace-nav-item ${viewMode === 'plan' ? 'active' : ''}`} onClick={() => setViewMode('plan')}>Plan Result</button>}
++            {!butlerMode && <button className={`workspace-nav-item ${viewMode === 'execution' ? 'active' : ''}`} onClick={() => setViewMode('execution')}>Professional Execution</button>}
+             <div className="workspace-rail-spacer" />
+             {butlerMode && <button className={`workspace-nav-item ${viewMode === 'knowledge' ? 'active' : ''}`} onClick={() => setViewMode('knowledge')}>记忆与能力</button>}
+             <small>{sessionVisible ? 'Signed in: GOAA auto-saves your plan and conversation — refresh or return anytime.' : 'Plan freely without signing in; sign in when purchasing, leaving, or switching topics to save.'}</small>
+diff --git a/app/components/LoginMenu.tsx b/app/components/LoginMenu.tsx
+index 6411c75..67ad1de 100644
+--- a/app/components/LoginMenu.tsx
++++ b/app/components/LoginMenu.tsx
+@@ -26,6 +26,8 @@ type LoginMenuProps = {
+   customerLoginHref?: string;
+   agentLoginHref?: string;
+   registerHref?: string;
++  /** Shown under the menu when a sign-out could not complete. */
++  error?: string | null;
+ };
+ 
+ const PURPLE = '#512FEB';
+@@ -152,6 +154,7 @@ export default function LoginMenu({
+   accountHref = '/planning',
+   logoutHref = '/client-logout?return=home',
+   onLogout,
++  error = null,
+   customerLoginHref = '/client-login',
+   agentLoginHref = '/agent-login',
+   registerHref = '/client-login',
+@@ -213,6 +216,11 @@ export default function LoginMenu({
+               ) : (
+                 <MenuLink href={logoutHref}>LOG OUT</MenuLink>
+               )}
++              {error ? (
++                <div role="alert" data-testid="sign-out-error" style={{ padding: '10px 20px 6px', fontSize: 13, color: '#fca5a5', letterSpacing: 0 }}>
++                  {error}
++                </div>
++              ) : null}
+             </>
+           ) : (
+             <>
+diff --git a/app/components/agent-loop/AdminReview.tsx b/app/components/agent-loop/AdminReview.tsx
+index 2ff08b6..a84d761 100644
+--- a/app/components/agent-loop/AdminReview.tsx
++++ b/app/components/agent-loop/AdminReview.tsx
+@@ -12,7 +12,6 @@
+  */
+ 
+ import { useCallback, useEffect, useState } from 'react'
+-import Link from 'next/link'
+ import Shell from './Shell'
+ import { api, ApiError } from '@/app/lib/agent-loop/api'
+ import type { Application, AuditEvent, DocumentRow, SessionUser } from '@/app/lib/agent-loop/api'
+@@ -123,25 +122,8 @@ export default function AdminReview({
+   const preReview = app?.pre_review
+ 
+   return (
+-    <Shell user={user} canEnterAgent={false} clerkAuth={clerkAuth}>
+-      <div className="pp-layout">
+-        <nav className="pp-rail" aria-label="admin navigation">
+-          <Link className="pp-rail-item" href="/agent-loop/customer">
+-            <span className="pp-rail-ic" aria-hidden="true">
+-              ←
+-            </span>
+-            <span>User dashboard</span>
+-          </Link>
+-          <button type="button" className="pp-rail-item pp-active" data-testid="admin-rail-queue">
+-            <span className="pp-rail-ic" aria-hidden="true">
+-              🛡️
+-            </span>
+-            <span>Agent review</span>
+-          </button>
+-          <span className="pp-rail-kicker">admin role required · server-verified</span>
+-        </nav>
+-
+-        <main className="pp-main" data-testid="admin-main">
++    <Shell user={user} canEnterAgent={false} clerkAuth={clerkAuth} portal="admin" activeId="applications" eyebrow="Licence review" title="Applications">
++      <div data-testid="admin-main">
+           <div className="pp-stack">
+             <section className="pp-panel">
+               <div className="pp-section-head">
+@@ -152,7 +134,7 @@ export default function AdminReview({
+                     is advisory: it cannot approve and it cannot change a status.
+                   </p>
+                 </div>
+-                <span className="pp-badge">admin · {user.email}</span>
++                <span className="pp-status pp-status-review">admin · {user.email}</span>
+               </div>
+ 
+               <div className="pp-tabs">
+@@ -466,11 +448,7 @@ export default function AdminReview({
+               </section>
+             ) : null}
+           </div>
+-        </main>
+       </div>
+-      <footer className="pp-footer">
+-        C2 isolated candidate · admin role verified on the server for every /admin/* call
+-      </footer>
+     </Shell>
+   )
+ }
+diff --git a/app/components/agent-loop/AgentPanel.tsx b/app/components/agent-loop/AgentPanel.tsx
+index da8dc32..1a7df08 100644
+--- a/app/components/agent-loop/AgentPanel.tsx
++++ b/app/components/agent-loop/AgentPanel.tsx
+@@ -25,18 +25,8 @@ export default function AgentPanel({
+   clerkAuth?: boolean
+ }) {
+   return (
+-    <Shell user={user} canEnterAgent isAgentView clerkAuth={clerkAuth}>
+-      <div className="pp-layout">
+-        <nav className="pp-rail" aria-label="agent navigation">
+-          <button type="button" className="pp-rail-item pp-active" data-testid="agent-rail-home">
+-            <span className="pp-rail-ic" aria-hidden="true">
+-              🧭
+-            </span>
+-            <span>Agent home</span>
+-          </button>
+-          <span className="pp-rail-kicker">same account · same session as the user panel</span>
+-        </nav>
+-        <main className="pp-main" data-testid="agent-main">
++    <Shell user={user} canEnterAgent isAgentView clerkAuth={clerkAuth} portal="agent" activeId="overview" eyebrow="Agent overview" title="Agent panel">
++      <div data-testid="agent-main">
+           <div className="pp-stack">
+             <section className="pp-panel">
+               <div className="pp-section-head">
+@@ -115,11 +105,7 @@ export default function AgentPanel({
+               </div>
+             </section>
+           </div>
+-        </main>
+       </div>
+-      <footer className="pp-footer">
+-        C2 isolated candidate · permission verified against the live API on every request
+-      </footer>
+     </Shell>
+   )
+ }
+diff --git a/app/components/agent-loop/ApplicationForm.tsx b/app/components/agent-loop/ApplicationForm.tsx
+index d5893b7..8d9050f 100644
+--- a/app/components/agent-loop/ApplicationForm.tsx
++++ b/app/components/agent-loop/ApplicationForm.tsx
+@@ -221,25 +221,12 @@ export default function ApplicationForm({
+       user={user}
+       canEnterAgent={user.roles.includes('agent') && status === 'approved'}
+       clerkAuth={clerkAuth}
++      portal="customer"
++      activeId="licensed"
++      eyebrow="Get Licensed"
++      title="Agent application"
+     >
+-      <div className="pp-layout">
+-        <nav className="pp-rail" aria-label="application navigation">
+-          <Link className="pp-rail-item" href="/agent-loop/customer">
+-            <span className="pp-rail-ic" aria-hidden="true">
+-              ←
+-            </span>
+-            <span>Back to dashboard</span>
+-          </Link>
+-          <button type="button" className="pp-rail-item pp-active" data-testid="apply-rail-item">
+-            <span className="pp-rail-ic" aria-hidden="true">
+-              📜
+-            </span>
+-            <span>Agent application</span>
+-          </button>
+-          <span className="pp-rail-kicker">Get Licensed · same account</span>
+-        </nav>
+-
+-        <main className="pp-main" data-testid="apply-main">
++      <div data-testid="apply-main">
+           <div className="pp-stack">
+             <section className="pp-panel">
+               <div className="pp-section-head">
+@@ -621,11 +608,7 @@ export default function ApplicationForm({
+               </section>
+             ) : null}
+           </div>
+-        </main>
+       </div>
+-      <footer className="pp-footer">
+-        C2 isolated candidate · PostgreSQL-backed · synthetic data only · not production
+-      </footer>
+     </Shell>
+   )
+ }
+diff --git a/app/components/agent-loop/AuthPanel.tsx b/app/components/agent-loop/AuthPanel.tsx
+index 0485973..f6420b0 100644
+--- a/app/components/agent-loop/AuthPanel.tsx
++++ b/app/components/agent-loop/AuthPanel.tsx
+@@ -64,15 +64,9 @@ export default function AuthPanel() {
+   }
+ 
+   return (
+-    <div className="pp-root">
+-      <header className="pp-topbar">
+-        <div className="pp-brand">
+-          goaa.ai<span className="pp-brand-sub">Become an Agent</span>
+-        </div>
+-        <span className="pp-badge">C2 isolated · synthetic data</span>
+-      </header>
+-      <main className="pp-main" style={{ margin: '0 auto' }}>
+-        <div className="pp-panel" style={{ maxWidth: 520 }}>
++    <div className="goaa goaa-auth">
++      <main style={{ width: 'min(100%, 520px)' }}>
++        <div className="goaa-card-2">
+           <div className="pp-tabs">
+             <button
+               type="button"
+@@ -177,10 +171,6 @@ export default function AuthPanel() {
+           </form>
+         </div>
+ 
+-        <p className="pp-footnote" style={{ maxWidth: 520 }}>
+-          This is the isolated C2 candidate environment. Use synthetic names, synthetic e-mail
+-          addresses and synthetic documents only. Nothing here is production.
+-        </p>
+       </main>
+     </div>
+   )
+diff --git a/app/components/agent-loop/CustomerPanel.tsx b/app/components/agent-loop/CustomerPanel.tsx
+index cc2f3ab..fc7b40c 100644
+--- a/app/components/agent-loop/CustomerPanel.tsx
++++ b/app/components/agent-loop/CustomerPanel.tsx
+@@ -15,20 +15,10 @@
+  * touch no third party and no price.
+  */
+ 
+-import { useState } from 'react'
+ import Link from 'next/link'
+-import Shell, { Rail } from './Shell'
+-import type { RailItem } from './Shell'
++import Shell from './Shell'
+ import type { SessionUser } from '@/app/lib/agent-loop/api'
+ 
+-const RAIL: RailItem[] = [
+-  { id: 'chat', label: 'Chat', icon: '💬', kicker: 'existing golden view' },
+-  { id: 'matters', label: 'Matters', icon: '🗂️', kicker: 'existing golden view' },
+-  { id: 'skills', label: 'Skills Marketplace', icon: '🧰' },
+-  { id: 'licensed', label: 'Get Licensed', icon: '📜', divider: true, isNew: true },
+-  { id: 'earning', label: 'Earning Opportunities', icon: '💡' },
+-]
+-
+ type Status = 'draft' | 'submitted' | 'info_requested' | 'approved' | 'rejected' | 'suspended'
+ 
+ const STATUS_LABEL: Record<Status, string> = {
+@@ -61,60 +51,17 @@ export default function CustomerPanel({
+   /** Server-decided: this deployment signs people in through Clerk. */
+   clerkAuth?: boolean
+ }) {
+-  const [tab, setTab] = useState('licensed')
+   const status = (application?.status || null) as Status | null
+ 
+   return (
+-    <Shell user={user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuth}>
+-      <div className="pp-layout">
+-        <Rail items={RAIL} active={tab} onSelect={setTab} />
+-        <main className="pp-main" data-testid="customer-main">
+-          {tab === 'licensed' ? (
+-            <LicensedTab application={application} status={status} canEnterAgent={canEnterAgent} />
+-          ) : tab === 'skills' ? (
+-            <PreviewTab
+-              title="Skills Marketplace"
+-              body="Skills are shown here as products of the assistant. Browsing, pricing and third-party integrations are preview-only in this round — nothing is charged and no partner is contacted."
+-              chips={['preview only', 'no price change', 'no third party']}
+-            />
+-          ) : tab === 'earning' ? (
+-            <PreviewTab
+-              title="Earning Opportunities"
+-              body="Paid task previews, partner courses and membership referrals. Content only in this round — no payouts, no referral settlement."
+-              chips={['Coming soon', 'content only']}
+-            />
+-          ) : (
+-            <PreviewTab
+-              title={tab === 'chat' ? 'Chat' : 'Matters'}
+-              body="This is the existing assistant view. It is intentionally left as-is and is not part of the agent-application loop."
+-              chips={['existing golden view', 'untouched']}
+-            />
+-          )}
+-        </main>
++    <Shell user={user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuth} portal="customer" activeId="licensed" eyebrow="Get Licensed" title="Agent licence application">
++      <div data-testid="customer-main">
++        <LicensedTab application={application} status={status} canEnterAgent={canEnterAgent} />
+       </div>
+-      <footer className="pp-footer">
+-        C2 isolated candidate · synthetic accounts and synthetic documents only · not production
+-      </footer>
+     </Shell>
+   )
+ }
+ 
+-function PreviewTab({ title, body, chips }: { title: string; body: string; chips: string[] }) {
+-  return (
+-    <section className="pp-panel">
+-      <h1 className="pp-h1">{title}</h1>
+-      <p className="pp-body pp-muted">{body}</p>
+-      <div className="pp-chip-row">
+-        {chips.map((c) => (
+-          <span className="pp-chip" key={c}>
+-            {c}
+-          </span>
+-        ))}
+-      </div>
+-    </section>
+-  )
+-}
+-
+ function LicensedTab({
+   application,
+   status,
+diff --git a/app/components/agent-loop/Gate.tsx b/app/components/agent-loop/Gate.tsx
+index c1769e3..b0436bd 100644
+--- a/app/components/agent-loop/Gate.tsx
++++ b/app/components/agent-loop/Gate.tsx
+@@ -22,33 +22,23 @@ export default function Gate({
+   back?: { href: string; label: string }
+ }) {
+   return (
+-    <div className="pp-root">
+-      <header className="pp-topbar">
+-        <div className="pp-brand">
+-          goaa.ai<span className="pp-brand-sub">Access gate</span>
+-        </div>
+-        <span className="pp-badge">C2 isolated · synthetic data</span>
+-      </header>
+-      <main className="pp-main" style={{ maxWidth: 640 }}>
+-        <section className="pp-gate-card" data-testid="access-gate" data-gate-code={code}>
+-          <span className="pp-gate-badge">{code}</span>
+-          <h1 className="pp-h1">{title}</h1>
+-          <p className="pp-body pp-muted">{message}</p>
+-          <div className="pp-actions">
+-            {back ? (
+-              <Link className="pp-btn pp-btn-secondary" data-testid="gate-back" href={back.href}>
+-                {back.label}
+-              </Link>
+-            ) : null}
+-            <Link className="pp-btn pp-btn-ghost" href="/agent-loop/login">
+-              Sign in with another account
++    <div className="goaa" style={{ display: 'grid', placeItems: 'center', padding: 24 }}>
++      <section className="goaa-card" data-testid="access-gate" data-gate-code={code} style={{ maxWidth: 640, width: '100%' }}>
++        <span className="goaa-pill outline">{code}</span>
++        <h1 className="goaa-h1" style={{ marginTop: 12 }}>{title}</h1>
++        <p className="goaa-muted" style={{ margin: '10px 0 18px' }}>{message}</p>
++        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
++          {back ? (
++            <Link className="goaa-btn goaa-btn-secondary" data-testid="gate-back" href={back.href}>
++              {back.label}
+             </Link>
+-          </div>
+-        </section>
+-      </main>
+-      <footer className="pp-footer">
+-        Permission is re-checked on the server on every request, every refresh and every direct URL.
+-      </footer>
++          ) : null}
++          <Link className="goaa-btn goaa-btn-secondary" href="/agent-loop/login">
++            Sign in with another account
++          </Link>
++        </div>
++        <p className="goaa-muted" style={{ marginTop: 18, fontSize: 13 }}>Permission is re-checked on the server on every request, every refresh and every direct URL.</p>
++      </section>
+     </div>
+   )
+ }
+diff --git a/app/components/agent-loop/GrowthPage.tsx b/app/components/agent-loop/GrowthPage.tsx
+new file mode 100644
+index 0000000..854c787
+--- /dev/null
++++ b/app/components/agent-loop/GrowthPage.tsx
+@@ -0,0 +1,47 @@
++'use client'
++
++/**
++ * GrowthPage.tsx — thin client wrapper so server pages can mount Shell with
++ * a rail preset, a heading and static content. Used by the customer growth
++ * pages (Skills Marketplace / Get Licensed / Earning Opportunities) and by
++ * the agent/admin placeholder routes.
++ */
++
++import type { ReactNode } from 'react'
++import Shell from './Shell'
++import type { SessionUser } from '@/app/lib/agent-loop/api'
++
++export default function GrowthPage({
++  user,
++  canEnterAgent,
++  clerkAuth,
++  portal,
++  activeId,
++  eyebrow,
++  title,
++  children,
++}: {
++  user: SessionUser
++  canEnterAgent: boolean
++  clerkAuth?: boolean
++  portal: 'customer' | 'agent' | 'admin'
++  activeId: string
++  eyebrow: string
++  title: string
++  children: ReactNode
++}) {
++  return (
++    <Shell user={user} canEnterAgent={canEnterAgent} clerkAuth={clerkAuth} portal={portal} activeId={activeId} eyebrow={eyebrow} title={title}>
++      {children}
++    </Shell>
++  )
++}
++
++export function ComingSoon({ what }: { what: string }) {
++  return (
++    <div className="goaa-card-2">
++      <h2 className="goaa-h2">{what}</h2>
++      <p className="goaa-muted" style={{ margin: 0 }}>Coming in a later round.</p>
++    </div>
++  )
++}
+diff --git a/app/components/agent-loop/Shell.tsx b/app/components/agent-loop/Shell.tsx
+index ba197fe..b88b14d 100644
+--- a/app/components/agent-loop/Shell.tsx
++++ b/app/components/agent-loop/Shell.tsx
+@@ -3,71 +3,35 @@
+ /**
+  * Shell.tsx — visual shell for the isolated /agent-loop/* front end.
+  *
+- * It reuses the existing portal-preview design system (pp-* classes) so the
+- * candidate pages keep the current look, spacing and navigation behaviour.
+- * It does NOT import or modify any golden page, component or stylesheet.
++ * Round C1: the shell now renders the shared PortalShell (planning.goaa.ai
++ * look: logo + portal brand + account menu, left rail card, main card).
++ * The sign-out decision is unchanged and still lives in lib/agent-loop/signout.ts.
++ * Props are backwards compatible; `portal` and `activeId` pick the rail preset.
+  */
+ 
+ import Link from 'next/link'
+-import { useRouter } from 'next/navigation'
+-import { useEffect, useState } from 'react'
++import { useState } from 'react'
+ import type { ReactNode } from 'react'
+ import type { SessionUser } from '@/app/lib/agent-loop/api'
+ import { api } from '@/app/lib/agent-loop/api'
+ import { performSignOut } from '@/app/lib/agent-loop/signout'
++import PortalShell, { ADMIN_RAIL, AGENT_RAIL, CUSTOMER_RAIL } from '@/app/components/portal/PortalShell'
++import type { RailSection } from '@/app/components/portal/PortalShell'
+ 
+-export type RailItem = {
+-  id: string
+-  label: string
+-  icon?: ReactNode
+-  /** Small caption under the item, e.g. "existing golden view". */
+-  kicker?: string
+-  /** Draws a separator above the item. */
+-  divider?: boolean
+-  /** Shows the "New" tag. */
+-  isNew?: boolean
+-}
+-
+-export function Rail({
+-  items,
+-  active,
+-  onSelect,
+-}: {
+-  items: RailItem[]
+-  active: string
+-  onSelect: (id: string) => void
+-}) {
+-  return (
+-    <nav className="pp-rail" aria-label="main navigation">
+-      {items.map((item) => (
+-        <div key={item.id}>
+-          <button
+-            type="button"
+-            data-testid={`rail-${item.id}`}
+-            className={`pp-rail-item${active === item.id ? ' pp-active' : ''}${
+-              item.divider ? ' pp-divider-top' : ''
+-            }`}
+-            aria-current={active === item.id ? 'page' : undefined}
+-            onClick={() => onSelect(item.id)}
+-          >
+-            <span className="pp-rail-ic" aria-hidden="true">
+-              {item.icon}
+-            </span>
+-            <span>{item.label}</span>
+-            {item.isNew ? <span className="pp-new-tag">New</span> : null}
+-          </button>
+-          {item.kicker ? <span className="pp-rail-kicker">{item.kicker}</span> : null}
+-        </div>
+-      ))}
+-    </nav>
+-  )
+-}
++export type { RailItem, RailSection } from '@/app/components/portal/PortalShell'
+ 
+ export default function Shell({
+   user,
+   canEnterAgent,
+   isAgentView,
+   clerkAuth = false,
++  portal,
++  activeId,
++  sections,
++  eyebrow,
++  title,
++  headerRight,
++  aside,
+   children,
+ }: {
+   user: SessionUser
+@@ -76,36 +40,29 @@ export default function Shell({
+   isAgentView?: boolean
+   /** Server-decided: this deployment signs people in through Clerk. */
+   clerkAuth?: boolean
++  portal?: 'customer' | 'agent' | 'admin'
++  activeId?: string
++  sections?: RailSection[]
++  eyebrow?: string
++  title?: ReactNode
++  headerRight?: ReactNode
++  aside?: ReactNode
+   children: ReactNode
+ }) {
+-  const router = useRouter()
+-  const [menuOpen, setMenuOpen] = useState(false)
+   const [busy, setBusy] = useState(false)
+   const [signOutError, setSignOutError] = useState<string | null>(null)
+ 
+-  useEffect(() => {
+-    function onDoc(event: MouseEvent) {
+-      // A React stopPropagation on the wrapper does not stop a listener that is
+-      // registered directly on document, so the trigger click would close the
+-      // popover in the same tick that opens it. Ignore clicks inside the area.
+-      const target = event.target as HTMLElement | null
+-      if (target && target.closest('.pp-user-area')) return
+-      setMenuOpen(false)
+-    }
+-    document.addEventListener('click', onDoc)
+-    return () => document.removeEventListener('click', onDoc)
+-  }, [])
++  const which = portal ?? (isAgentView ? 'agent' : 'customer')
++  const rail = sections ?? (which === 'agent' ? AGENT_RAIL : which === 'admin' ? ADMIN_RAIL : CUSTOMER_RAIL)
+ 
+   /**
+-   * Sign out.
+-   *
+-   * The decision — and the refusal to claim a sign-out that did not happen —
+-   * lives in lib/agent-loop/signout.ts, where all three cases are tested.
++   * Sign out. Never report a sign-out that did not happen: only a refusal
++   * lands back here and is shown; the Clerk branch navigates through the SDK.
+    */
+   async function signOut() {
++    if (busy) return
+     setBusy(true)
+     setSignOutError(null)
+-
+     const result = await performSignOut({
+       clerkAuth,
+       browser: typeof window === 'undefined' ? null : window,
+@@ -118,86 +75,46 @@ export default function Shell({
+       },
+       navigate: (url) => window.location.assign(url),
+     })
+-
+-    // The Clerk branch navigates through the SDK; only a refusal lands here.
+     if (result.status !== 'redirected') {
+       setBusy(false)
+       setSignOutError(result.message)
+     }
+   }
+ 
+-  const initials = (user.full_name || user.email || '?').trim().slice(0, 1).toUpperCase()
++  const railFooter = (
++    <div style={{ padding: '4px 8px 0', display: 'grid', gap: 6, fontSize: 13 }}>
++      {which === 'agent' ? (
++        <Link className="goaa-rail-item" data-testid="switch-to-user" href="/agent-loop/customer">⇄ Back to Customer</Link>
++      ) : canEnterAgent ? (
++        <Link className="goaa-rail-item" data-testid="switch-to-agent" href="/agent-loop/agent">⇄ Switch to Agent Portal</Link>
++      ) : which === 'customer' ? (
++        <span className="goaa-muted" style={{ padding: '0 6px' }}>Agent Portal opens after your licence is approved.</span>
++      ) : null}
++      {user.roles.includes('admin') && which !== 'admin' ? (
++        <Link className="goaa-rail-item" data-testid="go-admin-review" href="/agent-loop/admin">Admin review queue</Link>
++      ) : null}
++      <span className="goaa-muted" style={{ padding: '0 6px', fontSize: 12 }}>{user.email}</span>
++      {signOutError ? (
++        <div role="alert" data-testid="sign-out-error" style={{ color: 'var(--goaa-danger)', padding: '0 6px' }}>{signOutError}</div>
++      ) : null}
++    </div>
++  )
+ 
+   return (
+-    <div className="pp-root">
+-      <header className="pp-topbar">
+-        <div className="pp-brand">
+-          goaa.ai
+-          <span className="pp-brand-sub">
+-            {isAgentView ? 'Agent panel' : 'Personal Service Center'}
+-          </span>
+-        </div>
+-        <div className="pp-topbar-right">
+-          <span className="pp-badge">C2 isolated · synthetic data</span>
+-          <div className="pp-user-area" onClick={(e) => e.stopPropagation()}>
+-            <button
+-              type="button"
+-              className="pp-user-btn"
+-              data-testid="account-menu-button"
+-              aria-expanded={menuOpen}
+-              onClick={() => setMenuOpen((v) => !v)}
+-            >
+-              <span className="pp-user-avatar" aria-hidden="true">
+-                {initials}
+-              </span>
+-              <span className="pp-user-email">{user.email}</span>
+-              <span className="pp-user-caret" aria-hidden="true">
+-                ▾
+-              </span>
+-            </button>
+-            {menuOpen ? (
+-              <div className="pp-user-pop" role="menu" data-testid="account-menu">
+-                <div className="pp-user-head">
+-                  <div className="pp-user-name">{user.full_name || 'Unnamed account'}</div>
+-                  <div className="pp-user-meta">
+-                    roles: {user.roles.join(', ') || 'none'}
+-                  </div>
+-                </div>
+-                {isAgentView ? (
+-                  <Link className="pp-menu-item" data-testid="switch-to-user" href="/agent-loop/customer">
+-                    ⇄ Switch to User panel
+-                  </Link>
+-                ) : canEnterAgent ? (
+-                  <Link className="pp-menu-item" data-testid="switch-to-agent" href="/agent-loop/agent">
+-                    ⇄ Switch to Agent panel
+-                  </Link>
+-                ) : null}
+-                {user.roles.includes('admin') ? (
+-                  <Link className="pp-menu-item" data-testid="go-admin-review" href="/agent-loop/admin">
+-                    🛡️ Agent review queue
+-                  </Link>
+-                ) : null}
+-                <div className="pp-menu-sep" />
+-                {signOutError ? (
+-                  <div className="pp-menu-item pp-menu-note" role="alert" data-testid="sign-out-error">
+-                    {signOutError}
+-                  </div>
+-                ) : null}
+-                <button
+-                  type="button"
+-                  className="pp-menu-item"
+-                  data-testid="sign-out"
+-                  disabled={busy}
+-                  onClick={signOut}
+-                >
+-                  Sign out
+-                </button>
+-              </div>
+-            ) : null}
+-          </div>
+-        </div>
+-      </header>
++    <PortalShell
++      portal={which}
++      brandHref={which === 'customer' ? '/planning' : `/agent-loop/${which}`}
++      signedIn
++      onLogout={signOut}
++      sections={rail}
++      activeId={activeId ?? ''}
++      railFooter={railFooter}
++      eyebrow={eyebrow}
++      title={title}
++      headerRight={headerRight}
++      aside={aside}
++    >
+       {children}
+-    </div>
++    </PortalShell>
+   )
+ }
+diff --git a/app/components/butler-workspace.css b/app/components/butler-workspace.css
+index 724cf18..97fe802 100644
+--- a/app/components/butler-workspace.css
++++ b/app/components/butler-workspace.css
+@@ -74,3 +74,8 @@
+   .butler-workspace .butler-inline-inbox { padding-left: 14px; padding-right: 14px; }
+   .butler-workspace .workspace-composer { margin-left: 14px; margin-right: 14px; }
+ }
++
++/* Round C1: growth-area links in the customer rail */
++.butler-workspace .workspace-rail a.workspace-nav-item { display: flex; align-items: center; gap: 8px; text-decoration: none; }
++.butler-workspace .workspace-rail-divider { height: 1px; background: rgba(255,255,255,.08); margin: 10px 8px; }
++.butler-workspace .workspace-nav-tag { margin-left: auto; font-size: 10px; letter-spacing: .06em; padding: 2px 7px; border-radius: 999px; background: #6944cc; color: #fff; }
+diff --git a/app/components/portal/PortalShell.tsx b/app/components/portal/PortalShell.tsx
+new file mode 100644
+index 0000000..497383f
+--- /dev/null
++++ b/app/components/portal/PortalShell.tsx
+@@ -0,0 +1,188 @@
++'use client';
++
++/**
++ * PortalShell — the one layout every portal page uses (customer / agent / admin).
++ * Visual spec = planning.goaa.ai workspace: rounded header card with logo +
++ * brand text + account menu (ghost), left rail card, main card, optional aside.
++ * Brand text follows the portal: customer "AI Butler", agent "AI Agent", admin "AI Admin".
++ *
++ * Requires goaa-tokens.css loaded once in app/layout.tsx.
++ * Does not import anything from /portal-preview or the golden ChatComponent.
++ */
++
++import Link from 'next/link';
++import type { ReactNode } from 'react';
++import LoginMenu from '@/app/components/LoginMenu';
++
++export type RailItem = {
++  id: string;
++  label: string;
++  href?: string;          // link item
++  onSelect?: () => void;  // in-page item
++  isNew?: boolean;
++  dividerAbove?: boolean;
++  disabled?: boolean;
++};
++
++export type RailSection = { title?: string; items: RailItem[] };
++
++export type PortalShellProps = {
++  /** Which portal this is; only affects data-attrs and the switch link. */
++  portal: 'customer' | 'agent' | 'admin';
++  brandHref?: string;                     // default '/planning'
++  signedIn: boolean;
++  onLogout?: () => void;
++  /** Optional primary CTA at the top of the rail (e.g. "+ New"). */
++  railCta?: { label: string; onClick: () => void };
++  sections: RailSection[];
++  activeId: string;
++  /** Rendered at the bottom of the rail: role switch / gate hint. */
++  railFooter?: ReactNode;
++  eyebrow?: string;
++  title?: ReactNode;
++  headerRight?: ReactNode;                // e.g. status pill next to title
++  aside?: ReactNode;                      // right column (blueprint, help)
++  children: ReactNode;
++};
++
++export const PORTAL_BRAND: Record<PortalShellProps['portal'], string> = {
++  customer: 'AI Butler',
++  agent: 'AI Agent',
++  admin: 'AI Admin',
++};
++
++export default function PortalShell(p: PortalShellProps) {
++  const withAside = Boolean(p.aside);
++  const brand = PORTAL_BRAND[p.portal];
++  return (
++    <div className="goaa" data-portal={p.portal}>
++      <header className="goaa-header">
++        <Link className="goaa-brand" href={p.brandHref ?? '/planning'} aria-label={`${brand} home`}>
++          <img src="/goaa-logo.svg" alt="" />
++          <span className="goaa-brand-text">{brand}</span>
++        </Link>
++        <LoginMenu variant="ghost" signedIn={p.signedIn} onLogout={p.onLogout} />
++      </header>
++
++      <div className={`goaa-layout${withAside ? ' goaa-with-aside' : ''}`}>
++        <nav className="goaa-rail" aria-label="main navigation">
++          {p.railCta ? (
++            <button type="button" className="goaa-rail-cta" onClick={p.railCta.onClick}>
++              + {p.railCta.label}
++            </button>
++          ) : null}
++
++          {p.sections.map((s, si) => (
++            <div key={si}>
++              {s.title ? <div className="goaa-rail-section">{s.title}</div> : null}
++              {s.items.map((it) => {
++                const current = it.id === p.activeId;
++                const body = (
++                  <>
++                    <span>{it.label}</span>
++                    {it.isNew ? <span className="goaa-rail-tag">NEW</span> : null}
++                  </>
++                );
++                return (
++                  <div key={it.id}>
++                    {it.dividerAbove ? <div className="goaa-rail-divider" /> : null}
++                    {it.href ? (
++                      <Link
++                        className="goaa-rail-item"
++                        href={it.href}
++                        aria-current={current ? 'page' : undefined}
++                        aria-disabled={it.disabled || undefined}
++                        data-testid={`rail-${it.id}`}
++                      >
++                        {body}
++                      </Link>
++                    ) : (
++                      <button
++                        type="button"
++                        className="goaa-rail-item"
++                        aria-current={current ? 'page' : undefined}
++                        disabled={it.disabled}
++                        onClick={it.onSelect}
++                        data-testid={`rail-${it.id}`}
++                      >
++                        {body}
++                      </button>
++                    )}
++                  </div>
++                );
++              })}
++            </div>
++          ))}
++
++          {p.railFooter ? (
++            <>
++              <div className="goaa-rail-divider" />
++              {p.railFooter}
++            </>
++          ) : null}
++        </nav>
++
++        <main className="goaa-main">
++          {(p.eyebrow || p.title) && (
++            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
++              <div>
++                {p.eyebrow ? <div className="goaa-eyebrow">{p.eyebrow}</div> : null}
++                {p.title ? <h1 className="goaa-h1">{p.title}</h1> : null}
++              </div>
++              {p.headerRight}
++            </div>
++          )}
++          {p.children}
++        </main>
++
++        {withAside ? <aside className="goaa-aside">{p.aside}</aside> : null}
++      </div>
++    </div>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/* Rail presets — the only place the three menus are defined.          */
++/* ------------------------------------------------------------------ */
++
++export const CUSTOMER_RAIL: RailSection[] = [
++  {
++    title: 'My AI Butler',
++    items: [
++      { id: 'chat', label: 'Chat', href: '/planning' },
++      { id: 'matters', label: 'Matters', href: '/planning?view=matters' },
++      { id: 'skills', label: 'Skills Marketplace', href: '/agent-loop/customer/skills' },
++      { id: 'licensed', label: 'Get Licensed', href: '/agent-loop/customer/get-licensed', isNew: true, dividerAbove: true },
++      { id: 'earning', label: 'Earning Opportunities', href: '/agent-loop/customer/earning', isNew: true },
++      // Plan Result and Professional Execution are intentionally absent:
++      // capabilities remain reachable from Matters cards and the order flow.
++    ],
++  },
++];
++
++export const AGENT_RAIL: RailSection[] = [
++  {
++    title: 'Agent Portal',
++    items: [
++      { id: 'overview', label: 'Overview', href: '/agent-loop/agent' },
++      { id: 'opportunities', label: 'Opportunities', href: '/agent-loop/agent/opportunities' },
++      { id: 'orders', label: 'Service Orders', href: '/agent-loop/agent/orders' },
++      { id: 'knowledge', label: 'Knowledge Base', href: '/agent-loop/agent/knowledge' },
++      { id: 'my-ai', label: 'My AI', href: '/agent-loop/agent/my-ai' },
++    ],
++  },
++];
++
++export const ADMIN_RAIL: RailSection[] = [
++  {
++    title: 'Admin',
++    items: [
++      { id: 'overview', label: 'Overview', href: '/agent-loop/admin' },
++      { id: 'applications', label: 'Applications', href: '/agent-loop/admin/applications' },
++      { id: 'content', label: 'Content', href: '/agent-loop/admin/content' },
++      { id: 'finance', label: 'Finance', href: '/agent-loop/admin/finance' },
++      { id: 'system', label: 'System', href: '/agent-loop/admin/system' },
++      { id: 'support', label: 'Support', href: '/agent-loop/admin/support' },
++    ],
++  },
++];
+diff --git a/app/components/portal/clerk-appearance.ts b/app/components/portal/clerk-appearance.ts
+new file mode 100644
+index 0000000..bc153f4
+--- /dev/null
++++ b/app/components/portal/clerk-appearance.ts
+@@ -0,0 +1,99 @@
++/**
++ * clerk-appearance.ts — makes Clerk's <SignIn withSignUp /> look like the
++ * approved /client-login card (dark gradient card, pill buttons, white primary,
++ * "Welcome to GOAA" heading). Pass as `appearance={goaaClerkAppearance}`.
++ *
++ * Only presentation. No auth logic, no routing, no env.
++ */
++
++import type { Appearance } from '@clerk/types';
++
++export const goaaClerkAppearance: Appearance = {
++  variables: {
++    colorPrimary: '#f4f4f5',
++    colorText: '#ffffff',
++    colorTextSecondary: 'rgba(255,255,255,.62)',
++    colorBackground: 'transparent',
++    colorInputBackground: 'rgba(255,255,255,.055)',
++    colorInputText: '#ffffff',
++    colorDanger: '#fca5a5',
++    borderRadius: '15px',
++    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
++    fontSize: '15px',
++  },
++  elements: {
++    rootBox: { width: '100%' },
++    cardBox: { width: '100%', boxShadow: 'none' },
++    card: {
++      width: 'min(100%, 470px)',
++      padding: '34px 34px 30px',
++      border: '1px solid rgba(255,255,255,.12)',
++      background: 'linear-gradient(180deg, rgba(30,30,38,.98), rgba(18,18,24,.98))',
++      borderRadius: '28px',
++      boxShadow: '0 30px 90px rgba(0,0,0,.45)',
++    },
++    logoBox: { justifyContent: 'center', marginBottom: '16px' },
++    logoImage: { width: '48px', height: '48px', borderRadius: '50%' },
++    headerTitle: { fontSize: '28px', letterSpacing: '-.03em', textAlign: 'center' },
++    headerSubtitle: { color: 'rgba(255,255,255,.62)', fontSize: '14px', lineHeight: 1.6, textAlign: 'center' },
++    socialButtonsBlockButton: {
++      height: '52px',
++      borderRadius: '999px',
++      border: '1px solid rgba(255,255,255,.28)',
++      background: 'rgba(255,255,255,.035)',
++      color: '#fff',
++      fontWeight: 700,
++      fontSize: '15px',
++    },
++    socialButtonsBlockButtonText: { color: '#fff', fontWeight: 700 },
++    dividerLine: { background: 'rgba(255,255,255,.14)' },
++    dividerText: { color: 'rgba(255,255,255,.46)', fontSize: '13px' },
++    formFieldLabel: { display: 'none' },
++    formFieldInput: {
++      height: '52px',
++      padding: '0 16px',
++      borderRadius: '15px',
++      border: '1px solid rgba(255,255,255,.16)',
++      background: 'rgba(255,255,255,.055)',
++      color: '#fff',
++      boxShadow: 'none',
++    },
++    formButtonPrimary: {
++      height: '52px',
++      borderRadius: '999px',
++      border: 0,
++      background: '#f4f4f5',
++      color: '#111116',
++      fontWeight: 700,
++      fontSize: '16px',
++      textTransform: 'none',
++      boxShadow: 'none',
++      '&:hover': { background: '#ffffff' },
++    },
++    footerAction: { justifyContent: 'center' },
++    footerActionText: { color: 'rgba(255,255,255,.62)', fontSize: '14px' },
++    footerActionLink: { color: '#fff', textDecoration: 'underline', textUnderlineOffset: '3px', fontWeight: 400 },
++    footer: { background: 'transparent' },
++    identityPreview: { background: 'rgba(255,255,255,.055)', borderRadius: '15px' },
++    otpCodeFieldInput: { borderRadius: '12px', background: 'rgba(255,255,255,.055)', color: '#fff', border: '1px solid rgba(255,255,255,.16)' },
++    alert: { background: 'rgba(252,165,165,.08)', border: '1px solid rgba(252,165,165,.3)', borderRadius: '12px' },
++    alertText: { color: '#fca5a5' },
++  },
++  layout: {
++    logoImageUrl: '/goaa-logo.svg',
++    logoPlacement: 'inside',
++    socialButtonsPlacement: 'top',
++    socialButtonsVariant: 'blockButton',
++    showOptionalFields: false,
++    shimmer: false,
++  },
++};
++
++/** Page wrapper style for goaa-clerk-login (mirrors /client-login <main>). */
++export const goaaClerkPageStyle = {
++  minHeight: '100vh',
++  display: 'grid',
++  placeItems: 'center',
++  padding: '24px',
++  background: '#08080c',
++} as const;
+diff --git a/app/goaa-clerk-login/page.tsx b/app/goaa-clerk-login/page.tsx
+index ed32047..a54cbc9 100644
+--- a/app/goaa-clerk-login/page.tsx
++++ b/app/goaa-clerk-login/page.tsx
+@@ -1,6 +1,7 @@
+ import { headers } from "next/headers"
+ import { redirect } from "next/navigation"
+ import { SignIn } from "@clerk/nextjs"
++import { goaaClerkAppearance, goaaClerkPageStyle } from "../components/portal/clerk-appearance"
+ 
+ import {
+   CLERK_ENTRY_MARKER,
+@@ -37,23 +38,14 @@ export default function ClerkLoginPage({ searchParams }: { searchParams: SearchP
+   const next = safeNextTarget(raw)
+ 
+   return (
+-    <main
+-      style={{
+-        minHeight: "100vh",
+-        display: "flex",
+-        alignItems: "center",
+-        justifyContent: "center",
+-        padding: "48px 16px",
+-        background: "#07070b",
+-      }}
+-    >
+-      <div style={{ width: "100%", maxWidth: 420 }}>
++    <main style={goaaClerkPageStyle}>
++      <div style={{ width: "100%", maxWidth: 470 }}>
+         <SignIn
+           withSignUp
+           routing="hash"
+           forceRedirectUrl={next}
+           fallbackRedirectUrl={next}
+-          appearance={{ variables: { colorPrimary: "#6d5efc" } }}
++          appearance={goaaClerkAppearance}
+         />
+       </div>
+     </main>
+diff --git a/app/layout.tsx b/app/layout.tsx
+index 25a57b2..cd4bc95 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -2,6 +2,8 @@ import type { Metadata } from "next"
+ import { ClerkProvider } from "@clerk/nextjs"
+ import "./globals.css"
+ import "./logo.css"
++import "./styles/goaa-tokens.css"
++import "./styles/goaa-pp-compat.css"
+ import ProfessionalConnectBar from "./components/ProfessionalConnectBar"
+ import SignedInCookieSync from "./components/SignedInCookieSync"
+ import GoldenSessionBridge from "./components/GoldenSessionBridge"
+diff --git a/app/lib/golden-signout.ts b/app/lib/golden-signout.ts
+new file mode 100644
+index 0000000..f1b9c4e
+--- /dev/null
++++ b/app/lib/golden-signout.ts
+@@ -0,0 +1,52 @@
++/**
++ * golden-signout.ts — one place that decides how the account menu's LOG OUT
++ * behaves on golden pages.
++ *
++ * Contract (see FILE-DIVISION-AND-INTERFACE.md §3): when the golden session
++ * bridge is mounted it exposes window.__goaaGoldenSession.signOut(redirectUrl)
++ * resolving to 'ended' | 'not-started' | 'failed'. Order is fixed by the
++ * bridge: revoke business credential -> clear browser state -> Clerk sign-out.
++ *   'ended' / 'not-started' -> safe to navigate.
++ *   'failed'                -> do NOT navigate, do NOT clear local state,
++ *                              surface lastError so the user can retry.
++ * When the bridge is absent (Clerk off / older build) the caller falls back to
++ * the legacy local sign-out, exactly as before.
++ */
++
++export type GoldenSignOutStatus = 'ended' | 'not-started' | 'failed'
++
++export type GoldenSessionApi = {
++  signOut: (redirectUrl?: string) => Promise<GoldenSignOutStatus>
++  session: { user_id: string; role: string } | null
++  lastError: string | null
++}
++
++export const GOLDEN_SIGN_OUT_FAILED = 'Sign-out did not complete — you are still signed in. Please try again.'
++
++export function goldenSessionOf(browser: unknown): GoldenSessionApi | null {
++  if (!browser || typeof browser !== 'object') return null
++  const api = (browser as { __goaaGoldenSession?: Partial<GoldenSessionApi> }).__goaaGoldenSession
++  return api && typeof api.signOut === 'function' ? (api as GoldenSessionApi) : null
++}
++
++export type GoldenSignOutOutcome =
++  | { status: 'navigate' }
++  | { status: 'legacy' }
++  | { status: 'failed'; message: string }
++
++/**
++ * Decide what the LOG OUT button should do next. Pure: no navigation, no
++ * storage access — the caller performs the side effects.
++ */
++export async function decideGoldenSignOut(browser: unknown, redirectUrl: string): Promise<GoldenSignOutOutcome> {
++  const golden = goldenSessionOf(browser)
++  if (!golden) return { status: 'legacy' }
++  let result: GoldenSignOutStatus
++  try {
++    result = await golden.signOut(redirectUrl)
++  } catch {
++    return { status: 'failed', message: golden.lastError || GOLDEN_SIGN_OUT_FAILED }
++  }
++  if (result === 'ended' || result === 'not-started') return { status: 'navigate' }
++  return { status: 'failed', message: golden.lastError || GOLDEN_SIGN_OUT_FAILED }
++}
+diff --git a/app/styles/goaa-pp-compat.css b/app/styles/goaa-pp-compat.css
+new file mode 100644
+index 0000000..048b1d7
+--- /dev/null
++++ b/app/styles/goaa-pp-compat.css
+@@ -0,0 +1,49 @@
++/* goaa-pp-compat.css — maps the pp-* content classes still used inside the
++ * real /agent-loop panels onto goaa tokens, so those panels render in the
++ * planning.goaa.ai look without a rewrite. Scoped to .goaa; /portal-preview
++ * keeps its own stylesheet and is unaffected. */
++.goaa .pp-stack { display: grid; gap: 16px; }
++.goaa .pp-panel { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
++.goaa .pp-panel-inner { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: 12px; padding: 16px; }
++.goaa .pp-section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
++.goaa .pp-h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -.01em; }
++.goaa .pp-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
++.goaa .pp-h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
++.goaa .pp-body { margin: 0 0 14px; line-height: 1.6; }
++.goaa .pp-muted { color: var(--goaa-muted); }
++.goaa .pp-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
++.goaa .pp-label { font-size: var(--goaa-fs-eyebrow); letter-spacing: .08em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 12px 0 4px; }
++.goaa .pp-inline-label { font-size: 13px; color: var(--goaa-muted); }
++.goaa .pp-inline-hint, .goaa .pp-footnote { font-size: 13px; color: var(--goaa-muted-2); }
++.goaa .pp-note { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
++.goaa .pp-warn-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(245,181,68,.35); border-radius: 10px; background: rgba(245,181,68,.08); color: #f5d38a; font-size: 14px; }
++.goaa .pp-good-box { padding: 12px 14px; margin: 12px 0; border: 1px solid rgba(168,231,203,.3); border-radius: 10px; background: var(--goaa-ok-bg); color: var(--goaa-ok-text); font-size: 14px; }
++.goaa .pp-err { color: var(--goaa-danger); }
++.goaa .pp-ok { color: var(--goaa-ok-text); }
++.goaa .pp-flag { color: var(--goaa-warn); }
++.goaa .pp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
++.goaa .pp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; text-decoration: none; }
++.goaa .pp-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
++.goaa .pp-btn-secondary, .goaa .pp-btn-ghost { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
++.goaa .pp-btn-ghost { background: transparent; }
++.goaa .pp-btn-danger { background: rgba(252,165,165,.08); border: 1px solid rgba(252,165,165,.35); color: var(--goaa-danger); }
++.goaa .pp-btn[disabled] { opacity: .45; cursor: not-allowed; }
++.goaa .pp-status, .goaa .pp-chip { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
++.goaa .pp-status-good { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
++.goaa .pp-status-warn { background: #3a2d12; color: #f5d38a; }
++.goaa .pp-status-review { background: var(--goaa-accent-bg); color: var(--goaa-accent-soft); }
++.goaa .pp-status-muted { background: transparent; border: 1px solid var(--goaa-border-strong); color: var(--goaa-muted); }
++.goaa .pp-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
++.goaa .pp-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
++.goaa .pp-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
++.goaa .pp-tab.pp-active { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
++.goaa .pp-field { display: grid; gap: 6px; margin-bottom: 12px; }
++.goaa .pp-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
++.goaa .pp-input, .goaa .pp-select, .goaa .pp-textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
++.goaa .pp-textarea { min-height: 96px; resize: vertical; }
++.goaa .pp-toggle-row { display: flex; align-items: center; gap: 10px; }
++.goaa .pp-kv { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--goaa-border); font-size: 14px; }
++.goaa .pp-list { margin: 0; padding-left: 18px; line-height: 1.7; }
++.goaa .pp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
++.goaa .pp-table th { text-align: left; color: var(--goaa-muted-2); font-weight: 500; font-size: 12px; letter-spacing: .06em; padding: 8px 10px; border-bottom: 1px solid var(--goaa-border); }
++.goaa .pp-table td { padding: 12px 10px; border-bottom: 1px solid var(--goaa-border); vertical-align: top; }
+diff --git a/app/styles/goaa-tokens.css b/app/styles/goaa-tokens.css
+new file mode 100644
+index 0000000..6d9f0e7
+--- /dev/null
++++ b/app/styles/goaa-tokens.css
+@@ -0,0 +1,125 @@
++/* goaa-tokens.css — GOAA UI source of truth (approved 2026-09-11).
++ * Dashboard = planning.goaa.ai workspace; sign-in = /client-login card.
++ * Load once in app/layout.tsx. /portal-preview/** must NOT import this. */
++
++:root {
++  --goaa-bg: #0d0b15;
++  --goaa-bg-elev: #111016;
++  --goaa-card: #121017;
++  --goaa-card-2: #17151e;
++  --goaa-border: #2b2533;
++  --goaa-border-strong: #393343;
++  --goaa-text: #f7f5fb;
++  --goaa-text-2: #dfd8ee;
++  --goaa-muted: #aaa5b7;
++  --goaa-muted-2: #92909f;
++  --goaa-accent: #6944cc;
++  --goaa-accent-border: #7b57e7;
++  --goaa-accent-soft: #c4b5fd;
++  --goaa-accent-bg: #21162f;
++  --goaa-accent-bg-border: #4b386f;
++  --goaa-pill: #272035;
++  --goaa-pill-text: #d7c8f6;
++  --goaa-ok-bg: #15312a;
++  --goaa-ok-text: #a8e7cb;
++  --goaa-warn: #f5b544;
++  --goaa-danger: #fca5a5;
++
++  --goaa-auth-bg: #08080c;
++  --goaa-auth-card: linear-gradient(180deg, rgba(30,30,38,.98), rgba(18,18,24,.98));
++  --goaa-auth-card-border: rgba(255,255,255,.12);
++  --goaa-auth-input-bg: rgba(255,255,255,.055);
++  --goaa-auth-input-border: rgba(255,255,255,.16);
++  --goaa-auth-btn-bg: rgba(255,255,255,.035);
++  --goaa-auth-btn-border: rgba(255,255,255,.28);
++  --goaa-auth-primary-bg: #f4f4f5;
++  --goaa-auth-primary-text: #111116;
++  --goaa-auth-muted: rgba(255,255,255,.62);
++  --goaa-auth-hairline: rgba(255,255,255,.14);
++
++  --goaa-font: Outfit, Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
++  --goaa-font-auth: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
++  --goaa-fs-body: 15px;
++  --goaa-fs-small: 13px;
++  --goaa-fs-eyebrow: 12px;
++  --goaa-r-card: 14px;
++  --goaa-r-card-lg: 18px;
++  --goaa-r-btn: 9px;
++  --goaa-r-input: 8px;
++  --goaa-r-pill: 999px;
++  --goaa-r-auth-card: 28px;
++  --goaa-r-auth-input: 15px;
++
++  --goaa-rail-w: 260px;
++  --goaa-header-h: 76px;
++  --goaa-gap: 16px;
++  --goaa-page-pad: 24px;
++}
++
++.goaa { background: var(--goaa-bg); color: var(--goaa-text); font-family: var(--goaa-font); font-size: var(--goaa-fs-body); line-height: 1.55; min-height: 100vh; }
++.goaa a { color: var(--goaa-accent-soft); }
++.goaa .goaa-eyebrow { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); }
++.goaa .goaa-h1 { font-size: 28px; font-weight: 700; margin: 4px 0 0; letter-spacing: -.01em; }
++.goaa .goaa-h2 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
++.goaa .goaa-muted { color: var(--goaa-muted); }
++
++/* header */
++.goaa .goaa-header { height: var(--goaa-header-h); margin: 16px var(--goaa-page-pad) 0; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; background: var(--goaa-bg-elev); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card-lg); }
++.goaa .goaa-brand { display: flex; align-items: center; gap: 14px; color: var(--goaa-text); text-decoration: none; }
++.goaa .goaa-brand img { width: 44px; height: 44px; border-radius: 50%; }
++.goaa .goaa-brand-text { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
++
++/* layout */
++.goaa .goaa-layout { display: grid; grid-template-columns: var(--goaa-rail-w) minmax(0, 1fr); gap: var(--goaa-gap); margin: var(--goaa-gap) var(--goaa-page-pad) 40px; }
++.goaa .goaa-layout.goaa-with-aside { grid-template-columns: var(--goaa-rail-w) minmax(0, 1fr) 380px; }
++.goaa .goaa-rail, .goaa .goaa-main, .goaa .goaa-aside { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card-lg); }
++.goaa .goaa-rail { padding: 20px 14px; align-self: start; position: sticky; top: 16px; }
++.goaa .goaa-main { padding: 24px 28px; min-height: 60vh; }
++.goaa .goaa-aside { padding: 24px; align-self: start; }
++@media (max-width: 1100px) { .goaa .goaa-layout, .goaa .goaa-layout.goaa-with-aside { grid-template-columns: 1fr; } .goaa .goaa-rail { position: static; } }
++
++/* rail */
++.goaa .goaa-rail-cta { display: block; width: 100%; padding: 14px 16px; margin-bottom: 18px; text-align: left; font: inherit; font-size: 17px; color: var(--goaa-text); background: var(--goaa-accent-bg); border: 1px solid var(--goaa-accent-bg-border); border-radius: 12px; cursor: pointer; }
++.goaa .goaa-rail-section { font-size: var(--goaa-fs-eyebrow); letter-spacing: .12em; text-transform: uppercase; color: var(--goaa-muted-2); margin: 8px 8px 10px; }
++.goaa .goaa-rail-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; margin: 2px 0; font: inherit; font-size: 16px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: 12px; cursor: pointer; text-align: left; text-decoration: none; }
++.goaa .goaa-rail-item:hover { color: var(--goaa-text-2); background: rgba(255,255,255,.04); }
++.goaa .goaa-rail-item[aria-current="page"] { color: var(--goaa-text); background: #17131e; border-color: var(--goaa-border); }
++.goaa .goaa-rail-divider { height: 1px; background: var(--goaa-border); margin: 12px 8px; }
++.goaa .goaa-rail-tag { margin-left: auto; font-size: 10px; letter-spacing: .06em; padding: 2px 7px; border-radius: var(--goaa-r-pill); background: var(--goaa-accent); color: #fff; }
++
++/* cards, buttons, pills, forms */
++.goaa .goaa-card { background: var(--goaa-card); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
++.goaa .goaa-card-2 { background: var(--goaa-card-2); border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); padding: 20px; }
++.goaa .goaa-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; border-radius: var(--goaa-r-btn); cursor: pointer; }
++.goaa .goaa-btn-primary { background: var(--goaa-accent); border: 1px solid var(--goaa-accent-border); color: #fff; }
++.goaa .goaa-btn-secondary { background: #17131e; border: 1px solid var(--goaa-border-strong); color: var(--goaa-text-2); }
++.goaa .goaa-btn[disabled] { opacity: .45; cursor: not-allowed; }
++.goaa .goaa-pill { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: var(--goaa-r-pill); background: var(--goaa-pill); color: var(--goaa-pill-text); }
++.goaa .goaa-pill.ok { background: var(--goaa-ok-bg); color: var(--goaa-ok-text); }
++.goaa .goaa-pill.outline { background: transparent; border: 1px solid var(--goaa-accent-bg-border); color: var(--goaa-accent-soft); }
++.goaa .goaa-input { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; color: var(--goaa-text); background: #0d0b15; border: 1px solid var(--goaa-border-strong); border-radius: var(--goaa-r-input); }
++.goaa .goaa-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 20px; }
++.goaa .goaa-tab { padding: 10px 16px; font: inherit; font-size: 15px; color: var(--goaa-muted); background: transparent; border: 1px solid transparent; border-radius: var(--goaa-r-btn); cursor: pointer; }
++.goaa .goaa-tab[aria-pressed="true"] { color: #eee4ff; background: var(--goaa-accent-bg); border-color: var(--goaa-accent-bg-border); }
++.goaa .goaa-notice { padding: 12px 14px; margin: 12px 0; border: 1px solid #373040; border-radius: 10px; color: #b6adc4; font-size: 14px; }
++.goaa .goaa-step { display: grid; grid-template-columns: 40px 1fr 20px; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--goaa-border); border-radius: var(--goaa-r-card); background: var(--goaa-card); }
++.goaa .goaa-step.active { background: #16122a; border-color: var(--goaa-accent-bg-border); }
++.goaa .goaa-step-n { font-size: 13px; color: var(--goaa-muted-2); }
++.goaa .goaa-step-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--goaa-accent-soft); }
++.goaa .goaa-step.active .goaa-step-dot { background: var(--goaa-accent-soft); }
++
++/* auth card (mirrors /client-login) */
++.goaa-auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--goaa-auth-bg); color: #fff; font-family: var(--goaa-font-auth); }
++.goaa-auth-card { position: relative; width: min(100%, 470px); padding: 34px 34px 30px; border: 1px solid var(--goaa-auth-card-border); background: var(--goaa-auth-card); border-radius: var(--goaa-r-auth-card); box-shadow: 0 30px 90px rgba(0,0,0,.45); }
++.goaa-auth-close { position: absolute; top: 16px; right: 16px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: rgba(255,255,255,.72); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
++.goaa-auth-logo { display: block; width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; }
++.goaa-auth-title { margin: 0; text-align: center; font-size: 28px; letter-spacing: -.03em; }
++.goaa-auth-sub { margin: 10px auto 0; text-align: center; color: var(--goaa-auth-muted); font-size: 14px; line-height: 1.6; }
++.goaa-auth-btn { width: 100%; height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font: inherit; font-size: 15px; font-weight: 700; color: #fff; background: var(--goaa-auth-btn-bg); border: 1px solid var(--goaa-auth-btn-border); border-radius: var(--goaa-r-pill); cursor: pointer; }
++.goaa-auth-btn.primary { background: var(--goaa-auth-primary-bg); color: var(--goaa-auth-primary-text); border: 0; }
++.goaa-auth-btn[disabled] { opacity: .55; }
++.goaa-auth-input { width: 100%; height: 52px; box-sizing: border-box; padding: 0 16px; font: inherit; font-size: 15px; color: #fff; background: var(--goaa-auth-input-bg); border: 1px solid var(--goaa-auth-input-border); border-radius: var(--goaa-r-auth-input); outline: none; }
++.goaa-auth-or { display: flex; align-items: center; gap: 14px; margin: 24px 0; color: rgba(255,255,255,.46); font-size: 13px; }
++.goaa-auth-or span { height: 1px; flex: 1; background: var(--goaa-auth-hairline); }
++.goaa-auth-link { background: transparent; border: 0; padding: 0; color: #fff; font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
++.goaa-auth-foot { margin: 22px 0 0; text-align: center; font-size: 12px; color: rgba(255,255,255,.45); }
+diff --git a/scripts/test-client-logout-cal.cjs b/scripts/test-client-logout-cal.cjs
+index f540e87..5e442b7 100644
+--- a/scripts/test-client-logout-cal.cjs
++++ b/scripts/test-client-logout-cal.cjs
+@@ -103,6 +103,7 @@ function loadCookieMod() {
+       react: React,
+       'react/jsx-runtime': require('react/jsx-runtime'),
+       '../lib/customer-signout': libExports,
++      '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+     };
+     const exports = {};
+     vm.runInNewContext(transpile(pageSrc, 'client-logout/page.tsx'), {
+@@ -156,6 +157,7 @@ function loadCookieMod() {
+       react: React,
+       'react/jsx-runtime': require('react/jsx-runtime'),
+       '../lib/customer-signout': libExports2,
++      '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+     };
+     const exports = {};
+     vm.runInNewContext(transpile(pageSrc, 'client-logout/page.tsx'), {
+@@ -185,6 +187,7 @@ function loadCookieMod() {
+     };}},
+     '../lib/personal-agent-matter': {LEGACY_WORKSPACE_KEY: 'goaa_planning_workspace_v1', MATTER_RESTORE_EVENT: 'restore'},
+     '../lib/customer-signout': {clearCustomerSession: () => ({})},
++    '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+   };
+   for (const name of ['ProfessionalHandoffCard','ButlerMattersView','ButlerWelcome','PersonalAgentInbox','PersonalAgentKnowledge','AgentProblemSolvingModel','AgentMattersOverview','LoginMenu']) imports[`./${name}`] = {default: name};
+   const browser = {
+diff --git a/scripts/test-customer-growth-pages.cjs b/scripts/test-customer-growth-pages.cjs
+new file mode 100644
+index 0000000..6c55553
+--- /dev/null
++++ b/scripts/test-customer-growth-pages.cjs
+@@ -0,0 +1,46 @@
++#!/usr/bin/env node
++// Round C1 — customer growth pages: English only, no payment actions, correct links.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++const CJK = /[\u3400-\u9fff]/
++const PAY = /\b(checkout|pay now|payout|withdraw|buy now|subscribe)\b/i
++let passed = 0
++const test = (n, f) => { f(); passed++; console.log(`PASS ${n}`) }
++
++const pages = {
++  skills: read('app/agent-loop/customer/skills/page.tsx'),
++  licensed: read('app/agent-loop/customer/get-licensed/page.tsx'),
++  earning: read('app/agent-loop/customer/earning/page.tsx'),
++}
++
++test('all three pages are English-only and carry no payment actions', () => {
++  for (const [k, s] of Object.entries(pages)) { assert.ok(!CJK.test(s), `${k} CJK`); assert.ok(!PAY.test(s), `${k} payment action`) }
++})
++test('each page requires a session and mounts the customer portal with the right rail item', () => {
++  for (const [k, s] of Object.entries(pages)) {
++    assert.ok(s.includes("if (!session) redirect('/agent-loop/login?next=/agent-loop/customer/"), `${k} guard`)
++    assert.ok(s.includes('portal="customer"'), `${k} portal`)
++  }
++  assert.ok(pages.skills.includes('activeId="skills"')); assert.ok(pages.licensed.includes('activeId="licensed"')); assert.ok(pages.earning.includes('activeId="earning"'))
++})
++test('Skills: partner pending notice, Use this skill seeds the chat', () => {
++  assert.ok(pages.skills.includes('data-testid="skills-partner-pending"'))
++  assert.ok(pages.skills.includes('/planning?q='))
++})
++test('Get Licensed: Learn first disabled, Apply now -> /agent-loop/apply', () => {
++  assert.ok(pages.licensed.includes('disabled>Coming soon'))
++  assert.ok(pages.licensed.includes('href="/agent-loop/apply"'))
++})
++test('Earning: membership-fee-only rule stated; referral disabled; agent path links to Get Licensed', () => {
++  assert.ok(pages.earning.includes('membership fees only'))
++  assert.ok(pages.earning.includes('never to insurance premiums or commissions'))
++  assert.ok(pages.earning.includes('disabled>Coming soon'))
++  assert.ok(pages.earning.includes('href="/agent-loop/customer/get-licensed"'))
++})
++test('agent/admin placeholder routes exist so the rails never 404', () => {
++  for (const p of ['agent/opportunities', 'agent/orders', 'agent/knowledge', 'agent/my-ai', 'admin/applications', 'admin/content', 'admin/finance', 'admin/system', 'admin/support']) assert.ok(fs.existsSync(path.join(ROOT, `app/agent-loop/${p}/page.tsx`)), p)
++})
++console.log(`\nALL ${passed} GROWTH PAGE TESTS PASSED`)
+diff --git a/scripts/test-customer-signout.cjs b/scripts/test-customer-signout.cjs
+index 1469664..9d34a96 100644
+--- a/scripts/test-customer-signout.cjs
++++ b/scripts/test-customer-signout.cjs
+@@ -290,7 +290,7 @@ async function test(name, fn) { await fn(); passed++; console.log(`PASS ${name}`
+     const navStart = src.indexOf('aria-label="Primary navigation"');
+     const navEnd = src.indexOf('</nav>', navStart);
+     const nav = src.slice(navStart, navEnd);
+-    assert.ok(nav.includes('<LoginMenu variant="ghost" signedIn={sessionVisible} onLogout={handleCustomerSignOut} />'), 'LoginMenu receives sessionVisible + sign-out handler');
++    assert.ok(nav.includes('<LoginMenu variant="ghost" signedIn={sessionVisible} onLogout={handleCustomerSignOut} error={signOutError} />'), 'LoginMenu receives sessionVisible + sign-out handler + error slot');
+     assert.ok(nav.includes('<a href="#start" className="goaa-start-link">Start Planning'), 'Start Planning link remains');
+     assert.ok(nav.includes('For Professionals') === false, 'For Professionals removed');
+     assert.ok(nav.includes('Sign in') === false, 'standalone Sign in removed');
+diff --git a/scripts/test-header-login-menu.cjs b/scripts/test-header-login-menu.cjs
+index f92df7f..864ce23 100644
+--- a/scripts/test-header-login-menu.cjs
++++ b/scripts/test-header-login-menu.cjs
+@@ -187,6 +187,7 @@ async function test(name, fn) { await fn(); passed++; console.log(`PASS ${name}`
+     }; } },
+     '../lib/personal-agent-matter': { LEGACY_WORKSPACE_KEY: 'goaa_planning_workspace_v1', MATTER_RESTORE_EVENT: 'restore' },
+     '../lib/customer-signout': { clearCustomerSession: () => ({}) },
++    '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+   };
+   for (const name of ['ProfessionalHandoffCard', 'ButlerMattersView', 'ButlerWelcome', 'PersonalAgentInbox', 'PersonalAgentKnowledge', 'AgentProblemSolvingModel', 'AgentMattersOverview', 'LoginMenu']) imports[`./${name}`] = { default: name };
+   const browser = {
+diff --git a/scripts/test-logo-nav.cjs b/scripts/test-logo-nav.cjs
+index 959568f..bfc4ff4 100644
+--- a/scripts/test-logo-nav.cjs
++++ b/scripts/test-logo-nav.cjs
+@@ -54,6 +54,7 @@ async function test(name, fn) { await fn(); passed++; console.log(`PASS ${name}`
+     };}},
+     '../lib/personal-agent-matter': {LEGACY_WORKSPACE_KEY: 'goaa_planning_workspace_v1', MATTER_RESTORE_EVENT: 'restore'},
+     '../lib/customer-signout': {clearCustomerSession: () => ({})},
++    '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+   };
+   for (const name of ['ProfessionalHandoffCard','ButlerMattersView','ButlerWelcome','PersonalAgentInbox','PersonalAgentKnowledge','AgentProblemSolvingModel','AgentMattersOverview','LoginMenu']) imports[`./${name}`] = {default: name};
+   const browser = {
+diff --git a/scripts/test-portal-preview-isolation.cjs b/scripts/test-portal-preview-isolation.cjs
+index 84dd671..b26313c 100644
+--- a/scripts/test-portal-preview-isolation.cjs
++++ b/scripts/test-portal-preview-isolation.cjs
+@@ -43,15 +43,22 @@ async function run() {
+     console.log(`PASS ${name}`)
+   }
+ 
+-  const { lines, modified, untracked } = newFilePaths()
+-
+-  await test('golden tree is untouched: no tracked file modified/added/deleted/renamed', () => {
+-    assert.equal(modified.length, 0, `modified paths: ${modified.join(', ')}`)
+-  })
+-
+-  await test('every untracked path stays inside the isolated namespaces', () => {
+-    const offenders = untracked.filter((p) => !ALLOWED_UNTRACKED_PREFIXES.some((pre) => p.startsWith(pre)))
+-    assert.equal(offenders.length, 0, `untracked outside allowed prefixes: ${offenders.join(', ')}`)
++  // Round C1: the preview namespaces are tracked now, so the git-status
++  // "zero-write" gate is replaced by a direction check — nothing outside the
++  // preview may import the preview, and the preview may not import golden.
++  await test('no real route/component/lib imports the portal-preview namespace or its stylesheet', () => {
++    const bad = []
++    const scan = (dir) => {
++      for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
++        const rel = `${dir}/${entry.name}`
++        if (entry.isDirectory()) { if (!rel.includes('portal-preview') && rel !== 'app/node_modules') scan(rel); continue }
++        if (!/\.(ts|tsx|css)$/.test(entry.name) || rel.includes('portal-preview')) continue
++        const src = fs.readFileSync(path.join(ROOT, rel), 'utf8')
++        if (/(from|import)\s+['"][^'"]*portal-preview/.test(src)) bad.push(rel)
++      }
++    }
++    scan('app')
++    assert.equal(bad.length, 0, `imports portal-preview: ${bad.join(', ')}`)
+   })
+ 
+   const newFiles = []
+@@ -65,8 +72,8 @@ async function run() {
+   collect(path.join(ROOT, 'app/portal-preview'))
+   collect(path.join(ROOT, 'app/components/portal-preview'))
+   collect(path.join(ROOT, 'app/lib/portal-preview'))
+-  for (const p of untracked.filter((x) => x.startsWith('scripts/test-portal-preview-'))) {
+-    newFiles.push(path.join(ROOT, p))
++  for (const name of fs.readdirSync(path.join(ROOT, 'scripts'))) {
++    if (name.startsWith('test-portal-preview-')) newFiles.push(path.join(ROOT, 'scripts', name))
+   }
+ 
+   await test('route files exist for customer, agent and admin', () => {
+diff --git a/scripts/test-portal-shell.cjs b/scripts/test-portal-shell.cjs
+new file mode 100644
+index 0000000..71bf909
+--- /dev/null
++++ b/scripts/test-portal-shell.cjs
+@@ -0,0 +1,77 @@
++#!/usr/bin/env node
++// Round C1 — PortalShell / three-portal navigation checks (static, offline).
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const ROOT = path.resolve(__dirname, '..')
++const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
++const CJK = /[\u3400-\u9fff]/
++let passed = 0
++const test = (name, fn) => { fn(); passed++; console.log(`PASS ${name}`) }
++
++const shell = read('app/components/portal/PortalShell.tsx')
++const rail = (name) => {
++  const start = shell.indexOf(`export const ${name}`)
++  const end = shell.indexOf('];', start)
++  return shell.slice(start, end)
++}
++
++test('customer rail hides Plan Result / Professional Execution and shows the three growth entries', () => {
++  const r = rail('CUSTOMER_RAIL')
++  assert.ok(!/label: 'Plan Result'/.test(r))
++  assert.ok(!/label: 'Professional Execution'/.test(r))
++  for (const label of ['Chat', 'Matters', 'Skills Marketplace', 'Get Licensed', 'Earning Opportunities']) assert.ok(r.includes(`label: '${label}'`), label)
++  assert.ok(r.includes("href: '/agent-loop/customer/skills'"))
++  assert.ok(r.includes("href: '/agent-loop/customer/get-licensed'"))
++  assert.ok(r.includes("href: '/agent-loop/customer/earning'"))
++})
++
++test('brand text follows the portal: AI Butler / AI Agent / AI Admin', () => {
++  assert.ok(shell.includes("customer: 'AI Butler'"))
++  assert.ok(shell.includes("agent: 'AI Agent'"))
++  assert.ok(shell.includes("admin: 'AI Admin'"))
++  assert.ok(shell.includes('<span className="goaa-brand-text">{brand}</span>'))
++})
++
++test('agent and admin rails exist with their sections', () => {
++  const a = rail('AGENT_RAIL'); const d = rail('ADMIN_RAIL')
++  for (const l of ['Overview', 'Opportunities', 'Service Orders', 'Knowledge Base', 'My AI']) assert.ok(a.includes(`label: '${l}'`), l)
++  for (const l of ['Overview', 'Applications', 'Content', 'Finance', 'System', 'Support']) assert.ok(d.includes(`label: '${l}'`), l)
++})
++
++test('PortalShell and the real agent-loop UI never import the preview stylesheet or preview libs', () => {
++  const files = ['app/components/portal/PortalShell.tsx', 'app/components/portal/clerk-appearance.ts']
++  const walk = (dir) => { for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) { const p = `${dir}/${e.name}`; if (e.isDirectory()) walk(p); else if (/\.(tsx?|css)$/.test(e.name)) files.push(p) } }
++  walk('app/agent-loop'); walk('app/components/agent-loop')
++  for (const f of files) {
++    const s = read(f)
++    assert.ok(!/(from|import)\s+['"][^'"]*portal-preview/.test(s), `${f} imports from portal-preview`)
++    assert.ok(!CJK.test(s), `${f} contains CJK`)
++  }
++})
++
++test('layout loads the goaa token sheets once', () => {
++  const l = read('app/layout.tsx')
++  assert.ok(l.includes('import "./styles/goaa-tokens.css"'))
++  assert.ok(l.includes('import "./styles/goaa-pp-compat.css"'))
++})
++
++test('Clerk sign-in uses the approved auth-card appearance', () => {
++  const p = read('app/goaa-clerk-login/page.tsx')
++  assert.ok(p.includes('appearance={goaaClerkAppearance}'))
++  assert.ok(p.includes('style={goaaClerkPageStyle}'))
++  assert.ok(!p.includes('#6d5efc'))
++})
++
++test('golden customer rail: growth links present, old two entries hidden in butler mode', () => {
++  const c = read('app/components/ChatComponent.tsx')
++  const start = c.indexOf('<aside className="workspace-rail">'); const end = c.indexOf('</aside>', start)
++  const r = c.slice(start, end)
++  assert.ok(r.includes('href="/agent-loop/customer/skills"'))
++  assert.ok(r.includes('href="/agent-loop/customer/get-licensed"'))
++  assert.ok(r.includes('href="/agent-loop/customer/earning"'))
++  assert.ok(r.includes("{!butlerMode && <button className={`workspace-nav-item ${viewMode === 'plan' ? 'active' : ''}`}"), 'Plan Result only outside butler mode')
++  assert.ok(r.includes("{!butlerMode && <button className={`workspace-nav-item ${viewMode === 'execution' ? 'active' : ''}`}"), 'Professional Execution only outside butler mode')
++})
++
++console.log(`\nALL ${passed} PORTAL SHELL TESTS PASSED`)
+diff --git a/scripts/test-product-handoff.cjs b/scripts/test-product-handoff.cjs
+index fe9ef16..c281760 100644
+--- a/scripts/test-product-handoff.cjs
++++ b/scripts/test-product-handoff.cjs
+@@ -50,6 +50,7 @@ function fixture(initial = {}, reply = {}) {
+     };}},
+     '../lib/personal-agent-matter': {LEGACY_WORKSPACE_KEY: 'goaa_planning_workspace_v1', MATTER_RESTORE_EVENT: 'restore'},
+     '../lib/customer-signout': {clearCustomerSession: () => ({})},
++    '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+   };
+   for (const name of ['ProfessionalHandoffCard','ButlerMattersView','ButlerWelcome','PersonalAgentInbox','PersonalAgentKnowledge','AgentProblemSolvingModel','AgentMattersOverview','LoginMenu']) imports[`./${name}`] = {default: name};
+   const browser = {localStorage: {getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key)}, location: {assign: url => navigations.push(url)}};
+diff --git a/scripts/test-signout-wiring.cjs b/scripts/test-signout-wiring.cjs
+new file mode 100644
+index 0000000..b05b231
+--- /dev/null
++++ b/scripts/test-signout-wiring.cjs
+@@ -0,0 +1,56 @@
++#!/usr/bin/env node
++// Round C1 — LOG OUT wiring through window.__goaaGoldenSession (three outcomes).
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const vm = require('node:vm')
++const ts = require('typescript')
++const ROOT = path.resolve(__dirname, '..')
++
++function load(rel) {
++  const src = fs.readFileSync(path.join(ROOT, rel), 'utf8')
++  const out = ts.transpileModule(src, { fileName: rel, reportDiagnostics: true, compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } })
++  assert.equal((out.diagnostics || []).filter((d) => d.category === ts.DiagnosticCategory.Error).length, 0)
++  const exports = {}; const module = { exports }
++  vm.runInNewContext(out.outputText, { exports, module, require: () => { throw new Error('no imports expected') }, console }, { filename: rel })
++  return exports
++}
++
++let passed = 0
++const test = async (name, fn) => { await fn(); passed++; console.log(`PASS ${name}`) }
++
++;(async () => {
++  const { decideGoldenSignOut, GOLDEN_SIGN_OUT_FAILED } = load('app/lib/golden-signout.ts')
++  const bridge = (result, lastError = null) => ({ __goaaGoldenSession: { session: null, lastError, signOut: async () => result } })
++
++  await test("'ended' -> navigate", async () => { assert.equal((await decideGoldenSignOut(bridge('ended'), '/x')).status, 'navigate') })
++  await test("'not-started' -> navigate", async () => { assert.equal((await decideGoldenSignOut(bridge('not-started'), '/x')).status, 'navigate') })
++  await test("'failed' -> failed with lastError, no navigation", async () => {
++    const r = await decideGoldenSignOut(bridge('failed', 'revoke not confirmed'), '/x')
++    assert.equal(r.status, 'failed'); assert.equal(r.message, 'revoke not confirmed')
++  })
++  await test("'failed' without lastError -> default message", async () => {
++    const r = await decideGoldenSignOut(bridge('failed'), '/x')
++    assert.equal(r.status, 'failed'); assert.equal(r.message, GOLDEN_SIGN_OUT_FAILED)
++  })
++  await test('signOut throws -> failed', async () => {
++    const r = await decideGoldenSignOut({ __goaaGoldenSession: { session: null, lastError: null, signOut: async () => { throw new Error('boom') } } }, '/x')
++    assert.equal(r.status, 'failed')
++  })
++  await test('bridge absent -> legacy fallback', async () => { assert.equal((await decideGoldenSignOut({}, '/x')).status, 'legacy') })
++  await test('redirectUrl is passed through to the bridge', async () => {
++    let seen = null
++    await decideGoldenSignOut({ __goaaGoldenSession: { session: null, lastError: null, signOut: async (u) => { seen = u; return 'ended' } } }, '/planning?logged_out=1')
++    assert.equal(seen, '/planning?logged_out=1')
++  })
++  await test("ChatComponent: 'failed' returns before clearing local state; error passed to LoginMenu", () => {
++    const c = fs.readFileSync(path.join(ROOT, 'app/components/ChatComponent.tsx'), 'utf8')
++    const fn = c.slice(c.indexOf('async function handleCustomerSignOut'), c.indexOf('async function submitPrompt'))
++    assert.ok(fn.indexOf("outcome.status === 'failed'") < fn.indexOf('clearCustomerSession('), 'failed check precedes clear')
++    assert.ok(fn.includes('setSignOutError(outcome.message)') && fn.includes('return'))
++    assert.ok(c.includes('error={signOutError}'))
++    const m = fs.readFileSync(path.join(ROOT, 'app/components/LoginMenu.tsx'), 'utf8')
++    assert.ok(m.includes('data-testid="sign-out-error"'))
++  })
++  console.log(`\nALL ${passed} SIGNOUT WIRING TESTS PASSED`)
++})().catch((e) => { console.error(e); process.exit(1) })
+diff --git a/scripts/test-workspace-english.cjs b/scripts/test-workspace-english.cjs
+index 12e26b8..0121473 100644
+--- a/scripts/test-workspace-english.cjs
++++ b/scripts/test-workspace-english.cjs
+@@ -56,6 +56,7 @@ async function test(name, fn) { await fn(); passed++; console.log(`PASS ${name}`
+     '../lib/openclaw': { chat: async () => ({ sessionId: 's', stage: 'intake', intent: 'tax_planning', knownFacts: {}, displayTitle: '保险保障规划', subIntent: null, response: 'x', connectionReady: false, productAction: null }) },
+     '../lib/personal-agent-matter': { LEGACY_WORKSPACE_KEY: 'goaa_planning_workspace_v1', MATTER_RESTORE_EVENT: 'restore' },
+     '../lib/customer-signout': { clearCustomerSession: () => ({}) },
++    '../lib/golden-signout': { decideGoldenSignOut: async () => ({ status: 'legacy' }) },
+   };
+   for (const name of ['ProfessionalHandoffCard', 'ButlerMattersView', 'ButlerWelcome', 'PersonalAgentInbox', 'PersonalAgentKnowledge', 'AgentProblemSolvingModel', 'AgentMattersOverview', 'LoginMenu']) imports[`./${name}`] = { default: name };
+   const browser = {
+-- 
+2.43.0
+
