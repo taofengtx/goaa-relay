@@ -1,0 +1,209 @@
+From 9386d5ed59da439acc534fa4c138fe709e53f031 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 11 Sep 2026 09:58:40 +0000
+Subject: [PATCH] round C1.5: bridge starts a business session for every
+ sign-in in a tab
+
+Round C1.4 R3: after one account signed out and an existing account signed
+in on the same page, the second account had no business token until the
+page was reloaded (DB: no new business_tokens row until the reload).
+
+Cause: GoldenSessionBridge guarded the start with a boolean ref that was
+set on the first sign-in and never cleared. Clerk's signOut({redirectUrl})
+navigates inside the app, so the root-layout component is not remounted;
+the ref stayed true and the next sign-in skipped startBusinessSession.
+
+Fix:
+- the guard is keyed by Clerk userId (startedFor), and cleared on every
+  signed-out render, so any later sign-in - same user or another - starts;
+- the effect also depends on userId;
+- a direct user switch with no signed-out render in between (multi-session)
+  clears the stored marker/credential first, so the previous user's token
+  is never resumed for the new user.
+
+Unchanged: read-before-mint order, revoke-on-signed-out path, signOut
+handle and events, no new state. File is in Aika's area; for her review.
+
+Note (not changed here): /golden/session/verify resolves a business token
+without checking it belongs to the current Clerk user; the bridge-side
+switch guard covers the browser path, the server-side binding is a
+separate backend decision.
+
+Test: scripts/test-golden-bridge-user-switch.cjs (5) renders the real
+component with hook doubles; fails against the previous bridge (second
+sign-in never starts). c2-clerk golden-session 23/23, sign-out 7/7,
+candidate-shape 8/8 locally.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0187FcquTLWgvavMDgSvEHQp
+---
+ app/components/GoldenSessionBridge.tsx     | 28 +++++--
+ scripts/test-golden-bridge-user-switch.cjs | 96 ++++++++++++++++++++++
+ 2 files changed, 118 insertions(+), 6 deletions(-)
+ create mode 100644 scripts/test-golden-bridge-user-switch.cjs
+
+diff --git a/app/components/GoldenSessionBridge.tsx b/app/components/GoldenSessionBridge.tsx
+index a501ec1..5290b9e 100644
+--- a/app/components/GoldenSessionBridge.tsx
++++ b/app/components/GoldenSessionBridge.tsx
+@@ -95,8 +95,14 @@ function announce(name: string, detail: unknown): void {
+ }
+ 
+ function ClerkSessionBridge() {
+-  const { isLoaded, isSignedIn } = useAuth()
+-  const started = useRef(false)
++  const { isLoaded, isSignedIn, userId } = useAuth()
++  // Which Clerk user this tab has already started a business session for.
++  // Keyed by user, and cleared on sign-out: Clerk's signOut navigates inside
++  // the app, so this layout-level component is NOT remounted between one
++  // account signing out and the next signing in. A plain boolean stayed true
++  // across that boundary and the second sign-in never started a session
++  // (Round C1.4 R3: existing account had no business token until a reload).
++  const startedFor = useRef<string | null>(null)
+   const handle = useRef<GoldenSessionHandle>({ session: null, lastError: null, signOut: async () => 'failed' })
+ 
+   // The handle a golden page can call, and the event it can dispatch. Both do
+@@ -166,8 +172,16 @@ function ClerkSessionBridge() {
+     let cancelled = false
+ 
+     if (isSignedIn) {
+-      if (started.current) return undefined
+-      started.current = true
++      if (!userId || startedFor.current === userId) return undefined
++      // A different Clerk user without a signed-out render in between (a
++      // multi-session switch): whatever credential is stored belongs to the
++      // previous user and must not be resumed for this one.
++      const switchedUser = startedFor.current !== null
++      startedFor.current = userId
++      if (switchedUser) {
++        clearMarker(window.sessionStorage)
++        clearGoldenCredential(window.localStorage)
++      }
+       void (async () => {
+         const result = await startBusinessSession(bridgeFetch, {
+           credential: readGoldenCredential(window.localStorage),
+@@ -189,7 +203,9 @@ function ClerkSessionBridge() {
+       }
+     }
+ 
+-    // Clerk says signed out. If this browser still has a business credential,
++    // Clerk says signed out: the next sign-in, by anyone, must start afresh.
++    startedFor.current = null
++    // If this browser still has a business credential,
+     // it has to go now — that is the whole point of the token-based path.
+     const leftover = readMarker(window.sessionStorage)
+     if (!leftover) return undefined
+@@ -209,7 +225,7 @@ function ClerkSessionBridge() {
+     return () => {
+       cancelled = true
+     }
+-  }, [isLoaded, isSignedIn])
++  }, [isLoaded, isSignedIn, userId])
+ 
+   return null
+ }
+diff --git a/scripts/test-golden-bridge-user-switch.cjs b/scripts/test-golden-bridge-user-switch.cjs
+new file mode 100644
+index 0000000..e9552cf
+--- /dev/null
++++ b/scripts/test-golden-bridge-user-switch.cjs
+@@ -0,0 +1,96 @@
++#!/usr/bin/env node
++// Round C1.5 — GoldenSessionBridge must start a business session for every
++// Clerk user that signs in within one tab, including after a sign-out that
++// did not remount the layout (Clerk's signOut navigates inside the app).
++// Renders the real component with hook doubles; no browser, no network.
++const assert = require('node:assert/strict')
++const fs = require('node:fs')
++const path = require('node:path')
++const vm = require('node:vm')
++const ts = require('typescript')
++const ROOT = path.resolve(__dirname, '..')
++const source = fs.readFileSync(path.join(ROOT, 'app/components/GoldenSessionBridge.tsx'), 'utf8')
++const js = ts.transpileModule(source, { fileName: 'GoldenSessionBridge.tsx', compilerOptions: {
++  module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: false,
++} }).outputText
++
++let passed = 0
++const test = async (n, f) => { await f(); passed++; console.log(`PASS ${n}`) }
++
++function harness() {
++  // Minimal hook runtime: refs persist by call index, effects re-run when deps change.
++  const refs = []; const effects = []; let i = 0; let e = 0
++  const react = {
++    useRef: (v) => { const k = i++; if (!(k in refs)) refs[k] = { current: v }; return refs[k] },
++    useEffect: (fn, deps) => {
++      const k = e++; const prev = effects[k]
++      const changed = !prev || !deps || deps.length !== prev.deps.length || deps.some((d, j) => d !== prev.deps[j])
++      if (!changed) return
++      if (prev && typeof prev.cleanup === 'function') prev.cleanup()
++      effects[k] = { deps, cleanup: fn() }
++    },
++  }
++  let auth = { isLoaded: true, isSignedIn: false, userId: null }
++  const calls = { start: [], credentials: [], revoke: 0 }
++  const storage = () => { const m = new Map(); return { getItem: (k) => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) } }
++  const win = { localStorage: storage(), sessionStorage: storage(), addEventListener() {}, removeEventListener() {}, dispatchEvent() {} }
++  const golden = {
++    startBusinessSession: async (_f, opts) => {
++      calls.start.push(auth.userId); calls.credentials.push(opts.credential)
++      win.localStorage.setItem('client_token', 'tok-' + auth.userId)
++      return { state: 'live', session: { user_id: 'biz-' + auth.userId, role: 'customer' }, created: true }
++    },
++    revokeBusinessSession: async () => { calls.revoke++ },
++    bootstrapBusinessSession: async () => ({}), endBusinessSession: async () => ({ status: 'ended' }),
++    readGoldenCredential: (st) => st.getItem('client_token'), clearGoldenCredential: (st) => st.removeItem('client_token'), readMarker: () => null, writeMarker: () => {}, clearMarker: () => {},
++    GOLDEN_SESSION_UNAVAILABLE: 'unavailable',
++  }
++  const modules = {
++    react, 'react/jsx-runtime': { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) },
++    '@clerk/nextjs': { useAuth: () => auth },
++    '@/app/lib/agent-loop/signout': { SIGN_OUT_FAILED_MESSAGE: 'f', SIGN_OUT_LOADING_MESSAGE: 'l', clerkSignOutOf: () => null },
++    '@/app/lib/golden-session': golden,
++  }
++  const exp = {}
++  vm.runInNewContext(js, { exports: exp, module: { exports: exp }, require: (id) => { assert.ok(id in modules, `unexpected import ${id}`); return modules[id] }, window: win, CustomEvent: class { constructor(n, o) { this.type = n; this.detail = o && o.detail } }, console })
++  const el = exp.default({ clerkAuth: true })
++  const render = async (next) => { auth = { ...auth, ...next }; i = 0; e = 0; el.type(); await new Promise((r) => setImmediate(r)) }
++  return { render, calls }
++}
++
++;(async () => {
++  await test('first sign-in starts one session', async () => {
++    const h = harness()
++    await h.render({ isSignedIn: true, userId: 'user_A' })
++    await h.render({})
++    assert.deepEqual(h.calls.start, ['user_A'])
++  })
++  await test('sign-out then another user in the same tab starts a new session', async () => {
++    const h = harness()
++    await h.render({ isSignedIn: true, userId: 'user_A' })
++    await h.render({ isSignedIn: false, userId: null })
++    await h.render({ isSignedIn: true, userId: 'user_B' })
++    assert.deepEqual(h.calls.start, ['user_A', 'user_B'])
++  })
++  await test('sign-out then the SAME user again starts a new session', async () => {
++    const h = harness()
++    await h.render({ isSignedIn: true, userId: 'user_A' })
++    await h.render({ isSignedIn: false, userId: null })
++    await h.render({ isSignedIn: true, userId: 'user_A' })
++    assert.deepEqual(h.calls.start, ['user_A', 'user_A'])
++  })
++  await test('re-renders without a user change never rotate the session', async () => {
++    const h = harness()
++    await h.render({ isSignedIn: true, userId: 'user_A' })
++    for (let k = 0; k < 5; k++) await h.render({})
++    assert.equal(h.calls.start.length, 1)
++  })
++  await test('a direct switch from one user to another (no signed-out render) starts for the new user', async () => {
++    const h = harness()
++    await h.render({ isSignedIn: true, userId: 'user_A' })
++    await h.render({ isSignedIn: true, userId: 'user_B' })
++    assert.deepEqual(h.calls.start, ['user_A', 'user_B'])
++    assert.equal(h.calls.credentials[1], null, "user_A's stored credential must not be resumed for user_B")
++  })
++  console.log(`\nALL ${passed} GOLDEN BRIDGE USER-SWITCH TESTS PASSED`)
++})().catch((err) => { console.error(err); process.exit(1) })
+-- 
+2.43.0
+
