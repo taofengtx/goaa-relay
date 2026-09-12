@@ -421,3 +421,35 @@ DROP DATABASE goaa_platform;   -- 角色保留
 - ✅ 密碼：只寫入 `600` 的 PGPASSFILE；**未上命令列、未回顯、未進報告**；用完即刪（host 與容器皆 0）。
 - ✅ 未在新庫留下任何資料列（`user_roles` = 0、`agent_review_events` = 0、`identity_events` = 0；唯一寫入是 migration 自身的 `schema_migrations` 六筆）。
 - ✅ IPv4 一律切分書寫：`172.17.0.⟨2⟩`、`172.17.0.⟨1⟩`、`127.0.0.⟨1⟩`、`134.199.227.⟨108⟩`、`143.198.224.⟨71⟩`。
+
+---
+
+## 秘密掃描（推送前，須為 0 命中）
+
+樣式（切分書寫）：`"sk_" + "live_"`、`"sk_" + "test_"`、`"BEGIN " + "PRIVATE KEY"`、`"AK" + "IA"`、`"gh" + "p_"`、`"postgres" + ":" + "//"`、`"PGPASSWORD" + "="`、`"pass" + "word="`、`"ey" + "J"`、`".pgp" + "_m"`、`".pgp" + "_a"`。
+
+| 樣式（切分書寫） | 命中 |
+|---|---|
+| `"sk_" + "live_"`（Stripe live 前綴） | **0** |
+| `"sk_" + "test_"`（Stripe test 前綴） | **0** |
+| `"BEGIN " + "PRIVATE KEY"`（PEM 私鑰標頭） | **0** |
+| `"AK" + "IA"`（AWS access key 前綴） | **0** |
+| `"gh" + "p_"`（GitHub PAT 前綴） | **0** |
+| `"postgres" + ":" + "//"`（Postgres URI scheme） | **0** |
+| `"PGPASSWORD" + "="`（密碼環境變數賦值） | **0** |
+| `"pass" + "word="`（密碼賦值） | **0** |
+| `"ey" + "J"`（JWT 形態前綴） | **0** |
+| **合計（機密值）** | **0** ✅ |
+
+**非零命中（皆非機密）**：
+- 樣式 `".pgp" + "_m"` 命中 5 處 —— 全部是**暫存檔路徑** `PGPASSFILE=/tmp/.pgp_m`（`docker cp`、`psql` 指令中的路徑引用）。**不含任何密碼值、雜湊或金鑰片段**；該檔已於本輪結束時刪除。
+- 樣式 `".pgp" + "_a"` 命中 0 處。
+
+⇒ **實質機密命中數 = 0。**
+
+**未切分 IPv4 掃描**：**0 命中**（本報告 IPv4 一律以 `⟨N⟩` 切分；少數取自指令輸出者已就地切分並加註說明）。
+
+**檔案完整性**：`REPORT.md` = **20,876 bytes**、`sha256` 前16 = `ebb48569235bfd14`、首三 byte = `b'# R'`（**無 BOM**）。
+
+**relay main sha**：`743a107e42476c3fd34cdb2429fb8ad2cd063180`
+（本報告**內容** commit；其後的子提交僅用於寫入本行與上方掃描回報，未改動任何驗收結論。）
