@@ -705,3 +705,32 @@ systemctl restart goaa-platform-api-3103.service
 | 來源憑證檔 | ✅ 已用 `os.remove` 刪除 |
 
 **R5a（修正版）＝ 完成。3103 現以 production Clerk 憑證運行，身分驗證路徑實測有效。**
+
+---
+
+## 16. R5a（修正版）提交前掃描
+
+- **掃描標的**：本報告 `r5-clerk-live/REPORT.md`。
+- **掃描樣式**：13 類（逐類切分書寫）——
+  `sk_`+`live_`、`sk_`+`test_`、`BEGIN `+`PRIVATE KEY`、`AK`+`IA`、`gh`+`p_`、`postgres`+`:`+`//`、`PGPASS`+`WORD=`、`pass`+`word=`、`ey`+`J`、`.`+`pgp`+`ass`、`clerk`+`_secret`、`CLERK`+`_SECRET_KEY=`、`SESSION`+`_SECRET=`。
+- **機密值命中數 = 0。**
+
+**非零命中（全部為名稱／路徑，非機密）**：
+
+| 樣式 | 次數 | 性質 |
+|---|---|---|
+| `"." + "pgp" + "ass"` | 16 | **檔名／路徑** |
+| `"clerk" + "_secret"` | 14 | **變數名稱**（`CLERK_` 加 `SECRET_KEY`） |
+| `"CLERK" + "_SECRET_KEY="` | 1 | **變數名 + 等號**（§13.2 敘述文字，其後接反引號，**無值**） |
+
+**IPv4 書寫**：**可路由位址未切分 = 0**；`127.0.0.1` 依既有慣例逐字（loopback、非機密）；Docker bridge 位址以 `172.17.0.⟨2⟩` 切分。
+
+**秘密處理聲明**：本輪**未輸出、未落報告、未上命令列**任何 `pk`／`sk` 值。報告中的 `pk`／`sk` 資訊僅止於**前綴、長度、sha256[:16]**；`CLERK_ISSUER` 與 `CLERK_AUTHORIZED_PARTIES` 屬**非機密**故列全文。**來源憑證檔已刪除。**
+
+**檔案完整性（本節追加前，＝本輪內容 commit 之版本）**：
+
+| 檔案 | bytes | sha256[:16] | 首三 byte | BOM |
+|---|---|---|---|---|
+| `r5-clerk-live/REPORT.md` | 37,728 | `7f56d350291d397e` | `b'# R'` | 無 |
+
+**relay 提交鏈**：`854dc28` → `20ab9bb`（**本輪內容**）→ 本節（掃描＋sha）。**fast-forward、無 force。**
