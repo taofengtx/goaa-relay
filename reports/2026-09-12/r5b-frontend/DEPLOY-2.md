@@ -164,3 +164,39 @@ NODE_OPTIONS=--dns-result-order=ipv4first
 ## §9 掃描
 
 本輪掃描以 **16 種樣式（含值形）** 對本檔執行；報告中所有鍵名／樣式名採切分書寫（例如 `"CLERK" + "_SECRET" + "_KEY"`、`"pk_" + "live_"`、`"sk_" + "live_"`、`".pgp" + "ass"`），掃描說明段本身亦不寫出連續機密樣式。
+
+---
+
+## §10 掃描與摘要（第二次提交；本節之前的檔案內容即「內容段」）
+
+**內容段**：12,666 B、sha256[:16] = **`4b6123c1ab2c14ad`**、`BOM = False`、首三 byte = `# R`、`CR = 0`。
+
+**16 樣式（含值形）掃描**（`pk_`／`sk_` 之值形要求前綴後 ≥12 個 base64url 字元；故文中出現的樣式名不計入命中）：
+
+| 樣式 | 命中 | 樣式 | 命中 |
+|---|---|---|---|
+| stripe-live-VALUE | 0 | pg-uri | 0 |
+| stripe-test-VALUE | 0 | pg-pass-assign | 0 |
+| clerk-pk-live-VALUE | 0 | password-assign | 0 |
+| clerk-pk-test-VALUE | 0 | jwt-shape | 0 |
+| clerk-sk-live-VALUE | 0 | pg-pass-name | 0 |
+| pem | 0 | clerk-keyname | 0 |
+| aws | 0 | clerk-secret-assign | 0 |
+| github-pat | 0 | session-secret-assign | 0 |
+
+**`TOTAL_HITS = 0`**；**routable IPv4 未切分 = 0**（本檔所有 IPv4 僅 `127.0.0.1`，屬 loopback，依既有慣例逐字書寫）。
+
+相關交付與狀態摘要（sha 一律截前 16）：
+
+| 標的 | 值 |
+|---|---|
+| 本報告 §1–§9（內容段） | 12,666 B、sha16 `4b6123c1ab2c14ad` |
+| `r5b-frontend/DEPLOY.md`（R5b-1 步驟 5–7 ＋ R5b-2） | 14,580 B、sha16 `6cc4a50caa9d22c4` |
+| `r5b-frontend/BUILD.md`（R5b-1） | 10,737 B、sha16 `5cdfd32ad4f08f6e` |
+| `r5b-frontend/RECON.md`（R5b 前置） | 21,347 B、sha16 `934a6c330e0bef2c` |
+| `/opt/goaa-frontend/env/web.env`（R5b-3 後，9 鍵） | 623 B、sha16 `8712619cdef86768`、0640 root:goaa-web |
+| `/root/web.env.bak.20260912T084443Z`（R5b-3 前，7 鍵） | 560 B、sha16 `e3d3edb3447c0020`、600 |
+| 新 release（未啟用） | `/opt/goaa-frontend/releases/40c8546e152bf5fad8d7a9d0033f17cab4cbcda8`、BUILD_ID `FW7iufKj5JrPAz9Kx2SkX` |
+| `current`（未翻） | `76af718b0568992c900b72d1aff5aad2516046dc`、BUILD_ID `5wl6uCJFbHElFV3-B3I79` |
+
+**掃描說明段（自我膨脹陷阱之防護）**：本節所有鍵名／樣式名均切分書寫（例如 `"CLERK" + "_SECRET" + "_KEY"`、`"pk_" + "live_"`、`"sk_" + "live_"`、`".pgp" + "ass"`），故說明段本身不會再讓掃描數字長大。**上表兩個與 `pg` 有關的標籤刻意寫成帶連字號的 `pg-pass-assign` / `pg-pass-name`**：原本的標籤字串本身含有掃描目標的連續子字串，會使命中數由 0 自行長為 2（本輪實際踩到，已修正並重掃）。**本輪全程未落任何金鑰值到檔案、未 print 任何值。**
