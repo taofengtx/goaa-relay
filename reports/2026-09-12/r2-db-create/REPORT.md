@@ -1,12 +1,13 @@
 # Round R2 · 階段二 第一段 — 備份（步驟 1）＋ 建角色與庫（步驟 2–3）
 
-- **時間**：2026-09-12 05:56 UTC（= 2026-09-11 22:56 PDT）
+- **時間**：步驟 1 於 2026-09-12 05:56 UTC；步驟 2–3 於 06:03–06:05 UTC（= 2026-09-11 22:56–23:05 PDT）
 - **主機**：C1 `do-runtime-anchor`（`goaa-aika-cloud-1`，`134.199.227.⟨108⟩`）
 - **執行者**：Aika
-- **🔴 本輪狀態**：**步驟 1（備份）✅ 完成並驗收通過；步驟 2、步驟 3 ⏸ 未執行 —— 等待 Tao 核准。**
-  - 依據：Tao 的指令在步驟 2 標題寫明 **「（我核准後才做；請先把步驟 1 回報給我）」**。此閘門優先於本輪標題與 §A–E 回報規格，故**停在步驟 1**，未建任何角色／庫。
-  - 若 Tao 意為一次做完，回一句 go 即續作步驟 2–3。
-- **紀律**：未碰 `goaa` 庫任何一列；未重啟任何服務；未動 ufw／DOCKER-USER；密碼全程未產生（步驟 2 未執行）；IPv4 切分；sha256 前 16。
+- **🔴 本輪狀態（06:03 UTC 更新）**：**步驟 1（備份）✅、步驟 2（建角色與庫）✅、步驟 3（驗收 A–E）✅ 全數完成。**
+  - 06:03 UTC Tao 正式核准步驟 2–3（原「我核准後才做」為其模板殘留），並補充三點：① 核准此刻生效，先前停手回報為正確；② 密碼檔只列路徑、`/root/mkroles.sql` 用完即刪（含容器內副本）；③ 驗收 A 須確認兩角色**僅有 LOGIN**，若 `\du` 出現任何額外屬性即停手回報、不得自行 `ALTER`。
+  - **A 全綠**：五項危險屬性皆 `f`、僅 `rolcanlogin=t` ⇒ 未觸發停手條件。
+  - **migration 尚未執行**（依令）—— 階段二第二段（0001–0006 + 驗 schema）等待 Tao 另行下令。
+- **紀律**：未碰 `goaa` 庫任何一列；未重啟任何服務；未動 ufw／DOCKER-USER／`pg_hba.conf`；未跑 migration；密碼僅存於 `600` 檔案、**未上命令列／未回顯／未進報告**；IPv4 切分；sha256 前 16。
 
 ---
 
@@ -90,71 +91,202 @@ docker exec goaa-postgres psql -U goaa -tAc "select count(*) from pg_database wh
 
 ---
 
-## 步驟 2：建角色與庫 —— ⏸ **未執行（等待核准）**
+---
 
-未產生任何密碼檔、未寫任何 SQL 檔、未在容器內執行任何 `CREATE`。
+## 步驟 2：建角色與庫（✅ 完成，2026-09-12 06:03 UTC）
 
-規格（Tao 原令，保留待執行）：
-- 角色：`goaa_c2_migrate`（owner/migrate）、`goaa_c2_app`（應用）—— **沿用 C2 同名**（0001–0006 的 20 條授權與 0004 守衛寫死 `goaa_c2_app`，改名會使守衛**靜默失效**）。
-- 庫：`goaa_platform`，`OWNER goaa_c2_migrate`，`ENCODING UTF8`，`LC_COLLATE/LC_CTYPE en_US.utf8`，`TEMPLATE template0`。
-- `REVOKE ALL ON DATABASE goaa_platform FROM PUBLIC;` ＋ `GRANT CONNECT … TO goaa_c2_migrate, goaa_c2_app;`
-- 密碼：`openssl rand -base64 32 | tr -d '\n=+/' | cut -c1-32` 寫入 `/root/.goaa_platform_{migrate,app}.pw`（`umask 077`、`chmod 600`）；SQL 以 **檔案**形式送入容器，**密碼不上命令列、不回顯**，建完即刪。
-- `ON_ERROR_STOP=1`；**不加 `-1`**（`CREATE DATABASE` 不能在交易內）。
+### 2.1 執行方式（逐字）
 
-## 步驟 3：驗收 A–E —— ⏸ **未執行（等待核准）**
+```bash
+umask 077
+openssl rand -base64 32 | tr -d '\n=+/' | cut -c1-32 > /root/.goaa_platform_migrate.pw
+openssl rand -base64 32 | tr -d '\n=+/' | cut -c1-32 > /root/.goaa_platform_app.pw
+chmod 600 /root/.goaa_platform_migrate.pw /root/.goaa_platform_app.pw
 
-| 項 | 內容 | 狀態 |
+# SQL 以檔案產生（printf；密碼值只存在於檔案，不經命令列）
+printf '%s\n' \
+ "CREATE ROLE goaa_c2_migrate LOGIN PASSWORD '<migrate-pw>';" \
+ "CREATE ROLE goaa_c2_app     LOGIN PASSWORD '<app-pw>';" \
+ "CREATE DATABASE goaa_platform OWNER goaa_c2_migrate ENCODING 'UTF8' LC_COLLATE 'en_US.utf8' LC_CTYPE 'en_US.utf8' TEMPLATE template0;" \
+ "REVOKE ALL ON DATABASE goaa_platform FROM PUBLIC;" \
+ "GRANT CONNECT ON DATABASE goaa_platform TO goaa_c2_migrate, goaa_c2_app;" \
+ > /root/mkroles.sql
+chmod 600 /root/mkroles.sql
+
+docker cp /root/mkroles.sql goaa-postgres:/tmp/mkroles.sql
+docker exec goaa-postgres psql -U goaa -d postgres -v ON_ERROR_STOP=1 -f /tmp/mkroles.sql
+```
+
+- 連線一律 **`-U goaa`**（C1 超管是 `goaa`，**不是** `postgres` —— R1 階段一 K1 教訓）。
+- 輸出管線加 `sed "s/PASSWORD '[^']*'/PASSWORD '<redacted>'/g"`：即使 psql 回顯失敗語句，**密碼也不會進日誌或報告**。
+- **不加 `-1`**（`CREATE DATABASE` 不可在交易區塊內）。
+
+### 2.2 密碼產生（**只報長度／檔指紋，永不報值**）
+
+```
+migrate_pw_chars=32
+app_pw_chars=32
+migrate_pw_file_sha16=d865da8ac7acb3d8
+app_pw_file_sha16=d2af56823eebe2bf
+-rw------- 1 root root 33 Sep 12 06:03 /root/.goaa_platform_app.pw
+-rw------- 1 root root 33 Sep 12 06:03 /root/.goaa_platform_migrate.pw
+```
+
+（`33 bytes` = 32 字元 + 換行；權限 `600`。抽樣後剔除 `\n = + /`，實際長度恰為 32。）
+
+### 2.3 SQL 檔與執行結果
+
+`/root/mkroles.sql`：**5 行 / 5 條語句**、sha256 前16 `b8fa45d13b56cad5`、權限 `600`。
+
+```
+CREATE ROLE
+CREATE ROLE
+CREATE DATABASE
+REVOKE
+GRANT
+psql_pipeline_rc=0
+```
+
+⇒ **五條語句全部成功**，`ON_ERROR_STOP=1` 下 `psql` 返回碼 0，**無 ERROR、無 WARNING**。
+
+### 2.4 清理（依 Tao 第 2 點：用完即刪，含容器內副本）
+
+```
+mkroles_host_exists=NO
+mkroles_container_exists=NO
+```
+
+⇒ 主機 `/root/mkroles.sql` 與容器 `/tmp/mkroles.sql` **皆已刪除**；密碼檔保留（供後續 migration 使用）。
+
+---
+
+## 步驟 3：驗收 A–E（✅ 全數通過）
+
+### A. 角色屬性 —— **僅有 LOGIN**
+
+**A1 `\du goaa_c2_*`**
+```
+        List of roles
+    Role name    | Attributes
+-----------------+------------
+ goaa_c2_app     |
+ goaa_c2_migrate |
+```
+
+**A2 精確布林屬性（`pg_roles`）**
+```
+goaa_c2_app|f|f|f|f|f|t
+goaa_c2_migrate|f|f|f|f|f|t
+(欄序: rolname|rolsuper|rolcreatedb|rolcreaterole|rolreplication|rolbypassrls|rolcanlogin)
+```
+
+⇒ **SUPERUSER=❌、CREATEDB=❌、CREATEROLE=❌、REPLICATION=❌、BYPASSRLS=❌、CANLOGIN=✅** —— 完全符合 Tao 第 3 點要求。**無任何額外屬性 ⇒ 未觸發停手條件，未執行任何 `ALTER`。**
+
+**A3 角色成員關係**（`pg_auth_members`）→ **0**：兩角色皆非任何角色之成員，亦未被授予任何角色。
+
+### B. 新庫屬性（與舊庫一致）
+
+```
+goaa|goaa|UTF8|en_US.utf8|en_US.utf8
+goaa_platform|goaa_c2_migrate|UTF8|en_US.utf8|en_US.utf8
+(欄序: datname|owner|encoding|collate|ctype)
+```
+
+⇒ `goaa_platform`：owner **`goaa_c2_migrate`**、encoding **UTF8**、collate/ctype **`en_US.utf8`** —— 與現有 `goaa` **完全一致** ✅。
+
+### C. 連線驗證（PGPASSFILE；密碼不上命令列）
+
+| 測項 | 內容 | 結果 |
 |---|---|---|
-| A | `\du goaa_c2_*`（不得有 SUPERUSER／CREATEDB／CREATEROLE） | ⏸ |
-| B | `pg_database` owner／encoding／collate／ctype 與 `goaa` 一致 | ⏸ |
-| C | `goaa_c2_migrate`、`goaa_c2_app` 各以 PGPASSFILE 連 `goaa_platform` 執行 `select current_user, current_database();` | ⏸ |
-| D | 現有 `goaa` 庫毫髮無傷（`datname='goaa'` → 1；`goaa` 的 public 表數；`goaa-router` active ＋ `127.0.0.⟨1⟩:8080` 健康檢查 200） | ⏸ |
-| E | 新庫此刻為空（`information_schema.tables` where `table_schema='public'` → 0） | ⏸ |
+| C1 | `goaa_c2_migrate` → `select current_user, current_database();` | `goaa_c2_migrate\|goaa_platform`（rc=0） ✅ |
+| C2 | `goaa_c2_app` → 同上 | `goaa_c2_app\|goaa_platform`（rc=0） ✅ |
+| **C4** | 同上兩角色，改走**非 loopback**（scram 路徑） | 兩者皆成功 ✅ |
+| **C5** | 同 C4 但**故意用錯密碼** | `FATAL: password authentication failed for user "goaa_c2_app"` ✅ 被拒 |
+| **C6** | 無關角色 `goaa_rag` 連 `goaa_platform` | `FATAL: permission denied for database "goaa_platform"` / `User does not have CONNECT privilege.` ✅ |
+| **C7** | 對照：`goaa_rag` 連舊庫 `goaa` | `goaa_rag\|goaa` ✅（未受影響） |
 
-## 回滾 —— **本輪無需回滾（未建立任何物件）**
+> **🔴 本輪一次設計失誤（誠實記錄，已追查並修正）**
+> 初版 C3 用 **loopback** 做「無密碼應被拒」負向測試 → 竟回傳 `1`（連上了）。追查後確認**容器 `pg_hba.conf` 對 loopback 為 `trust`**（**既有設定，本輪未改動**）：
+> ```
+> local   all             all                          trust
+> host    all             all   127.0.0.⟨1⟩/32           trust
+> host    all             all   ::1/128                trust
+> local   replication     all                          trust
+> host    replication     all   127.0.0.⟨1⟩/32           trust
+> host    replication     all   ::1/128                trust
+> host    all             all   all                    scram-sha-256
+> ```
+> ⇒ 結論：**loopback 免密是既有環境事實**（連舊庫 `goaa` 亦然），故 **C1/C2 只能證明「角色可連新庫」，不能證明「密碼正確」**。遂改以**容器網橋位址 `172.17.0.⟨2⟩`（非 loopback ⇒ 命中最後一條 `scram-sha-256`）**＋ PGPASSFILE 重做，得出 **C4（正確密碼可連）／C5（錯密碼被拒）／C6（無權角色被拒）**。
+> **附帶安全觀察（非本輪造成，僅報告，未改動）**：容器內任何程序（含 `docker exec` 的 root）可經 loopback 以**任意角色免密登入**；對外路徑（經發布埠，來源為 `172.17.0.⟨1⟩` 非 loopback）仍強制 `scram-sha-256`，且 D0.2 已收掉公網 5432。**是否收緊 loopback 為 `scram`／`peer`，請 Tao 裁示。**
 
-待步驟 2 執行後的回滾指令（Tao 原令）：
+### D. 現有 `goaa` 庫毫髮無傷
+
+```
+D1  datname='goaa' 計數                        → 1
+D2  goaa 的 public 表數                        → 45
+D3  goaa 的 public 表清單（45 張）：
+    agent_documents agent_memory agents audit_log conversation_memory credits
+    goaa_agent_knowledge_chunks goaa_agent_knowledge_docs goaa_agent_leads
+    goaa_agent_preferences goaa_agent_profiles goaa_agent_skills goaa_agent_tokens
+    goaa_email_send_log goaa_order_* (14) goaa_planning_sessions goaa_verify_codes
+    messages models nodes projects qwenpaw_memory_chunks sessions tasks
+    tool_invocations tools v4_agents
+D4  systemctl is-active goaa-router            → active
+D5  curl 127.0.0.⟨1⟩:8080/health               → http_code=200
+```
+
+⇒ 表數 **45**、`goaa-router` **active**、健康檢查 **200** ✅。
+
+### E. 新庫此刻為空
+
+```
+information_schema.tables where table_schema='public'  → 0
+pg_namespace（非系統 schema）                          → public
+```
+
+⇒ **0 張表**、schema 僅 `public`（migration 尚未執行）✅。
+
+### 收尾檢查
+
+```
+pw_files_perm:      -rw------- 1 root root 33 /root/.goaa_platform_{app,migrate}.pw
+容器內殘留臨時檔:     NONE
+host 上 .pgp_* 殘留:  0
+```
+
+---
+
+## 回滾
+
+**本輪無需回滾**（`goaa` 庫全程未被觸碰；`goaa_platform` 為全新物件、尚未跑 migration）。如需完全撤除：
+
 ```sql
 DROP DATABASE goaa_platform;
 DROP ROLE goaa_c2_app;
 DROP ROLE goaa_c2_migrate;
 ```
-（現有 `goaa` 庫全程未被觸碰；備份檔保留於 `/root/backups/`。）
 
-## 密碼檔路徑（僅路徑，不列值）
+備份檔保留於 `/root/backups/`（見步驟 1），可完整還原 `goaa`。
 
-- **尚未建立。** 步驟 2 執行後將為：`/root/.goaa_platform_migrate.pw`、`/root/.goaa_platform_app.pw`（屆時僅回報路徑，永不回報值）。
+## 密碼檔路徑（**僅路徑，永不列值**）
 
----
+| 檔案 | 用途 | 權限 | 檔案指紋 sha256 前16 |
+|---|---|---|---|
+| `/root/.goaa_platform_migrate.pw` | `goaa_c2_migrate` 密碼 | 600 | `d865da8ac7acb3d8` |
+| `/root/.goaa_platform_app.pw` | `goaa_c2_app` 密碼 | 600 | `d2af56823eebe2bf` |
 
-## 紀律自證
-
-- ✅ 只 `ssh do-runtime-anchor`（C1）一次批次執行；**未連 C2／C3**。
-- ✅ **未建任何角色／庫／物件**（本輪 0 個 `CREATE`）。
-- ✅ **未跑任何 migration**。
-- ✅ 未改 env／設定檔；**未重啟任何服務**；未動 ufw／DOCKER-USER。
-- ✅ 未讀寫 `goaa` 庫的任何一列（僅 `pg_dump` 產出備份；`pg_restore --list` 只讀目錄）。
-- ✅ 密碼：本輪**根本未產生**（步驟 2 未執行）；無密碼進命令列／報告／歷史。
-- ✅ 備份完成後已清掉容器內暫存檔（`/tmp/goaa-*.dump`、`/tmp/v.dump`）。
+> 指紋僅供「檔案未遭更動」比對，**無法還原密碼**。第二段（migration）將以 `PGPASSFILE`（`/opt/goaa-test/env/*.pgpass`，屆時建立）取用，全程不上命令列、不回顯。
 
 ---
 
-## 秘密掃描（推送前，須為 0 命中）
+## 紀律自證（步驟 2–3）
 
-樣式（切分書寫）：`"sk_" + "live_"`、`"BEGIN " + "PRIVATE KEY"`、`"AK" + "IA"`、`"gh" + "p_"`、`"postgres" + ":" + "//"`。
-
-**掃描回報（推送前，逐樣式統計）**：
-
-| 樣式（切分書寫） | 命中 |
-|---|---|
-| `"sk_" + "live_"` | **0** |
-| `"BEGIN " + "PRIVATE KEY"` | **0** |
-| `"AK" + "IA"` | **0** |
-| `"gh" + "p_"` | **0** |
-| `"postgres" + ":" + "//"` | **0** |
-| **合計** | **0** ✅ |
-
-**檔案完整性**：`REPORT.md` = **6,569 bytes**、`sha256` 前16 = `6b5ac690ac0de4f1`、首三 byte = `b'# R'`（**無 BOM**）。
-
-**relay main sha**：`c1c2ffc4c2a490cc570ea8ac4db0bc76a4354552`
-（本報告**內容** commit；其後的子提交僅用於寫入本行與上方掃描回報。）
+- ✅ 只 `ssh do-runtime-anchor`（C1）；**未連 C2／C3**。
+- ✅ **未跑任何 migration**（依令）；`goaa_platform` 表數仍為 **0**。
+- ✅ 未改 env／設定檔；**未重啟任何服務**（`goaa-router` 仍 active、`/health` 200）。
+- ✅ 未動 ufw／DOCKER-USER／`pg_hba.conf`。
+- ✅ 未讀寫 `goaa` 庫任何一列（僅 `information_schema` 計數與表名）。
+- ✅ 密碼：`openssl rand` 產生後只寫入 `600` 檔案；**未上命令列、未進 `ps`、未回顯、未進報告**；psql 輸出另加 redaction。
+- ✅ `/root/mkroles.sql` 與容器內副本**用完即刪**（已驗 `NO / NO`）。
+- ✅ 臨時 PGPASSFILE（`/root/.pgp_*`、容器 `/tmp/.pgp_*`）全部清除（`host_left=0`、`CONTAINER_CLEAN`）。
+- ✅ IPv4 一律切分書寫：`172.17.0.⟨2⟩`、`172.17.0.⟨1⟩`、`127.0.0.⟨1⟩`、`134.199.227.⟨108⟩`。
