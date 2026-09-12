@@ -420,3 +420,75 @@ EnvironmentFiles=/opt/goaa-test/env/clerk-ui-3102.env (ignore_errors=no)
 - **IPv4 書寫**：**可路由位址未切分 = 0**；`127.0.0.1` 全為 loopback，逐字書寫。
 
 **relay 提交鏈**：`e979f24` → `30c2236`（**本輪內容**）→ 本節（掃描＋sha）。**fast-forward、無 force。**
+
+---
+
+## 13. Tao 授權後之全域追查（本機 ＋ C2）—— **找到 publishable、secret 已不可回復**
+
+> **授權變更**：Tao 指示「在你的本機找一下，或者去 C2 找找」⇒ **本輪解除**原「不得去別的目錄翻」之限制，進行全域追查。**唯讀，未變更任何檔案。**
+
+### 13.1 ★ 找到：production **publishable** key（公開金鑰）
+
+| 項 | 結果 |
+|---|---|
+| 值形 | `pk_`+`live_` + 19 字元（**共 27 字元**） |
+| sha256[:16] | **`562a0cfc245df772`** |
+| **解碼後 host（base64）** | **`clerk.goaa.ai`** ⇒ **production instance 的前端 API 域名** |
+| 出現位置 | ① `/home/aika/.qwenpaw/workspaces/default/dialog/2026-09-11.jsonl` **L784**<br>② `/home/aika/.qwenpaw/qwenpaw.log` **L41380** |
+
+**這把是公開金鑰**（設計上就放在前端、可被任何人看到），故可安全列出 host。⇒ **`CLERK_ISSUER` 的正確值可由此推得：`https://clerk.goaa.ai`。**
+
+### 13.2 ★ 找不到：production **secret** key —— **已被我們自己銷毀**
+
+兩處 `CLERK_SECRET_KEY=` 之後**都不是值，而是 `X` 連續串**：
+
+| 檔案 | 行 | X 連續長度 |
+|---|---|---|
+| `dialog/2026-09-11.jsonl` | L784 | **50** |
+| `qwenpaw.log` | L41380 | **50** |
+
+⇒ **這正是 Round C1.4 / C1.5 的 K 段處理**：依 Tao 當下「**已輪換**」之指示，對原值做**原地等長覆寫**（原文長度 50 bytes → 50 個 `X`）。**覆寫不可逆 ⇒ secret 值在本機已無法回復。**
+
+### 13.3 全機掃描（值形 `(pk|sk)_`+`live_`+≥12 字元）
+
+| 範圍 | 結果 |
+|---|---|
+| **本機**：`/home/aika`（含 `.qwenpaw`／`.claude`／`.config`／Projects）、`/tmp`、`/opt` | **`sk_`+`live_` 值形：0 命中**；`pk_`+`live_` 值形：僅上述 27 字元那把（2 處）＋測試用合成佔位（32 字元、sha16 `5e6471ea6d4bf71e`，可證明為假：base64 解出為亂碼）＋ Clerk 官方文件範例（30 字元） |
+| **本機 `/root`** | **無法讀取**（`drwx------`、`Permission denied`）⇒ **無法排除**該目錄另有副本（需 root 才能查） |
+| **C2 全機**（`/`，排除 `/proc` `/sys` `/dev` `/run`） | **值形命中僅 1 檔**：`/opt/goaa-test/src/c2-clerk-login-20260910/scripts/c2-clerk/test-entry-rules.mjs`（**測試佔位字串**，非真值）；`sk_`+`live_` 值形：**0** |
+
+### 13.4 後端是否「只靠 publishable 就能跑」？—— **不行**
+
+`services/c2_agent_loop/app/clerk_auth.py`：
+
+```python
+def clerk_configured(settings: Settings) -> bool:
+    return bool(settings.clerk_secret_key
+                and settings.clerk_issuer
+                and settings.clerk_authorized_parties)
+```
+
+且 `authenticate_request(...)` 以 **secret key** 作 SDK bearer 憑證（`Clerk(bearer_auth=settings.clerk_secret_key)`）。
+⇒ **`CLERK_SECRET_KEY` 為必要項**；缺它時 `clerk_configured()` 為 false，所有驗證走 `clerk_not_configured`（503）。
+⇒ **只有 publishable（公開）不足以完成步驟 3。**
+
+### 13.5 判定與結論
+
+| 需要的 5 個值 | 現況 |
+|---|---|
+| `CLERK_PUBLISHABLE_KEY` | ✅ **已取得**（→ `clerk.goaa.ai`） |
+| `NEXT_PUBLIC_` 加 `CLERK_PUBLISHABLE_KEY` | ✅ 同上（同值即可） |
+| `CLERK_ISSUER` | ✅ **可推得 `https://clerk.goaa.ai`**（公開資訊） |
+| `CLERK_AUTHORIZED_PARTIES` | ✅ 依令固定為 `https://planning.goaa.ai` |
+| **`CLERK_SECRET_KEY`** | ❌ **不存在**（本機兩處均為 50 個 `X`，值不可回復；全域掃描 0 命中） |
+
+⇒ **步驟 3 無法完成、步驟 4 無意義（做了會讓 3103 驗證全數失敗）。** 依令精神**停手**。
+
+**⚠️ 我列出的具體顧慮：** 若只把 publishable 換成 live 而 secret 仍是 test，`clerk_configured()` 會是 **true**（因為 test secret 存在）⇒ 服務「看似已設定」，但**所有登入都會靜默失敗**。**這是為什麼我不做「部分換值」。**
+
+### 13.6 需要 Tao 的動作（唯一阻塞）
+
+**請從 Clerk Dashboard 取得 production instance 的 secret key**，放到某台主機的某路徑並告知路徑（**不要貼在對話裡**）；我會用既有程序**主機間直傳**，只動 `api-3103.env` 的 Clerk 鍵、然後 `restart` 3103。
+
+- 若該 secret 已於 2026-09-11 輪換過 ⇒ 舊值本就失效，**必須取用「目前生效」的那一把**。
+- 附帶：production instance 的網域驗證狀態需一併確認（`clerk.goaa.ai` 是否存在且 JWKS 可達）——否則步驟 4-D 會得到 `clerk_verification_unavailable`。
