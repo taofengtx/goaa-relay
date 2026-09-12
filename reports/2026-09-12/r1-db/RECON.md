@@ -315,3 +315,4 @@ select current_user, current_database(), inet_server_port();
 **檔案完整性**：`RECON.md` = **16,005 bytes**、`sha256` 前16 = `d37a7b304e5a3d4e`、首三 byte = `b'# R'`（**無 BOM**）。
 
 **relay main sha**：`1b0d0ad08dfc70873a4bbb3d16b914231dd7234e`
+（本報告**內容** commit；其後的子提交僅用於寫入本行與上方掃描回報，未改動任何勘查結論。）
