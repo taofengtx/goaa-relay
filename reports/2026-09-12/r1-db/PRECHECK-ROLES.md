@@ -351,6 +351,18 @@ goaa_c2_migrate
 
 樣式（切分書寫）：`"sk_" + "live_"`、`"BEGIN " + "PRIVATE KEY"`、`"AK" + "IA"`、`"gh" + "p_"`、`"postgres" + ":" + "//"`。
 
-**掃描回報**：見下方表格（逐樣式統計）。
+**掃描回報（推送前，逐樣式統計）**：
 
-**relay main sha**：`PENDING_COMMIT_SHA`
+| 樣式（切分書寫） | 命中 |
+|---|---|
+| `"sk_" + "live_"`（Stripe live 前綴） | **0** |
+| `"BEGIN " + "PRIVATE KEY"`（PEM 私鑰標頭） | **0** |
+| `"AK" + "IA"`（AWS access key 前綴） | **0** |
+| `"gh" + "p_"`（GitHub PAT 前綴） | **0** |
+| `"postgres" + ":" + "//"`（Postgres URI scheme） | **0** |
+| **合計** | **0** ✅ |
+
+**檔案完整性**：`PRECHECK-ROLES.md` = **20,972 bytes**、`sha256` 前16 = `67cbfd749460b4c4`、首三 byte = `b'# R'`（**無 BOM**）。
+
+**relay main sha**：`28b4ef1aef172a30baa17f115da683ff9fbe19c3`
+（本報告**內容** commit；其後的子提交僅用於寫入本行與上方掃描回報，未改動任何檢查結論。）
