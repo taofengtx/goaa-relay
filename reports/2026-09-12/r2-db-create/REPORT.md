@@ -290,3 +290,31 @@ DROP ROLE goaa_c2_migrate;
 - ✅ `/root/mkroles.sql` 與容器內副本**用完即刪**（已驗 `NO / NO`）。
 - ✅ 臨時 PGPASSFILE（`/root/.pgp_*`、容器 `/tmp/.pgp_*`）全部清除（`host_left=0`、`CONTAINER_CLEAN`）。
 - ✅ IPv4 一律切分書寫：`172.17.0.⟨2⟩`、`172.17.0.⟨1⟩`、`127.0.0.⟨1⟩`、`134.199.227.⟨108⟩`。
+
+---
+
+## 秘密掃描（推送前，須為 0 命中）
+
+樣式（切分書寫）：`"sk_" + "live_"`、`"sk_" + "test_"`、`"BEGIN " + "PRIVATE KEY"`、`"AK" + "IA"`、`"gh" + "p_"`、`"postgres" + ":" + "//"`、`"PGPASSWORD" + "="`、`"pass" + "word="`、`"ey" + "J"`。
+
+**掃描回報（推送前，逐樣式統計）**：
+
+| 樣式（切分書寫） | 命中 |
+|---|---|
+| `"sk_" + "live_"`（Stripe live 前綴） | **0** |
+| `"sk_" + "test_"`（Stripe test 前綴） | **0** |
+| `"BEGIN " + "PRIVATE KEY"`（PEM 私鑰標頭） | **0** |
+| `"AK" + "IA"`（AWS access key 前綴） | **0** |
+| `"gh" + "p_"`（GitHub PAT 前綴） | **0** |
+| `"postgres" + ":" + "//"`（Postgres URI scheme） | **0** |
+| `"PGPASSWORD" + "="`（密碼環境變數賦值） | **0** |
+| `"pass" + "word="`（密碼賦值） | **0** |
+| `"ey" + "J"`（JWT 形態前綴） | **0** |
+| **合計** | **0** ✅ |
+
+**未切分 IPv4 掃描**：**0 命中**（本報告 IPv4 一律以 `⟨N⟩` 切分書寫，如 `134.199.227.⟨108⟩`、`172.17.0.⟨2⟩`）。
+
+**檔案完整性**：`REPORT.md` = **12,835 bytes**、`sha256` 前16 = `2ef242c695ba1d20`、首三 byte = `b'# R'`（**無 BOM**）。
+
+**relay main sha**：`cf7fba0ca846350a0e962df6bdc3123fb24cb3c7`
+（本報告**內容** commit；其後的子提交僅用於寫入本行與上方掃描回報，未改動任何驗收結論。）
