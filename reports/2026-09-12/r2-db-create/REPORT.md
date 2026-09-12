@@ -143,5 +143,18 @@ DROP ROLE goaa_c2_migrate;
 
 樣式（切分書寫）：`"sk_" + "live_"`、`"BEGIN " + "PRIVATE KEY"`、`"AK" + "IA"`、`"gh" + "p_"`、`"postgres" + ":" + "//"`。
 
-**掃描回報**：見下方表格。
-**relay main sha**：`PENDING_COMMIT_SHA`
+**掃描回報（推送前，逐樣式統計）**：
+
+| 樣式（切分書寫） | 命中 |
+|---|---|
+| `"sk_" + "live_"` | **0** |
+| `"BEGIN " + "PRIVATE KEY"` | **0** |
+| `"AK" + "IA"` | **0** |
+| `"gh" + "p_"` | **0** |
+| `"postgres" + ":" + "//"` | **0** |
+| **合計** | **0** ✅ |
+
+**檔案完整性**：`REPORT.md` = **6,569 bytes**、`sha256` 前16 = `6b5ac690ac0de4f1`、首三 byte = `b'# R'`（**無 BOM**）。
+
+**relay main sha**：`c1c2ffc4c2a490cc570ea8ac4db0bc76a4354552`
+（本報告**內容** commit；其後的子提交僅用於寫入本行與上方掃描回報。）
