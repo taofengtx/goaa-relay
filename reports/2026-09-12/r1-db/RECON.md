@@ -301,6 +301,17 @@ select current_user, current_database(), inet_server_port();
 - 本報告僅出現**變數名**（含 `POSTGRES_PASSWORD`、`GOAA_C2_DB_PASSFILE` 等**名稱**，非值）、庫名、角色名、路徑、行數、`sha256` 前 16 位。
 - **未列印任何 token／密碼／金鑰／連線 URI 的「值」**。
 
-> 掃描結果見下方「掃描回報」行（由 `grep -c` 逐樣式統計）。
+**掃描回報（推送前，逐樣式統計）**：
 
-**relay main sha**：`PENDING_COMMIT_SHA`
+| 樣式（切分書寫） | 命中 |
+|---|---|
+| `"sk_" + "live_"`（Stripe live 前綴） | **0** |
+| `"BEGIN " + "PRIVATE KEY"`（PEM 私鑰標頭） | **0** |
+| `"AK" + "IA"`（AWS access key 前綴） | **0** |
+| `"gh" + "p_"`（GitHub PAT 前綴） | **0** |
+| `"postgres" + ":" + "//"`（Postgres URI scheme） | **0** |
+| **合計** | **0** ✅ |
+
+**檔案完整性**：`RECON.md` = **16,005 bytes**、`sha256` 前16 = `d37a7b304e5a3d4e`、首三 byte = `b'# R'`（**無 BOM**）。
+
+**relay main sha**：`1b0d0ad08dfc70873a4bbb3d16b914231dd7234e`
