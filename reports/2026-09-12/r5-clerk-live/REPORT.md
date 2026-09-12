@@ -341,3 +341,69 @@ drwx--x---  root        goaa-c2loop  /opt/goaa-test/env
 | `r5-clerk-live/REPORT.md` | 17,504 | `c9fd2dac1808537c` | `b'# R'` | 無 |
 
 **relay 提交鏈**：`10042fd`（前輪掃描＋sha）→ `6ff3610`（**本輪內容**）→ 本節（掃描＋sha）。**fast-forward、無 force。**
+
+---
+
+## 11. 第三輪複驗（指令第三次重發）—— 2026-09-12T07:26:57Z
+
+**緣由**：R5a 指令第三次以相同內容重發。**重跑步驟 1、2（唯讀）。結果第三次相同 ⇒ 停手條件再次成立；步驟 3、4 仍未執行。**
+
+### 11.1 命中次數表（15 檔，含 2 隱藏檔；純 `grep -c`）
+
+| 路徑 | pk_live | sk_live |
+|---|---|---|
+| `/opt/goaa-test/env/app.pgpass` | 0 | 0 |
+| `/opt/goaa-test/env/app_role_password` | 0 | 0 |
+| `/opt/goaa-test/env/clerk-api-3103.env` | **0** | **0** |
+| `/opt/goaa-test/env/clerk-api-3103.env.bak-20260911-100202` | **0** | **0** |
+| `/opt/goaa-test/env/clerk-ui-3102.env` | **0** | **0** |
+| `/opt/goaa-test/env/clerk-ui-3102.env.bak-20260911-103145` | **0** | **0** |
+| `/opt/goaa-test/env/clerk-ui-3102.env.bak-c16-open` | **0** | **0** |
+| `/opt/goaa-test/env/clerk.env` | **0** | **0** |
+| `/opt/goaa-test/env/clerk.env.bak-20260911-103150` | **0** | **0** |
+| `/opt/goaa-test/env/goaa-c2-backend.env` | 0 | 0 |
+| `/opt/goaa-test/env/migrate.pgpass` | 0 | 0 |
+| `/opt/goaa-test/env/migrate_role_password` | 0 | 0 |
+| `/opt/goaa-test/env/session_secret` | 0 | 0 |
+| `/opt/goaa-test/env/.c2test-3103.env`（隱藏） | 0 | 0 |
+| `/opt/goaa-test/env/.pgpass`（隱藏） | 0 | 0 |
+
+`grep -l "pk_live\|sk_live"`（含隱藏檔）：**(無命中)**。
+
+### 11.2 目錄狀態舉證：「沒有任何新檔」
+
+`ls -la /opt/goaa-test/env/` 顯示 **15 個檔、數目與上一輪完全相同**，且 **所有 mtime 皆為 Sep 10–Sep 11**（無一個落在本次輪次時間範圍）：
+
+```
+-r--r-----  root        goaa-c2loop   758  Sep 10 07:17  .c2test-3103.env
+-rw-------  root        root          192  Sep 10 05:03  .pgpass
+-rw-------  goaa-c2loop goaa-c2loop    94  Sep 10 05:03  app.pgpass
+-rw-------  root        root           64  Sep 10 05:03  app_role_password
+-r--r-----  root        goaa-c2loop 1172  Sep 11 10:02  clerk-api-3103.env
+-r--r-----  root        goaa-c2loop 1171  Sep 10 22:55  clerk-api-3103.env.bak-20260911-100202
+-r--r-----  root        goaa-c2loop  511  Sep 11 10:55  clerk-ui-3102.env
+-r--r-----  root        goaa-c2loop  510  Sep 11 04:26  clerk-ui-3102.env.bak-20260911-103145
+-r--r-----  root        goaa-c2loop  511  Sep 11 10:31  clerk-ui-3102.env.bak-c16-open
+-r--r-----  root        goaa-c2loop  382  Sep 11 10:31  clerk.env
+-r--r-----  root        goaa-c2loop  381  Sep 10 08:12  clerk.env.bak-20260911-103150
+-r--r-----  root        goaa-c2loop  747  Sep 10 05:03  goaa-c2-backend.env
+-rw-------  root        root           98  Sep 10 05:03  migrate.pgpass
+-rw-------  root        root           64  Sep 10 05:03  migrate_role_password
+-rw-------  root        root           65  Sep 10 05:03  session_secret
+```
+
+⇒ **C2 上沒有任何人放入 production 憑證檔。**（本輪亦**未**在 C2 `/root` 發現任何 live 憑證暫存；該處僅有 Sep 10 之舊 `.sh`／`.tgz`／`.out` 檔，與憑證無關。）
+
+### 11.3 步驟 2 判定（第三次）
+
+```
+EnvironmentFiles=/opt/goaa-test/env/clerk-api-3103.env (ignore_errors=no)
+EnvironmentFiles=/opt/goaa-test/env/clerk-ui-3102.env (ignore_errors=no)
+```
+- `clerk-api-3103.env` 之 live 命中 = **0**；`clerk-ui-3102.env` 之 live 命中 = **0**。
+- ⇒ **無 live 憑證檔存在 ⇒ 無從被 C2 兩支服務載入 ⇒ 互不影響。** C2 重啟**不會**切到 production。**本輪未改 C2 任何東西。**
+
+### 11.4 第三輪結論
+
+**與 §1、§8 完全相同 ⇒ 停手。步驟 3、步驟 4 未執行；本輪無 🛡 卡；C1/C2 零變更。**
+**前提仍未就緒**（無 live 憑證、production instance 狀態未知）。**建議 Tao：提供憑證檔來源與位置，或明示本輪撤銷**；在前提就緒前，重複下達同一指令只會得到同一結果。
