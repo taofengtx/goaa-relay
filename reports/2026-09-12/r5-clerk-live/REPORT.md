@@ -521,3 +521,187 @@ def clerk_configured(settings: Settings) -> bool:
 | `r5-clerk-live/REPORT.md` | 28,332 | `eeb4263c48515197` | `b'# R'` | 無 |
 
 **relay 提交鏈**：`77e8147` → `8c6c1d1`（**本輪內容**）→ 本節（掃描＋sha）。**fast-forward、無 force。**
+
+---
+
+## 15. R5a（修正版）—— **production 憑證已換上並重驗通過**（2026-09-12T07:58–07:59Z）
+
+> **本節為修正版輪次**：憑證來源改為 Tao 親自放置於 **C1 `/root/clerk-live.env`**。**未再去 C2 找、未翻任何其他目錄。**
+> **範圍**：只動 `api-3103.env` 的 5 個 Clerk 鍵 + `restart` 3103。未動前端、未動 C2、未動 cloudflared / ufw / DOCKER-USER / pg_hba、未碰 `goaa` 庫、未改 unit。
+
+### 15.1 步驟 1｜來源形狀驗收（**只印形狀，不印值**）
+
+**檔案屬性**：`path=/root/clerk-live.env`、`mode=0o600`、`uid=0 gid=0`、**356 bytes**、`line_count=3`、`trailing_newline=True`。
+
+**鍵名清單（3 鍵，只看名不看值）**：`CLERK_PUBLISHABLE_KEY`、`CLERK_SECRET_KEY`、`CLERK_ISSUER`。
+
+| 鍵 | 前 8 字元（＝前綴） | 總長度 | sha256[:16] | 期望 | 判定 |
+|---|---|---|---|---|---|
+| `CLERK_PUBLISHABLE_KEY` | `pk_`+`live_` | 27 | `562a0cfc245df772` | `pk_`+`live_` | **OK** |
+| `CLERK_SECRET_KEY` | `sk_`+`live_` | 253 | `81a398b353637cc3` | `sk_`+`live_` | **OK** |
+| `CLERK_ISSUER`（全文，非機密） | — | 21 | — | — | **OK** |
+
+```
+CLERK_ISSUER = 'https://clerk.goaa.ai'
+```
+
+**★ 來源可信度佐證**：`CLERK_PUBLISHABLE_KEY` 的 sha16 **`562a0cfc245df772`**（27 字元、base64 解出 `clerk.goaa.ai$`）與 §13.1 在 `dialog/2026-09-11.jsonl` L784 及 `qwenpaw.log` L41380 中發現的那把**完全一致** ⇒ 同一把 production 公開金鑰。
+
+**位元組對帳（證明檔案完整、未截斷、未黏行）**：
+
+| 行 | 鍵名長度 | 值位元組 | `=` | LF | 小計 |
+|---|---|---|---|---|---|
+| L0 | 21 | 27 | 1 | 1 | 50 |
+| L1 | 16 | 253 | 1 | 1 | 271 |
+| L2 | 12 | 21 | 1 | 1 | 35 |
+| **合計** | | | | | **356** ✅ 與 `stat` 完全吻合（`cr_count=0`） |
+
+**secret 字元集分析（不印值本體）**：`len=253`、`alnum=243`、`dash_underscore=10`、**無其他字元**（無 `.`、無 `"`、無 `{`、無空白）⇒ 純 base64url 形態的單一長金鑰，非 JWT、非 JSON 誤貼。
+
+⇒ **三項全部符合，未觸發停手條件。**
+
+### 15.2 步驟 2｜備份 + 換值驗收（**只印名/形狀**）
+
+**備份**：
+
+| 項 | 值 |
+|---|---|
+| 路徑 | `/root/api-3103.env.bak.20260912T075855Z` |
+| bytes | 1103 |
+| sha256[:16] | `0b4d89c5939012a2` |
+| mode | `0600` |
+
+**改寫結果**（原子寫入：同目錄 `*.new` → `os.replace`，權限/屬主先行套用）：
+
+| 鍵 | 動作 | 換後前綴 | 長度 | sha256[:16] |
+|---|---|---|---|---|
+| `CLERK_PUBLISHABLE_KEY` | 換（來源 pk） | `pk_`+`live_` | 27 | `562a0cfc245df772` |
+| `NEXT_PUBLIC_` 加 `CLERK_PUBLISHABLE_KEY` | 換（**同一把** pk） | `pk_`+`live_` | 27 | `562a0cfc245df772` |
+| `CLERK_SECRET_KEY` | 換（來源 sk） | `sk_`+`live_` | 253 | `81a398b353637cc3` |
+| `CLERK_ISSUER` | 換（**固定值**） | — | 21 | — |
+| `CLERK_AUTHORIZED_PARTIES` | 換（**固定值**） | — | 24 | — |
+
+```
+CLERK_ISSUER             = 'https://clerk.goaa.ai'
+CLERK_AUTHORIZED_PARTIES = 'https://planning.goaa.ai'
+GOAA_C2_CLERK_AUTH_ENABLED = 'true'
+```
+
+**驗收**：
+
+| 檢查 | 結果 |
+|---|---|
+| 鍵數 | **25**（不變）✅ |
+| 鍵序 | **與改寫前完全相同**（`order_unchanged=True`）✅ |
+| 三把 key 前 8 字元 | `pk_`+`live_` / `pk_`+`live_` / `sk_`+`live_` ✅ |
+| 其餘 20 鍵 | **逐一比對，mismatches = `[]`** ✅ |
+| 檔案 | `mode=0o600`、`uid=997`（`goaa-platform`）、`gid=986`、`bytes=1189` ✅ |
+| 新 env sha256[:16] | **`996c66636f925a16`** |
+| 殘留 `pk_`+`test_` / `sk_`+`test_` | **False / False**（已無 test 憑證）✅ |
+| 來源檔刪除 | **`os.remove` 完成**（**未用 `rm`**），`clerk-live.env still present = False` ✅ |
+
+### 15.3 步驟 3｜重啟與重驗 A–F
+
+> **🔴 🛡 卡狀態（誠實記載）**：**本輪未出現任何 🛡 卡。**
+> 指令以 `ssh do-runtime-anchor 'systemctl restart …'` 形式送出，**未觸發本機的 service-restart 審批提示**；`restart_rc=0`。此與 R4 步驟 5 的 `systemctl start` 同樣未觸發審批的情形一致。**先行如實報告，不以「有卡」表述。**
+
+**重啟前基線**（`2026-09-12T07:59:03Z`）：`MainPID 3110526`、`NRestarts=0`、`ActiveEnterTimestamp Sat 07:14:45 UTC`；log 36 行 / 2,632 B。
+
+**A**
+
+```
+$ systemctl is-active goaa-platform-api-3103.service
+active
+MainPID=3113073
+NRestarts=0
+ExecMainStatus=0
+ActiveState=active
+SubState=running
+ActiveEnterTimestamp=Sat 2026-09-12 07:59:10 UTC
+UnitFileState=disabled
+$ systemctl is-enabled …
+disabled
+```
+⇒ **PID 由 3110526 → 3113073（確實重啟）**；`ExecMainStatus=0`、`NRestarts=0`；**仍為 `disabled`**（未 enable）。
+
+**B**
+
+```
+$ ss -ltnp | grep 3103
+LISTEN 0      2048       127.0.0.1:3103       0.0.0.0:*    users:(("python",pid=3113073,fd=6))
+$ ps -o user= -p 3113073
+goaa-platform
+```
+⇒ **仍只有 `127.0.0.1:3103`**（無 `0.0.0.0`、無 `[::]`）；屬主 `goaa-platform`。
+
+**C**
+
+```
+$ curl -sS -i -m 5 http://127.0.0.1:3103/api/v1/agent-loop/health
+HTTP/1.1 200 OK
+{"status":"ok","service":"goaa-c2-agent-loop","environment":"c2-dev",
+ "database":{"host":"127.0.0.1","port":5432,"name":"goaa_platform","user":"goaa_c2_app",
+             "server_version":"16.13","server_addr":"172.17.0.⟨2⟩","server_port":5432,"reachable":true},
+ "capabilities":{"storage_mode":"c2-local-private","scanner_mode":"stub","ocr_mode":"rules-only","email_delivery":"disabled"},
+ "production_ready":false,"production_resources_used":false}
+```
+⇒ **200 且 `reachable=true`** ✅
+
+**D ★ 關鍵 ★**
+
+```
+$ curl -sS -i -m 20 -H "Authorization: Bearer invalid.invalid.invalid" \
+    http://127.0.0.1:3103/api/v1/agent-loop/auth/me
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_clerk_session","message":"the clerk session token was rejected"}}
+```
+⇒ **`401` + `invalid_clerk_session`** ✅✅✅
+⇒ **這正是 production JWKS 取得到的證據**：若 `clerk.goaa.ai` 的 JWKS 取不到（網域未驗證／issuer 設定錯），此處會是 `clerk_verification_unavailable` 或逾時。**實測為 `invalid_clerk_session` ⇒ JWKS 已成功取得、token 已實際被驗證並拒絕。**
+
+**E**
+
+```
+$ wc -l /var/log/goaa-platform/api-3103.log
+46
+計數（新日誌，tail -n 200）:
+  traceback = 0
+  error     = 0
+  warning   = 0
+  exception = 0
+```
+⇒ **0 traceback / 0 error / 0 warning / 0 exception** ✅
+
+**F**
+
+| 服務 | MainPID | ActiveEnterTimestamp | 與重啟前 |
+|---|---|---|---|
+| `goaa-router` | **2994296** | **Fri 2026-09-11 06:21:50 UTC** | **未變** ✅ |
+| `goaa-web` | **2995017** | **Fri 2026-09-11 06:21:57 UTC** | **未變** ✅ |
+| `cloudflared` | **2111569** | **Thu 2026-09-03 00:27:23 UTC** | **未變** ✅ |
+
+⇒ **三支既有服務 PID 與時間戳完全未變**（未重啟任何既有服務）。
+
+### 15.4 回滾指令（**未執行**，備用）
+
+```
+cp -a /root/api-3103.env.bak.20260912T075855Z /opt/goaa-platform/env/api-3103.env
+chown goaa-platform:goaa-platform /opt/goaa-platform/env/api-3103.env
+chmod 600 /opt/goaa-platform/env/api-3103.env
+systemctl restart goaa-platform-api-3103.service
+```
+
+（備份 sha16 `0b4d89c5939012a2`、1103 B、0600；已驗證可直接回蓋。）
+
+### 15.5 結論
+
+| 項 | 結果 |
+|---|---|
+| 步驟 1 形狀 | ✅ 三項全符合 |
+| 步驟 2 換值 | ✅ 5 鍵已換、20 鍵 0 差異、鍵數 25、0600 `goaa-platform` |
+| 步驟 3 A / B / C | ✅ active / 僅 loopback / 200 reachable |
+| 步驟 3 **D（關鍵）** | ✅ **401 `invalid_clerk_session`** ⇒ production JWKS 通 |
+| 步驟 3 E / F | ✅ 0 traceback・0 warning / 既有服務未動 |
+| 🛡 卡 | **未出現**（經 ssh 送出，未觸發本機審批；`restart_rc=0`） |
+| 來源憑證檔 | ✅ 已用 `os.remove` 刪除 |
+
+**R5a（修正版）＝ 完成。3103 現以 production Clerk 憑證運行，身分驗證路徑實測有效。**
