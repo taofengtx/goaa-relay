@@ -313,3 +313,31 @@ drwx--x---  root        goaa-c2loop  /opt/goaa-test/env
 
 1. 目前 `CLERK_AUTHORIZED_PARTIES` 是 **local-tunnel 用值**（`localhost:13102` 等），與指令要求的 `https://planning.goaa.ai` **不同** ⇒ 真要做步驟 3 時需**依令以 planning.goaa.ai 為準**（本輪**未改**）。
 2. `CLERK_ISSUER` 之 host 目前指向 **Dev instance**。切到 production 時，`CLERK_ISSUER` 會變成 production issuer；**步驟 4-D 的成敗完全取決於該 production instance 是否已建、網域／DNS 是否已驗證**（否則會得到 `clerk_verification_unavailable`，而非要求的 `invalid_clerk_session`）。
+
+---
+
+## 10. 複驗提交前掃描（R5a 第二輪）
+
+> **說明**：§8–§9 為本輪新增，追加於既有附錄之後（指令重發而非新輪次，故不改動前文）。
+
+- **掃描標的**：本報告 `r5-clerk-live/REPORT.md`。
+- **掃描樣式**：13 類（逐類切分書寫，避免敘述本身膨脹計數）——
+  `sk_`+`live_`、`sk_`+`test_`、`BEGIN `+`PRIVATE KEY`、`AK`+`IA`、`gh`+`p_`、`postgres`+`:`+`//`、`PGPASS`+`WORD=`、`pass`+`word=`、`ey`+`J`、`.`+`pgp`+`ass`、`clerk`+`_secret`、`CLERK`+`_SECRET_KEY=`、`SESSION`+`_SECRET=`。
+- **機密值命中數 = 0。**
+
+**非零命中（皆非機密，明示不掩飾）**：
+
+- `"." + "pgp" + "ass"` **10 處** —— 全部是**檔名／路徑**（env 目錄清單與鍵名表）。
+- `"clerk" + "_secret"` **6 處** —— 全部是**變數名稱**（`CLERK_` 加 `SECRET_KEY`）。**不是鍵值本身**。
+
+**IPv4 書寫**：**可路由（公開）位址未切分命中數 = 0**；`127.0.0.1` 出現 3 次，全為 **loopback**、依既有慣例**逐字書寫**（非可路由、非機密）。
+
+**秘密處理**：本輪**未讀取、未複製、未傳輸、未輸出**任何憑證值。`CLERK_AUTHORIZED_PARTIES` 與 issuer host 屬**非機密**（前者是白名單網址、後者是公開的 Clerk 主機名），故依令逐字列出。
+
+**檔案完整性（本節追加前，＝本輪內容 commit 之版本）**：
+
+| 檔案 | bytes | sha256[:16] | 首三 byte | BOM |
+|---|---|---|---|---|
+| `r5-clerk-live/REPORT.md` | 17,504 | `c9fd2dac1808537c` | `b'# R'` | 無 |
+
+**relay 提交鏈**：`10042fd`（前輪掃描＋sha）→ `6ff3610`（**本輪內容**）→ 本節（掃描＋sha）。**fast-forward、無 force。**
