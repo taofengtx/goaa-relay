@@ -405,3 +405,24 @@ WorkingDirectory=/opt/goaa/web/releases/butler-3c8ef2f-candidate
 
 - `ActiveState=active`、`SubState=running`、`MainPID 2039675`、**`UnitFileState=enabled`**。
 - **血統與本次切換無關**（`butler-3c8ef2f` 候選線，非 Clerk 版）；列此僅為避免日後誤動。**C2 的 3100 被它佔用。**
+
+---
+
+## 9. 秘密掃描（本報告自身）
+
+- 掃描腳本：`/tmp/r4s-scan.py`（13 種樣式，樣式字面量切分書寫）。
+- **機密值命中數 = 0。**
+- 非零項僅 1 類：`"clerk" + "_secret"` **3 處（L310／L338／L347）—— 全為變數名 `CLERK_SECRET_KEY`，非機密、僅名稱**。
+- 未切分 IPv4：**13**，全部為 `127.0.0.1`（loopback）與 `0.0.0.0`（unspecified）⇒ 依既有慣例逐字書寫（非機密）。**可路由（公開）IPv4 未切分 = 0。**
+- 檔案自身：`reports/2026-09-12/r5b-frontend/RECON.md`
+  - 內容（footer 前）：**19,936 bytes**、`sha256[:16] = 08f3afdfe86ed368`
+  - `BOM = False`、`first3 = '# R'`
+  - 本檔（含 §9／§10）之**最終** bytes／sha256 以本次 commit 訊息所列為準。
+
+## 10. 掃描複核（final）
+
+- 複核時刻：`2026-09-12T08:3xZ`（UTC）。
+- **機密值命中 = 0**（13 種樣式全掃，含切分書寫之值形）。
+- 非零項 **總計 5 處**，全部為**變數名** `CLERK_SECRET_KEY`（§3 的 C2 env 鍵名清單、§3 差異表、§3 結論、§9、以及 §10 本節自身之引用）—— **非機密、僅名稱**。
+- **可路由（公開）IPv4 未切分 = 0**；未切分者 13 處全為 `127.0.0.1`（loopback）與 `0.0.0.0`（unspecified），依既有慣例逐字。
+- **本報告不含任何憑證值、不含任何密鑰前綴字面量、不含 secret 指派式。**
