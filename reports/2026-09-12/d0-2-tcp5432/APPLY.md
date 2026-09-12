@@ -319,3 +319,15 @@ $ /etc/ufw/after.rules                   → 40 行、640 root:root、1358 B、s
 | `goaa-router` / `/health` | **active / 200** |
 
 → 止血**持續有效**（非僅 H 的單一窗口）；外部視角驗收（步驟 I）仍由 Tao 執行。本主機全程未對外發起任何連線或掃描。
+
+## 11. 外部視角驗收（步驟 I，由 Tao 執行，2026-09-12）
+
+Tao 從本機 Windows 執行 `Test-NetConnection`，逐字結果：
+
+```
+22 -> True ；5432 -> False（WARNING: TCP connect to (<C1 公網 IP> : 5432) failed）
+```
+
+**結論**：外部 IPv4 已無法連上 5432；對照組 22 通，證明測試路徑有效。
+
+→ D0.2 全項（A–H 由 Aika 於主機內執行、I 由 Tao 於外部執行）**驗收閉環完成**；本輪止血目標達成。
