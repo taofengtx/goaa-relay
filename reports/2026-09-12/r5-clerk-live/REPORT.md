@@ -197,3 +197,119 @@ systemctl restart goaa-platform-api-3103.service
 | `r5-clerk-live/REPORT.md` | 9,614 | `8688af4577a1854d` | `b'# R'` | 無 |
 
 **relay main sha**：`0feac98`（本報告**內容** commit；其後子提交僅追加本節與本行，未改動任何結論。）
+
+---
+
+## 8. 本輪（Tao 重發 R5a 後）之複驗 —— 2026-09-12T07:24:56Z
+
+**緣由**：R5a 指令以相同內容重發。**本次重跑步驟 1 與步驟 2（唯讀）**，確認自上一輪以來 C2 上是否已放入 live 憑證檔。
+**結果：與上一輪完全一致 ⇒ 停手條件再次成立；步驟 3、步驟 4 仍然未執行。**
+
+### 8.1 依令「原樣」迴圈輸出（含 `|| echo 0`，未事後美化）
+
+每列實為兩行（`grep -c` 零命中時**印出 `0` 且回傳 1**，`|| echo 0` 再補一個 `0`）。**這是量測瑕疵，不是資料異常**；為忠實呈現方法論，原樣保留：
+
+```
+/opt/goaa-test/env/app.pgpass pk_live=0
+0 sk_live=0
+0 pk_test=0
+0
+...
+/opt/goaa-test/env/clerk.env pk_live=0
+0 sk_live=0
+0 pk_test=2
+```
+
+- **全部 13 個非隱藏檔：`pk_live` = 0、`sk_live` = 0。**
+- 有 Clerk 憑證的檔（`clerk.env`、`clerk-api-3103.env`、`clerk-ui-3102.env` 與其備份）：**只有 `pk_test`（2 次）**。
+
+### 8.2 修正版（納入 2 個隱藏檔；純 `grep -c`，不接 `|| echo`）
+
+| # | 路徑 | pk_live | sk_live | pk_test | sk_test | pk_ | sk_ |
+|---|---|---|---|---|---|---|---|
+| 1 | `/opt/goaa-test/env/app.pgpass` | 0 | 0 | 0 | 0 | 0 | 0 |
+| 2 | `/opt/goaa-test/env/app_role_password` | 0 | 0 | 0 | 0 | 0 | 0 |
+| 3 | `/opt/goaa-test/env/clerk-api-3103.env` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 4 | `/opt/goaa-test/env/clerk-api-3103.env.bak-20260911-100202` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 5 | `/opt/goaa-test/env/clerk-ui-3102.env` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 6 | `/opt/goaa-test/env/clerk-ui-3102.env.bak-20260911-103145` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 7 | `/opt/goaa-test/env/clerk-ui-3102.env.bak-c16-open` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 8 | `/opt/goaa-test/env/clerk.env` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 9 | `/opt/goaa-test/env/clerk.env.bak-20260911-103150` | **0** | **0** | 2 | 1 | 2 | 1 |
+| 10 | `/opt/goaa-test/env/goaa-c2-backend.env` | 0 | 0 | 0 | 0 | 0 | 0 |
+| 11 | `/opt/goaa-test/env/migrate.pgpass` | 0 | 0 | 0 | 0 | 0 | 0 |
+| 12 | `/opt/goaa-test/env/migrate_role_password` | 0 | 0 | 0 | 0 | 0 | 0 |
+| 13 | `/opt/goaa-test/env/session_secret` | 0 | 0 | 0 | 0 | 0 | 0 |
+| 14 | `/opt/goaa-test/env/.c2test-3103.env`（隱藏） | 0 | 0 | 0 | 0 | 0 | 0 |
+| 15 | `/opt/goaa-test/env/.pgpass`（隱藏） | 0 | 0 | 0 | 0 | 0 | 0 |
+
+### 8.3 `grep -l`（含隱藏檔）
+
+```
+含 pk_live 的檔：(無)
+含 sk_live 的檔：(無)
+```
+
+### 8.4 鍵名清單（`cut -d= -f1 | sort`；**只有鍵名**）
+
+| 檔案 | 鍵數 | 鍵名 |
+|---|---|---|
+| `clerk.env` | 5 | `CLERK_AUTHORIZED_PARTIES`、`CLERK_ISSUER`、`CLERK_PUBLISHABLE_KEY`、`CLERK_SECRET_KEY`、`NEXT_PUBLIC_` 加 `CLERK_PUBLISHABLE_KEY` |
+| `clerk-api-3103.env` | 27 | 上述 5 鍵 + `GOAA_C2_CLERK_AUTH_ENABLED` + `GOAA_C2_DB_HOST`／`_DB_NAME`／`_DB_PASSFILE`／`_DB_PORT`／`_DB_SSLMODE`／`_DB_USER`／`_DOWNLOAD_TTL`／`_EMAIL_DELIVERY`／`_ENV`／`_MAX_UPLOAD_BYTES`／`_MIGRATE_PASSFILE`／`_MIGRATE_USER`／`_OCR`／`_PRIVATE_FILES_DIR`／`_PSQL`／`_PUBLIC_BASE_URL`／`_SCANNER`／`_SESSION_COOKIE`／`_SESSION_SECRET`／`_SESSION_TTL`／`_STORAGE_LABEL` |
+| `clerk-ui-3102.env` | 10 | 5 個 Clerk 鍵 + `GOAA_AGENT_LOOP_UPSTREAM`、`GOAA_C2_CLERK_AUTH_ENABLED`、`HOSTNAME`、`NODE_ENV`、`PORT` |
+| `.c2test-3103.env` | 21 | **全為 `GOAA_C2_*`：無任何 Clerk 鍵** |
+
+### 8.5 形狀與長度（前 8 字元；只列形狀）
+
+| 鍵 | 長度 | 形狀 |
+|---|---|---|
+| `CLERK_PUBLISHABLE_KEY` | 62 | `pk_`+`test_` |
+| `CLERK_SECRET_KEY` | 50 | `sk_`+`test_` |
+| `NEXT_PUBLIC_` 加 `CLERK_PUBLISHABLE_KEY` | 62 | `pk_`+`test_` |
+
+⇒ **仍是 test 前綴，無一為 live。**
+
+### 8.6 步驟 2 判定（複驗）
+
+```
+EnvironmentFiles=/opt/goaa-test/env/clerk-api-3103.env (ignore_errors=no)
+EnvironmentFiles=/opt/goaa-test/env/clerk-ui-3102.env (ignore_errors=no)
+```
+- `clerk-api-3103.env` 內 live 前綴命中 = **0**；`clerk-ui-3102.env` 內 live 前綴命中 = **0**。
+- ⇒ **「live 憑證所在檔」不存在 ⇒ 不可能被 C2 兩支服務載入 ⇒ 互不影響。** C2 重啟**不會**切到 production。**本輪未改 C2 任何東西。**
+
+### 8.7 env 目錄權限（`ls -la`，僅權限／屬主／大小）
+
+```
+drwx--x---  root        goaa-c2loop  /opt/goaa-test/env
+-r--r-----  root        goaa-c2loop   758   .c2test-3103.env
+-rw-------  root        root           192   .pgpass
+-rw-------  goaa-c2loop goaa-c2loop    94   app.pgpass
+-rw-------  root        root            64   app_role_password
+-r--r-----  root        goaa-c2loop  1172   clerk-api-3103.env
+-r--r-----  root        goaa-c2loop  1171   clerk-api-3103.env.bak-20260911-100202
+-r--r-----  root        goaa-c2loop   511   clerk-ui-3102.env
+-r--r-----  root        goaa-c2loop   ...
+```
+
+### 8.8 複驗結論
+
+**與 §1、§2 相同 ⇒ 停手。** 步驟 3、步驟 4 **未執行**（未備份、未傳輸、未改寫、未 `restart`）。**本輪無 🛡 卡。**
+
+---
+
+## 9. 步驟 3 之前置提醒（**發現，未變更**）
+
+依指令，步驟 3 換值時 `CLERK_AUTHORIZED_PARTIES` **必須是 `https://planning.goaa.ai`**。**唯讀查得 C1 現值（非機密）為：**
+
+| 鍵 | 現值（非機密） |
+|---|---|
+| `CLERK_AUTHORIZED_PARTIES`（C1 現值） | `http://localhost:13102,http://127.0.0.1:13102` |
+| `CLERK_ISSUER` 之 host（C1 現值） | `lenient-phoenix-9847.clerk.accounts.dev`（**Clerk Dev instance**） |
+| C1 `api-3103.env` 鍵數 | **25** |
+| 三把 key 形狀（C1 現值） | `pk_`+`test_` / `pk_`+`test_` / `sk_`+`test_` |
+
+⇒ **兩個待決問題（供 Tao 一併裁定）**：
+
+1. 目前 `CLERK_AUTHORIZED_PARTIES` 是 **local-tunnel 用值**（`localhost:13102` 等），與指令要求的 `https://planning.goaa.ai` **不同** ⇒ 真要做步驟 3 時需**依令以 planning.goaa.ai 為準**（本輪**未改**）。
+2. `CLERK_ISSUER` 之 host 目前指向 **Dev instance**。切到 production 時，`CLERK_ISSUER` 會變成 production issuer；**步驟 4-D 的成敗完全取決於該 production instance 是否已建、網域／DNS 是否已驗證**（否則會得到 `clerk_verification_unavailable`，而非要求的 `invalid_clerk_session`）。
