@@ -548,7 +548,7 @@ IPAddressAllow=172.64.153.⟨110⟩/32  （lenient-phoenix-9847.clerk.accounts.d
 **`127.0.0.1`（loopback）與 `0.0.0.0`（unspecified）依既有報告慣例逐字書寫** —— 兩者皆為非可路由、非機密位址。
 ⇒ **可路由 IPv4 未切分命中數 = 0。**
 
-**檔案完整性**：`RECON.md` = **`BYTES` bytes**、sha256 前16 = `SHA16`、首三 byte = `b'# R'`（**無 BOM**）。
+**檔案完整性**：`RECON.md` = **31,739 bytes**、sha256 前16 = `33d74fe74b9f7e98`、首三 byte = `b'# R'`（**無 BOM**）。
 
-**relay main sha**：`CONTENT_COMMIT_SHA`
-（本報告**內容** commit；其後子提交僅寫入本行與掃描回報，未改動任何結論。）
+**relay main sha**：`0ba49a7e4e9c30ab4fcd6b5037c3c7875accdadd`
+（本報告**內容** commit；其後子提交僅寫入本行與掃描回報，未改動任何驗收結論。）
