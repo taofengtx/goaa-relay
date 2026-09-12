@@ -407,3 +407,16 @@ EnvironmentFiles=/opt/goaa-test/env/clerk-ui-3102.env (ignore_errors=no)
 
 **與 §1、§8 完全相同 ⇒ 停手。步驟 3、步驟 4 未執行；本輪無 🛡 卡；C1/C2 零變更。**
 **前提仍未就緒**（無 live 憑證、production instance 狀態未知）。**建議 Tao：提供憑證檔來源與位置，或明示本輪撤銷**；在前提就緒前，重複下達同一指令只會得到同一結果。
+
+---
+
+## 12. 第三輪提交前掃描
+
+- **掃描標的**：本報告 `r5-clerk-live/REPORT.md`。
+- **掃描樣式**：13 類（逐類切分書寫）——
+  `sk_`+`live_`、`sk_`+`test_`、`BEGIN `+`PRIVATE KEY`、`AK`+`IA`、`gh`+`p_`、`postgres`+`:`+`//`、`PGPASS`+`WORD=`、`pass`+`word=`、`ey`+`J`、`.`+`pgp`+`ass`、`clerk`+`_secret`、`CLERK`+`_SECRET_KEY=`、`SESSION`+`_SECRET=`。
+- **機密值命中數 = 0。**
+- **非零命中（皆非機密）**：`"." + "pgp" + "ass"`（**檔名／路徑**）、`"clerk" + "_secret"`（**變數名稱**）。
+- **IPv4 書寫**：**可路由位址未切分 = 0**；`127.0.0.1` 全為 loopback，逐字書寫。
+
+**relay 提交鏈**：`e979f24` → `30c2236`（**本輪內容**）→ 本節（掃描＋sha）。**fast-forward、無 force。**
