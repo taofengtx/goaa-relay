@@ -365,3 +365,25 @@ systemctl stop goaa-platform-api-3103.service
 1. **是否 `enable`**（現為 `disabled`；重開機不會自動起）—— 待示明。
 2. **是否保留運行中**（見「回滾」）。
 3. **前端聯調**：C1 的 Next（3100，`goaa-web`）目前**沒有**指向 3103 的 base URL 設定，cloudflared 也沒有 3103 路由；依 R4 RECON 的三題回答，正確拓撲是 **Browser → Next(3100) BFF → 3103（loopback）**，即**只需在 Next 端加 `GOAA_AGENT_LOOP_UPSTREAM=http://127.0.0.1:3103` 一類的設定**，**不需**為 3103 加 cloudflared 路由。此事**本輪未動**，待令。
+
+
+---
+
+## 掃描說明（提交前）
+
+- **掃描標的**：本報告 `REPORT-step5.md`。
+- **掃描樣式**：13 類（逐類以切分方式書寫，避免敘述本身膨脹計數）——
+  `sk_`+`live_`、`sk_`+`test_`、`BEGIN `+`PRIVATE KEY`、`AK`+`IA`、`gh`+`p_`、`postgres`+`:`+`//`、`PGPASS`+`WORD=`、`pass`+`word=`、`ey`+`J`、`.`+`pgp`+`ass`、`clerk`+`_secret`、`CLERK`+`_SECRET_KEY=`、`SESSION`+`_SECRET=`。
+- **命中數 = 0（含機密值與非機密假陽性，全部為 0）。** 本報告未出現任何密碼檔名、Clerk 變數名或憑據賦值樣式。
+
+**IPv4 書寫**：**可路由（公開）位址未切分命中數 = 0**；`127.0.0.1`（loopback）與 `0.0.0.0`（unspecified）依既有報告慣例**逐字書寫**（非可路由、非機密）。健康回應中的 Docker bridge 位址已依版面紀律切分末段。
+
+**秘密處理**：本輪未讀取、未輸出、未傳遞任何憑據值；所有驗收指令只用固定字串 `invalid.invalid.invalid` 作無效 token，不含任何真實秘密。
+
+**檔案完整性（本節追加前，＝內容 commit 之版本）**：
+
+| 檔案 | bytes | sha256[:16] | 首三 byte | BOM |
+|---|---|---|---|---|
+| `REPORT-step5.md` | 16,533 | `2b8e00a8389e735d` | `b'# R'` | 無 |
+
+**relay main sha**：`a88bca4`（本報告**內容** commit；其後子提交僅追加本節與本行，未改動任何驗收結論。）
