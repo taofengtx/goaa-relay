@@ -170,3 +170,30 @@ systemctl restart goaa-platform-api-3103.service
 2. **是否仍要用 planning.goaa.ai 的 production instance**：切到 live 憑證時，`CLERK_ISSUER` 會變成 production issuer；步驟 4-D 的「**JWKS 取得到**」驗收**依賴 Clerk 該 production instance 已完成網域驗證與 DNS 設定**。若網域尚未驗證，換值的結果會是 `clerk_verification_unavailable`（而非 `invalid_clerk_session`）—— 這正是 Tao 在 4-D 要我分辨的那個訊號。**建議在提供憑證時一併確認 production instance 是否已上線。**
 3. **與 2026-09-11 事件的關聯（僅供對照）**：當時 Tao 在對話中貼過一把 live 密鑰，該值被視為**已洩漏並要求輪換**，且事後全域 live-前綴（`sk_`+`live_`）殘留已歸零。⇒ 本輪在 C2 全域找不到任何 live 憑證，**與該處置一致**；亦即**目前沒有任何現成的 live 憑證可搬**。
 4. **C1 現階段身分**：3103 目前與 C2 **共用同一組 test 憑證**（值相同）。在尚未取得 live 憑證前，**C1 的 3103 不應被視為 production 身分**。
+
+
+---
+
+## 附錄：提交前掃描（R5a）
+
+- **掃描標的**：本報告 `r5-clerk-live/REPORT.md`。
+- **掃描樣式**：13 類（逐類切分書寫，避免敘述本身膨脹計數）——
+  `sk_`+`live_`、`sk_`+`test_`、`BEGIN `+`PRIVATE KEY`、`AK`+`IA`、`gh`+`p_`、`postgres`+`:`+`//`、`PGPASS`+`WORD=`、`pass`+`word=`、`ey`+`J`、`.`+`pgp`+`ass`、`clerk`+`_secret`、`CLERK`+`_SECRET_KEY=`、`SESSION`+`_SECRET=`。
+- **機密值命中數 = 0。**
+
+**非零命中（皆非機密，明示不掩飾）**：
+
+- `"." + "pgp" + "ass"` **4 處** —— 全部是**檔名／路徑**（`/opt/goaa-test/env/` 下的 `app.` 加 `pgpass`、`migrate.` 加 `pgpass`、隱藏檔 `.` 加 `pgpass` 等）。
+- `"clerk" + "_secret"` **4 處** —— 全部是**變數名稱**（`CLERK_` 加 `SECRET_KEY`）出現在鍵名表與同值比對表。**不是鍵值本身**；本報告自始至終未讀取、未輸出任何憑證值或雜湊值。
+
+**IPv4 書寫**：**可路由（公開）位址未切分命中數 = 0**；`127.0.0.1`（loopback）依既有報告慣例**逐字書寫**（非可路由、非機密）。
+
+**秘密處理**：本輪**未讀取、未複製、未傳輸、未輸出**任何憑證值。C1 與 C2 的同值比對是**兩邊各自雜湊後只比對相等性**，**未輸出值、未輸出雜湊**。全域 live 前綴殘留 = **0**。
+
+**檔案完整性（本節追加前，＝內容 commit 之版本）**：
+
+| 檔案 | bytes | sha256[:16] | 首三 byte | BOM |
+|---|---|---|---|---|
+| `r5-clerk-live/REPORT.md` | 9,614 | `8688af4577a1854d` | `b'# R'` | 無 |
+
+**relay main sha**：`0feac98`（本報告**內容** commit；其後子提交僅追加本節與本行，未改動任何結論。）
