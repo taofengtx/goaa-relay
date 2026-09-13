@@ -4,6 +4,10 @@
 - **Version:** 1.0 · 2026-09-13
 - **Owner of approval:** Tao（人類）
 
+> **Canonical machine-readable manifest:** **`GOLDEN-SURFACE-MANIFEST.json`**（CANONICAL = TRUE）
+> **Legacy compatibility alias:** `GOLDEN-REGISTRY.json`（LEGACY_ALIAS；機器語義一致；新工具與新引用一律使用 canonical 檔名。）
+> 任何 Golden 指紋更新（§3 第 6 步）都必須**同步更新 canonical manifest**；alias 保持可用但**不得成為新的引用來源**。
+
 ---
 
 ## 1. 五條鐵律

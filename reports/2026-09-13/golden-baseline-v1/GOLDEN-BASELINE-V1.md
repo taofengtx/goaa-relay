@@ -6,6 +6,10 @@
 - **Snapshot time:** 2026-09-13 ~11:45 UTC（本檔所有指紋為該時刻實測）
 - **Environment mapping:** D0 = Aika-Box / Local Development · C1 = Live / Production · C2 = Test / Staging · Worker cloud = W1…W6
 
+> **Canonical machine-readable manifest:** **`GOLDEN-SURFACE-MANIFEST.json`**（CANONICAL = TRUE）
+> **Legacy compatibility alias:** `GOLDEN-REGISTRY.json`（LEGACY_ALIAS / COMPATIBILITY_ALIAS；機器語義與 canonical 完全一致，僅為避免舊腳本與歷史引用失效而保留。**未來 Aika-Box / QwenPaw / ChatGPT / Worker 只認 `GOLDEN-SURFACE-MANIFEST.json`。**）
+
+
 ---
 
 ## 0. Golden 定義（凍結原則）

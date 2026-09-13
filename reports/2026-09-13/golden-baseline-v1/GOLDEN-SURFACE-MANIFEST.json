@@ -1,9 +1,10 @@
 {
   "schema": "goaa.golden.registry/v1",
   "version": "1.0",
-  "canonical": false,
-  "status": "compatibility_alias",
+  "canonical": true,
+  "status": "canonical",
   "canonical_manifest": "GOLDEN-SURFACE-MANIFEST.json",
+  "legacy_alias": "GOLDEN-REGISTRY.json",
   "frozen_at_utc": "2026-09-13",
   "mode": "read-only-freeze",
   "environment_mapping": {
