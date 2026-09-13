@@ -1,0 +1,119 @@
+{
+  "t5": {
+    "session": "abx-20260913-050427-174147",
+    "run": "59c36fba594c",
+    "partial_read": {
+      "run": 4,
+      "sse": 4,
+      "state": 0
+    },
+    "replay_read": {
+      "run": 37,
+      "sse": 36,
+      "state": 2
+    },
+    "end": {
+      "run": {
+        "run_id": "59c36fba594c",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-050427-174147",
+        "chat_id": null,
+        "status": "Completed",
+        "sse_events": 36,
+        "text": "AIKA_QWENPAW_GATE2_T5_OK",
+        "error": null,
+        "reconnects": 0,
+        "created_at": 1789301067.541272,
+        "updated_at": 1789301068.7400649,
+        "finished_at": 1789301068.740062
+      },
+      "reason": "Completed"
+    },
+    "upstream_reconnect": {
+      "http": 200,
+      "run": "Completed",
+      "note": "run already closed"
+    },
+    "final": {
+      "run_id": "59c36fba594c",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050427-174147",
+      "chat_id": null,
+      "status": "Completed",
+      "sse_events": 36,
+      "text": "AIKA_QWENPAW_GATE2_T5_OK",
+      "error": null,
+      "reconnects": 0,
+      "created_at": 1789301067.541272,
+      "updated_at": 1789301068.7400649,
+      "finished_at": 1789301068.740062
+    }
+  },
+  "t6_worker_status": {
+    "worker_id": "do-cloud-1",
+    "online": true,
+    "reachable": true,
+    "qwenpaw_version": "basic:QwenPaw-DO",
+    "status": "Online",
+    "last_seen": 1789301072.9749308,
+    "last_checked": 1789301072.8445055,
+    "latency_ms": 71,
+    "error": null,
+    "api_flavor": "basic",
+    "capabilities": [
+      "chat"
+    ]
+  },
+  "t6": {
+    "http": 200,
+    "resp": {
+      "ok": true,
+      "run": {
+        "run_id": "6a0a5511faef",
+        "worker_id": "do-cloud-1",
+        "session_id": "abx-20260913-050432-a8c0e9",
+        "chat_id": null,
+        "status": "Running",
+        "sse_events": 0,
+        "text": "",
+        "error": null,
+        "reconnects": 0,
+        "created_at": 1789301072.9922442,
+        "updated_at": 1789301072.9922445,
+        "finished_at": null
+      },
+      "session_id": "abx-20260913-050432-a8c0e9",
+      "flavor": "basic"
+    },
+    "snapshot": {
+      "run_id": "6a0a5511faef",
+      "worker_id": "do-cloud-1",
+      "session_id": "abx-20260913-050432-a8c0e9",
+      "chat_id": null,
+      "status": "Running",
+      "sse_events": 0,
+      "text": "",
+      "error": null,
+      "reconnects": 0,
+      "created_at": 1789301072.9922442,
+      "updated_at": 1789301072.9922445,
+      "finished_at": null
+    }
+  },
+  "t7": {
+    "http": 503,
+    "resp": {
+      "detail": "worker do-cloud-2 has no known QwenPaw API: ConnectError: [Errno 111] Connection refused"
+    }
+  },
+  "t8": {
+    "no_cookie": {
+      "/api/qwenpaw/health": 401,
+      "/api/qwenpaw/workers": 401,
+      "/api/qwenpaw/sessions?worker_id=aika-core-01": 401,
+      "/api/qwenpaw/approvals?worker_id=aika-core-01": 401,
+      "/api/qwenpaw/audit": 401
+    },
+    "forged_cookie": 401
+  }
+}

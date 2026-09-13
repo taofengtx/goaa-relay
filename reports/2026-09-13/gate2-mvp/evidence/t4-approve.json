@@ -1,0 +1,119 @@
+{
+  "session_id": "abx-20260913-050336-0db487",
+  "run_id": "1168f9aa6763",
+  "run_state_before": "Waiting Approval",
+  "pending_scan": {
+    "ok": true,
+    "scanned_raw": 2,
+    "filtered_out": 1
+  },
+  "card": {
+    "worker_id": "aika-core-01",
+    "session_id": "abx-20260913-050336-0db487",
+    "request_id": "211355c2-a09d-4584-9edb-40c53bc3b2c4",
+    "tool": "execute_shell_command",
+    "severity": "HIGH",
+    "requested_action": "crontab -l 2>&1; echo \"---exit:$?\"",
+    "created_at": 1789301018.210787,
+    "expires_in_s": 300.0,
+    "age_s": 0.7,
+    "state": "PENDING",
+    "clickable": true,
+    "findings_count": 0,
+    "truncated": true
+  },
+  "decision_http": 200,
+  "decision": {
+    "ok": true,
+    "decision": "approve",
+    "request_id": "211355c2-a09d-4584-9edb-40c53bc3b2c4",
+    "http_status": 200,
+    "message": "Tool 'execute_shell_command' approved, executing...",
+    "audit_ts": 1789301018.9679031
+  },
+  "run_final": {
+    "run_id": "1168f9aa6763",
+    "worker_id": "aika-core-01",
+    "session_id": "abx-20260913-050336-0db487",
+    "chat_id": null,
+    "status": "Completed",
+    "sse_events": 142,
+    "text": "🛡️ **⏳ 等待审批**\n\n- 工具: `execute_shell_command`\n- 🔴 严重性: `HIGH` (高)\n- 发现: `1`\n- 风险说明:\n- [HIGH] Rule TOOL_CMD_SYSTEM_TAMPERING matched parameter 'command' of tool 'execute_shell_command'.\n\n- 参数:\n```json\n{\n  \"command\": \"crontab -l 2>&1; echo \\\"---exit:$?\\\"\"\n}\n```\n\n💡 **Actions**\n- Approve: `/approval approve`\n- Deny: `/approval deny`\n- List: `/approval list`Ran it. Exact output:\n\n```\nno crontab for aika\n```\n\nExit code was `1` (that's `crontab`'s standard \"nothing here\" response, not a real error — the `aika` user simply has no crontab installed). Nothing modified.",
+    "error": null,
+    "reconnects": 0,
+    "created_at": 1789301016.8011742,
+    "updated_at": 1789301020.4354746,
+    "finished_at": 1789301020.4354725
+  },
+  "audit": [
+    {
+      "ts": 1789300980.4821997,
+      "iso": "2026-09-13T05:03:00-0700",
+      "kind": "session_create",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050300-a78a2a",
+      "actor": "tao",
+      "source": "ui-click"
+    },
+    {
+      "ts": 1789300980.484628,
+      "iso": "2026-09-13T05:03:00-0700",
+      "kind": "chat_send",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050300-a78a2a",
+      "run_id": "a8e206963c3f",
+      "actor": "tao",
+      "source": "ui-click",
+      "flavor": "console",
+      "input_chars": 44
+    },
+    {
+      "ts": 1789300981.5067792,
+      "iso": "2026-09-13T05:03:01-0700",
+      "kind": "chat_send",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050300-a78a2a",
+      "run_id": "e26d64138948",
+      "actor": "tao",
+      "source": "ui-click",
+      "flavor": "console",
+      "input_chars": 44
+    },
+    {
+      "ts": 1789301016.7870338,
+      "iso": "2026-09-13T05:03:36-0700",
+      "kind": "session_create",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050336-0db487",
+      "actor": "tao",
+      "source": "ui-click"
+    },
+    {
+      "ts": 1789301016.8015997,
+      "iso": "2026-09-13T05:03:36-0700",
+      "kind": "chat_send",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050336-0db487",
+      "run_id": "1168f9aa6763",
+      "actor": "tao",
+      "source": "ui-click",
+      "flavor": "console",
+      "input_chars": 94
+    },
+    {
+      "ts": 1789301018.9679031,
+      "iso": "2026-09-13T05:03:38-0700",
+      "kind": "approval_decision",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050336-0db487",
+      "request_id": "211355c2-a09d-4584-9edb-40c53bc3b2c4",
+      "decision": "approve",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' approved, executing...",
+      "elapsed_ms": 91
+    }
+  ]
+}

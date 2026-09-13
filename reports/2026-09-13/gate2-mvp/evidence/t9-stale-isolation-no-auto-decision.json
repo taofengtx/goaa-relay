@@ -1,0 +1,81 @@
+{
+  "t11_stale": {
+    "scan": {
+      "ok": true,
+      "pending_count": 0,
+      "scanned_raw": 0,
+      "filtered_out": 0
+    },
+    "cards": []
+  },
+  "t12_isolation": {
+    "scan": {
+      "ok": true,
+      "pending_count": 0,
+      "scanned_raw": 0,
+      "filtered_out": 0
+    }
+  },
+  "t12_no_session_selected": {
+    "pending_count": 0,
+    "scanned_raw": 0,
+    "note": "no session selected => nothing surfaced"
+  },
+  "t14_no_auto_decision": {
+    "upstream_pending_count": 0,
+    "pendings": [],
+    "note": "requests that were never clicked are still waiting - nothing is auto-approved"
+  },
+  "t14_decisions": {
+    "total": 6,
+    "sources": [
+      "ui-click"
+    ],
+    "actors": [
+      "tao"
+    ],
+    "all_success": true
+  },
+  "final_roster": [
+    {
+      "worker_id": "aika-core-01",
+      "endpoint": "http://100.114.37.90:8088",
+      "transport": "tailnet",
+      "status": "Online",
+      "flavor": "console",
+      "version": "1.1.5.post1",
+      "latency_ms": 5,
+      "error": null
+    },
+    {
+      "worker_id": "do-cloud-1",
+      "endpoint": "http://127.0.0.1:18088",
+      "transport": "ssh-tunnel",
+      "status": "Online",
+      "flavor": "basic",
+      "version": "basic:QwenPaw-DO",
+      "latency_ms": 71,
+      "error": null
+    },
+    {
+      "worker_id": "do-cloud-2",
+      "endpoint": "http://127.0.0.1:18089",
+      "transport": "ssh-tunnel",
+      "status": "Offline",
+      "flavor": "unknown",
+      "version": null,
+      "latency_ms": 5,
+      "error": "ConnectError: [Errno 111] Connection refused"
+    },
+    {
+      "worker_id": "do-cloud-3",
+      "endpoint": "http://127.0.0.1:18090",
+      "transport": "ssh-tunnel",
+      "status": "Offline",
+      "flavor": "unknown",
+      "version": null,
+      "latency_ms": 4,
+      "error": "ConnectError: [Errno 111] Connection refused"
+    }
+  ]
+}

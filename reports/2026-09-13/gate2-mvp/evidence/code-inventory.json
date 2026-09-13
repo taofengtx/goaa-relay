@@ -1,0 +1,140 @@
+{
+  "artifacts": [
+    {
+      "file": "local-console/main.py",
+      "bytes": 162056,
+      "sha256_16": "64fdc422d39a3cb9",
+      "lines": 2283
+    },
+    {
+      "file": "local-console/qwenpaw_api.py",
+      "bytes": 14750,
+      "sha256_16": "88962ccdf4ace723",
+      "lines": 321
+    },
+    {
+      "file": "local-console/qwenpaw_workers.json",
+      "bytes": 2182,
+      "sha256_16": "c6b139343796b1de",
+      "lines": 51
+    },
+    {
+      "file": "local-console/integrations/__init__.py",
+      "bytes": 209,
+      "sha256_16": "727f1d9f9a8b4161",
+      "lines": 5
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/__init__.py",
+      "bytes": 575,
+      "sha256_16": "2d0dc48da2cebaf0",
+      "lines": 15
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/models.py",
+      "bytes": 3731,
+      "sha256_16": "cb42871faba584cc",
+      "lines": 127
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/client.py",
+      "bytes": 11687,
+      "sha256_16": "b175783d7cf081f2",
+      "lines": 255
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/events.py",
+      "bytes": 7358,
+      "sha256_16": "81598b0a256e3001",
+      "lines": 194
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/sessions.py",
+      "bytes": 12563,
+      "sha256_16": "f1d1ad034e7df3c4",
+      "lines": 302
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/approvals.py",
+      "bytes": 5236,
+      "sha256_16": "3d907e0f59148aa7",
+      "lines": 130
+    },
+    {
+      "file": "local-console/tools/start_qwenpaw_tunnels.sh",
+      "bytes": 1223,
+      "sha256_16": "b77a8739dcb40ef0",
+      "lines": 36
+    }
+  ],
+  "new_files": [
+    {
+      "file": "local-console/qwenpaw_api.py",
+      "bytes": 14750,
+      "sha256_16": "88962ccdf4ace723",
+      "lines": 321
+    },
+    {
+      "file": "local-console/qwenpaw_workers.json",
+      "bytes": 2182,
+      "sha256_16": "c6b139343796b1de",
+      "lines": 51
+    },
+    {
+      "file": "local-console/integrations/__init__.py",
+      "bytes": 209,
+      "sha256_16": "727f1d9f9a8b4161",
+      "lines": 5
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/__init__.py",
+      "bytes": 575,
+      "sha256_16": "2d0dc48da2cebaf0",
+      "lines": 15
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/models.py",
+      "bytes": 3731,
+      "sha256_16": "cb42871faba584cc",
+      "lines": 127
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/client.py",
+      "bytes": 11687,
+      "sha256_16": "b175783d7cf081f2",
+      "lines": 255
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/events.py",
+      "bytes": 7358,
+      "sha256_16": "81598b0a256e3001",
+      "lines": 194
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/sessions.py",
+      "bytes": 12563,
+      "sha256_16": "f1d1ad034e7df3c4",
+      "lines": 302
+    },
+    {
+      "file": "local-console/integrations/qwenpaw/approvals.py",
+      "bytes": 5236,
+      "sha256_16": "3d907e0f59148aa7",
+      "lines": 130
+    },
+    {
+      "file": "local-console/tools/start_qwenpaw_tunnels.sh",
+      "bytes": 1223,
+      "sha256_16": "b77a8739dcb40ef0",
+      "lines": 36
+    }
+  ],
+  "modified_files": [
+    {
+      "file": "local-console/main.py",
+      "bytes": 162056,
+      "sha256_16": "64fdc422d39a3cb9",
+      "lines": 2283
+    }
+  ]
+}

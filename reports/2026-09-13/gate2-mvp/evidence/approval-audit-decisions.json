@@ -1,0 +1,83 @@
+{
+  "note": "Local Console QwenPaw audit trail - approval decisions only (actor=local console user, source=ui-click)",
+  "decisions": [
+    {
+      "iso": "2026-09-13T05:03:38-0700",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050336-0db487",
+      "request_id": "211355c2-a09d-4584-9edb-40c53bc3b2c4",
+      "decision": "approve",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' approved, executing...",
+      "elapsed_ms": 91
+    },
+    {
+      "iso": "2026-09-13T05:04:11-0700",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050407-b003d2",
+      "request_id": "e059d8a1-3939-4759-b1d0-25439867c3bd",
+      "decision": "reject",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' denied: User denied",
+      "elapsed_ms": 10
+    },
+    {
+      "iso": "2026-09-13T05:08:21-0700",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-050748-db18b5",
+      "request_id": "885998a1-c5c4-4647-a200-35e53a77da8c",
+      "decision": "reject",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' denied: User denied",
+      "elapsed_ms": 11
+    },
+    {
+      "iso": "2026-09-13T11:25:05-0700",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-112448-e29a0e",
+      "request_id": "3901bb0e-11f1-48c0-8e32-49ed0aa31e32",
+      "decision": "reject",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' denied: User denied",
+      "elapsed_ms": 11
+    },
+    {
+      "iso": "2026-09-13T11:27:15-0700",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-112624-52b459",
+      "request_id": "d451f244-7a66-4081-85cc-10e613aad3e2",
+      "decision": "reject",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' denied: User denied",
+      "elapsed_ms": 59
+    },
+    {
+      "iso": "2026-09-13T11:27:43-0700",
+      "worker_id": "aika-core-01",
+      "session_id": "abx-20260913-112624-52b459",
+      "request_id": "17a45fd0-647b-4913-bbc5-27e27977a728",
+      "decision": "approve",
+      "actor": "tao",
+      "source": "ui-click",
+      "http_status": 200,
+      "success": true,
+      "message": "Tool 'execute_shell_command' approved, executing...",
+      "elapsed_ms": 147
+    }
+  ]
+}

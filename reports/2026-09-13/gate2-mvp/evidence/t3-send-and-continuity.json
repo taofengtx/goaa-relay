@@ -1,0 +1,72 @@
+{
+  "session_id": "abx-20260913-050300-a78a2a",
+  "run1": "a8e206963c3f",
+  "run2": "e26d64138948",
+  "seen1": {
+    "run": 20,
+    "sse": 19,
+    "state": 2,
+    "last_sse": "{\"sequence_number\": 18, \"object\": \"response\", \"status\": \"completed\", \"error\": null, \"id\": \"response_6df325b4-44f9-4068-9997-63277a14f0c6\", \"created_at\": 1786351037, \"completed_at\": 1789300981, \"output"
+  },
+  "seen2": {
+    "run": 20,
+    "sse": 19,
+    "state": 2,
+    "last_sse": "{\"sequence_number\": 18, \"object\": \"response\", \"status\": \"completed\", \"error\": null, \"id\": \"response_cf2deca7-96ad-4766-b546-deca6d453f5d\", \"created_at\": 1786351037, \"completed_at\": 1789300982, \"output"
+  },
+  "snap1": {
+    "run_id": "a8e206963c3f",
+    "worker_id": "aika-core-01",
+    "session_id": "abx-20260913-050300-a78a2a",
+    "chat_id": null,
+    "status": "Completed",
+    "sse_events": 19,
+    "text": "AIKA_QWENPAW_GATE2_T1_OK",
+    "error": null,
+    "reconnects": 0,
+    "created_at": 1789300980.4841528,
+    "updated_at": 1789300981.3582387,
+    "finished_at": 1789300981.358236
+  },
+  "snap2": {
+    "run_id": "e26d64138948",
+    "worker_id": "aika-core-01",
+    "session_id": "abx-20260913-050300-a78a2a",
+    "chat_id": null,
+    "status": "Completed",
+    "sse_events": 19,
+    "text": "AIKA_QWENPAW_GATE2_T2_OK",
+    "error": null,
+    "reconnects": 0,
+    "created_at": 1789300981.5062711,
+    "updated_at": 1789300982.6811774,
+    "finished_at": 1789300982.681174
+  },
+  "history": {
+    "ok": true,
+    "worker_id": "aika-core-01",
+    "session_id": "abx-20260913-050300-a78a2a",
+    "title": "gate2 T1/T2",
+    "chat_id": "a902846a-feaf-4c92-a619-75153453b70a",
+    "status": "Idle",
+    "messages": [
+      {
+        "role": "user",
+        "text": "Reply with exactly: AIKA_QWENPAW_GATE2_T1_OK"
+      },
+      {
+        "role": "assistant",
+        "text": "AIKA_QWENPAW_GATE2_T1_OK"
+      },
+      {
+        "role": "user",
+        "text": "Reply with exactly: AIKA_QWENPAW_GATE2_T2_OK"
+      },
+      {
+        "role": "assistant",
+        "text": "AIKA_QWENPAW_GATE2_T2_OK"
+      }
+    ],
+    "resumed": true
+  }
+}
