@@ -30,7 +30,7 @@ Browser never talks to QwenPaw directly: `Browser → Local Console → adapter 
 | T4 | Reject (guarded tool) | ✅ | `crontab -l ; touch <marker>` → reject → **marker absent** (command did not run) → run continued to `Completed` |
 | T5 | Reconnect / replay | ✅ | interrupt after 4 events → replay `from=0` → 36 events → `Completed`; on a finished run `POST /reconnect` → `200 run already closed` |
 | T6 | `basic` flavour worker (`do-cloud-1`) | ✅ (after fix) | honest `Failed` + upstream note (`status:error`), no fake success, no stuck `Running` |
-| T7 | Offline worker (`do-cloud-2`) | ✅ | `503 worker do-cloud-2 has no known QwenPaw API: ConnectError: [Errno 111] Connection refused` |
+| T7 | Offline worker (`do-cloud-2`) | ✅ | all three SSH tunnels opened, yet `do-cloud-2` stays `Offline` and `/chat` → `503 worker do-cloud-2 has no known QwenPaw API: ReadError: [Errno 104] Connection reset by peer`; confirmed **at the source** — `do-c2` / `do-c3` report `NO_8088_LISTENER` and 0 qwenpaw units (`evidence/t7-offline-recheck.json`) |
 | T8 | Auth on every route | ✅ | no cookie / forged cookie → 401 on `/health`, `/workers`, `/sessions`, `/approvals`, `/audit` |
 | T9 | Reconnect while a run waits for approval | ✅ | interrupt in `Waiting Approval` → reconnect `200` (1 replay), still `Reconnecting` → decision made → `Completed`; 1306 replayed SSE events, 6 state transitions; repeated assistant turns proved to be QwenPaw's own reasoning segments |
 | T10 | Audit trail integrity | ✅ | JSONL append-only; rows for session create / chat send / approval decision; no secret-like material |
@@ -53,7 +53,7 @@ This also closes the Gate-1 caveat: both decisions were made by **actual UI clic
 
 Raw evidence: `evidence/` — `t3-send-and-continuity.json`, `t4-approve.json`, `t5-reject.json`,
 `t6-reconnect-basic-offline-auth.json`, `t8-live-reconnect-resume.json`,
-`t9-stale-isolation-no-auto-decision.json`, `approval-audit-decisions.json`, `code-inventory.json`.
+`t7-offline-recheck.json`, `t9-stale-isolation-no-auto-decision.json`, `approval-audit-decisions.json`, `code-inventory.json`.
 
 ## 3. Worker roster as seen by the workspace
 
@@ -61,8 +61,8 @@ Raw evidence: `evidence/` — `t3-send-and-continuity.json`, `t4-approve.json`, 
 |---|---|---|---|---|---|
 | `aika-core-01` | Aika-Box local runtime | `http://100.114.37.90:8088` | Tailscale | `console` v1.1.5.post1 | Online (~5–55 ms) |
 | `do-cloud-1` | DO runtime anchor | `http://127.0.0.1:18088` | SSH tunnel | `basic` (`QwenPaw-DO` 1.0.0) | Online, **LLM backend broken** |
-| `do-cloud-2` | DO worker 2 | `http://127.0.0.1:18089` | SSH tunnel | — | Offline (no listener) |
-| `do-cloud-3` | DO worker 3 | `http://127.0.0.1:18090` | SSH tunnel | — | Offline (no listener) |
+| `do-cloud-2` | DO worker 2 | `http://127.0.0.1:18089` | SSH tunnel | — |  Offline (no listener, verified at source) |
+| `do-cloud-3` | DO worker 3 | `http://127.0.0.1:18090` | SSH tunnel | — |  Offline (no listener, verified at source) |
 
 ## 4. What was fixed while building
 
@@ -85,9 +85,19 @@ Raw evidence: `evidence/` — `t3-send-and-continuity.json`, `t4-approve.json`, 
 ## 6. State of the box after this round
 
 * Golden `:5188` **not modified, not restarted** — verified PID unchanged for the whole round.
-* Verification instance on `:5198` + the four worker tunnels are the only new local processes
-  (recorded with PIDs so they can be stopped on request).
-* New code committed locally in `goaa-ai-main` (add-only); **no push to any code remote**, no deploy.
+* Verification instance on `:5198` + the four worker tunnels are the only new local processes:
+
+| Process | PID | Binding |
+|---|---|---|
+| verification console (this code) | `2371500` | `127.0.0.1:5198` only |
+| tunnel `do-cloud-1` → `do-runtime-anchor:8088` | `2314785` | `127.0.0.1:18088` |
+| tunnel `do-cloud-2` → `do-c2:8088` | `2372459` | `127.0.0.1:18089` |
+| tunnel `do-cloud-3` → `do-c3:8088` | `2372462` | `127.0.0.1:18090` |
+| **Golden AIKA-BOX console (untouched)** | `6113` | `127.0.0.1:5188` + tailnet `100.114.37.90:5188`, `active` |
+
+  Stop the verification instance with `kill 2371500`; stop the tunnels by killing the `ssh -f -N -L`
+  PIDs above (the helper script re-creates them). Golden `:5188` was never restarted.
+* New code committed locally in `goaa-ai-main` (add-only, `68d6f38`); **no push to any code remote**, no deploy.
 
 ## 7. Next step (needs Tao's decision)
 

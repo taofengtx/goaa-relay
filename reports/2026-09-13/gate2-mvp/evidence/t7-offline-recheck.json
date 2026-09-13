@@ -1,0 +1,57 @@
+{
+  "roster_after_tunnels_up": [
+    {
+      "worker_id": "aika-core-01",
+      "endpoint": "http://100.114.37.90:8088",
+      "status": "Online",
+      "api_flavor": "console",
+      "error": null
+    },
+    {
+      "worker_id": "do-cloud-1",
+      "endpoint": "http://127.0.0.1:18088",
+      "status": "Online",
+      "api_flavor": "basic",
+      "error": null
+    },
+    {
+      "worker_id": "do-cloud-2",
+      "endpoint": "http://127.0.0.1:18089",
+      "status": "Offline",
+      "api_flavor": "unknown",
+      "error": "ReadError: [Errno 104] Connection reset by peer"
+    },
+    {
+      "worker_id": "do-cloud-3",
+      "endpoint": "http://127.0.0.1:18090",
+      "status": "Offline",
+      "api_flavor": "unknown",
+      "error": "ReadError: [Errno 104] Connection reset by peer"
+    }
+  ],
+  "chat_probe": {
+    "do-cloud-2": {
+      "http_status": 503,
+      "body": "{\"detail\":\"worker do-cloud-2 has no known QwenPaw API: ReadError: [Errno 104] Connection reset by peer\"}"
+    },
+    "do-cloud-3": {
+      "http_status": 503,
+      "body": "{\"detail\":\"worker do-cloud-3 has no known QwenPaw API: ReadError: [Errno 104] Connection reset by peer\"}"
+    }
+  },
+  "remote_check": {
+    "do-c2": {
+      "stdout": "goaa-aika-cloud-2-01\nNO_8088_LISTENER\n0",
+      "stderr": ""
+    },
+    "do-c3": {
+      "stdout": "goaa-aika-cloud-3\nNO_8088_LISTENER\n0",
+      "stderr": ""
+    },
+    "do-runtime-anchor": {
+      "stdout": "goaa-aika-cloud-1\nLISTEN 0      2048         0.0.0.⟨0⟩:8088       0.0.0.⟨0⟩:*          \n1",
+      "stderr": ""
+    }
+  },
+  "conclusion": "Tunnels were re-opened for all three workers; do-cloud-2 / do-cloud-3 stay Offline, and the remote hosts report no :8088 listener and no qwenpaw unit, so Offline reflects the workers, not a missing tunnel."
+}
