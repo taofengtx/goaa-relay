@@ -1,0 +1,5 @@
+{
+  "session_id": "abx-20260913-161008-49cf0a",
+  "started_at": "2026-09-13 16:10:08 PDT",
+  "note": "left unanswered on purpose; adapter should mark it EXPIRED and non-clickable after ttl (300s)"
+}

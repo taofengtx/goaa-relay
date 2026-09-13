@@ -1,0 +1,214 @@
+{
+  "j_audit": {
+    "http": 200,
+    "total_entries": 37,
+    "decisions": [
+      {
+        "iso": "2026-09-13T05:03:38-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-050336-0db487",
+        "request_id": "211355c2-a09d-4584-9edb-40c53bc3b2c4",
+        "decision": "approve",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T05:04:11-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-050407-b003d2",
+        "request_id": "e059d8a1-3939-4759-b1d0-25439867c3bd",
+        "decision": "reject",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T05:08:21-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-050748-db18b5",
+        "request_id": "885998a1-c5c4-4647-a200-35e53a77da8c",
+        "decision": "reject",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T11:25:05-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-112448-e29a0e",
+        "request_id": "3901bb0e-11f1-48c0-8e32-49ed0aa31e32",
+        "decision": "reject",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T11:27:15-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-112624-52b459",
+        "request_id": "d451f244-7a66-4081-85cc-10e613aad3e2",
+        "decision": "reject",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T11:27:43-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-112624-52b459",
+        "request_id": "17a45fd0-647b-4913-bbc5-27e27977a728",
+        "decision": "approve",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T16:07:21-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-160614-630ef5",
+        "request_id": "e761b820-2f14-4d26-8327-f555e5a9d140",
+        "decision": "reject",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      },
+      {
+        "iso": "2026-09-13T16:09:14-0700",
+        "worker_id": "aika-core-01",
+        "session_id": "abx-20260913-160838-9e55c3",
+        "request_id": "66489b5e-313c-4651-ad1e-6439e46ab29c",
+        "decision": "approve",
+        "actor": "tao",
+        "source": "ui-click",
+        "http_status": 200,
+        "success": true
+      }
+    ],
+    "decision_sources": [
+      "ui-click"
+    ],
+    "all_success": true
+  },
+  "i_approved_run_history": {
+    "http": 200,
+    "message_count": 2,
+    "messages": [
+      {
+        "role": "user",
+        "text": "Please run exactly this one command and report its output: crontab -l"
+      },
+      {
+        "role": "assistant",
+        "text": "Ran it. Result:\n\n```\n$ crontab -l\nno crontab for aika\n```\n\nExit code **1**, no stdout at all — the message is on stderr. That's the normal \"you have no crontab\" response, not an error in the command itself. The user `aika` has no personal crontab installed.\n\nA couple of notes in case they matter to you:\n\n- This is the *user* crontab only. If you meant system-wide scheduled jobs, those live in `/etc/crontab`, `/etc/cron.d/`, and `/etc/cron.{hourly,daily,weekly,monthly}/` — say the word and I'll look there instead.\n- QwenPaw has its own scheduler (`qwenpaw cron list --agent-id ...`), which is separate from system `cron`. If you're trying to figure out what I have scheduled, that's the right place to check, not `crontab`."
+      }
+    ]
+  },
+  "k_stale": {
+    "checked_at": "2026-09-13T16:15:37-07:00",
+    "session_id": "abx-20260913-161008-49cf0a",
+    "request_id": "441e556a-a832-4a96-b680-e2cf698562a8",
+    "series": [
+      {
+        "age_s": 167.4,
+        "state": "PENDING",
+        "clickable": true
+      },
+      {
+        "age_s": 197.1,
+        "state": "PENDING",
+        "clickable": true
+      },
+      {
+        "age_s": 281.4,
+        "state": "PENDING",
+        "clickable": true
+      },
+      {
+        "age_s": 328.5,
+        "state": "STALE",
+        "clickable": false
+      }
+    ],
+    "ui_render": "STALE · age 340.3s / ttl 300s · findings 1 · （已失效，不可點擊）",
+    "ui_button_count": 0,
+    "result": "PASS",
+    "note": "No auto-decision occurred. Exactly one approval was seeded and it aged out naturally."
+  },
+  "worker_roster": {
+    "http": 200,
+    "workers": [
+      {
+        "worker_id": "aika-core-01",
+        "role": null,
+        "endpoint": "http://100.114.37.90:8088",
+        "transport": "tailnet",
+        "status": "Online",
+        "api_flavor": "console",
+        "version": "1.1.5.post1",
+        "latency_ms": 6,
+        "error": null
+      },
+      {
+        "worker_id": "do-cloud-1",
+        "role": null,
+        "endpoint": "http://127.0.0.1:18088",
+        "transport": "ssh-tunnel",
+        "status": "Online",
+        "api_flavor": "basic",
+        "version": "basic:QwenPaw-DO",
+        "latency_ms": 73,
+        "error": null
+      },
+      {
+        "worker_id": "do-cloud-2",
+        "role": null,
+        "endpoint": "http://127.0.0.1:18089",
+        "transport": "ssh-tunnel",
+        "status": "Offline",
+        "api_flavor": "unknown",
+        "version": null,
+        "latency_ms": 35,
+        "error": "ReadError: [Errno 104] Connection reset by peer"
+      },
+      {
+        "worker_id": "do-cloud-3",
+        "role": null,
+        "endpoint": "http://127.0.0.1:18090",
+        "transport": "ssh-tunnel",
+        "status": "Offline",
+        "api_flavor": "unknown",
+        "version": null,
+        "latency_ms": 32,
+        "error": "ReadError: [Errno 104] Connection reset by peer"
+      }
+    ]
+  },
+  "adapter_health": {
+    "http": 200,
+    "ok": true,
+    "adapter": "qwenpaw-server-side",
+    "version": "5.2.C-2+qwenpaw-mvp",
+    "architecture": "browser -> aikabox:5188 -> adapter -> worker qwenpaw",
+    "workers_total": 4,
+    "workers_online": 2,
+    "user": "tao",
+    "audit_log": "/opt/goaa/run/qwenpaw_audit.jsonl"
+  },
+  "collected_at": "2026-09-13 16:09:46 PDT",
+  "verdict_this_round": {
+    "A_to_K": "PASS",
+    "duplicate_js": "YES (source / login template; index page clean)",
+    "session_history_ui": "FAIL (real UI gap)",
+    "rollback_ready": "YES",
+    "golden05_cutover": "NOT PASS (pending defect resolution or explicit acceptance)",
+    "gate2_final": "NOT PASS"
+  }
+}

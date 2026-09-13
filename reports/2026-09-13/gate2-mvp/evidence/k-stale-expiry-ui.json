@@ -1,0 +1,32 @@
+{
+  "check": "K - stale approval must not be clickable",
+  "result": "PASS",
+  "seed": {
+    "session_id": "abx-20260913-161008-49cf0a",
+    "request_id": "441e556a-a832-4a96-b680-e2cf698562a8",
+    "tool": "execute_shell_command",
+    "requested_action": "crontab -l",
+    "severity": "HIGH",
+    "created_at_epoch": 1789341009.4699335,
+    "ttl_s": 300
+  },
+  "observations": [
+    {"t": "16:12:56", "age_s": 167.4, "state": "PENDING", "clickable": true},
+    {"t": "16:13:26", "age_s": 197.1, "state": "PENDING", "clickable": true},
+    {"t": "16:14:50", "age_s": 281.4, "state": "PENDING", "clickable": true},
+    {"t": "16:15:37", "age_s": 328.5, "state": "STALE", "clickable": false}
+  ],
+  "ui_render": {
+    "page": "http://127.0.0.1:5188/ -> nav data-p=qwenpaw",
+    "session_selected": "abx-20260913-161008-49cf0a",
+    "card_text": "HIGH · execute_shell_command / crontab -l / STALE · age 340.3s / ttl 300s · findings 1 / （已失效，不可點擊）",
+    "approve_button_present": false,
+    "reject_button_present": false,
+    "button_count": 0
+  },
+  "notes": [
+    "No auto-decision occurred: the pending approval stayed PENDING for its full lifetime and aged into STALE.",
+    "No mass stale requests were manufactured; exactly one was seeded and it expired naturally.",
+    "The state transition boundary is between age 281.4s (PENDING/clickable) and age 328.5s (STALE/not clickable), consistent with ttl_s=300."
+  ]
+}

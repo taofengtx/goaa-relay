@@ -1,0 +1,41 @@
+{
+  "check": "duplicate QwenPaw JS block diagnosis (source + served pages)",
+  "result": "DUPLICATE_CONFIRMED_IN_SOURCE_ON_LOGIN_TEMPLATE",
+  "index_page_no_duplicate": true,
+  "served_index_page": {
+    "url": "http://127.0.0.1:5188/",
+    "script_tags": 2,
+    "qwenpaw_nav_items": 1,
+    "qwenpaw_page_div": 1,
+    "qwenpaw_script_copies": 1,
+    "duplicate_handler": false,
+    "duplicate_timer": false,
+    "verdict": "NO DUPLICATE within the Golden landing page"
+  },
+  "served_login_page": {
+    "url": "http://127.0.0.1:5188/login",
+    "script_tags": 2,
+    "qwenpaw_page_div": 0,
+    "qwenpaw_script_copies": 1,
+    "stray_block_bytes": 10220,
+    "load_error": "TypeError: Cannot set properties of null (setting 'onchange')",
+    "functional_impact": "none observed - login form handlers were bound by the preceding script; POST /login returns 401 for bad credentials",
+    "verdict": "stray block present on the wrong template"
+  },
+  "source_locations": {
+    "file": "local-console/main.py",
+    "sha16": "64fdc422d39a3cb9",
+    "total_lines": 2283,
+    "block_copy_1": {"lines": "168-360", "template": "login page HTML", "duplicate_defs": ["function loadWorkers@191", "function pollApprovals@276", "setInterval@328", "function send@332"]},
+    "block_copy_2": {"lines": "2090-2282", "template": "index page HTML", "duplicate_defs": ["function loadWorkers@2113", "function pollApprovals@2198", "setInterval@2250", "function send@2254"]},
+    "same_block_bytes_per_copy": "~10.2 KB each"
+  },
+  "cause": "The original insertion used an anchor string that exists in BOTH HTML templates; the edit tool replaced every occurrence, so the block was appended to the login template as well as the index template.",
+  "minimal_fix_plan": {
+    "scope": "delete lines 168-360 from local-console/main.py (the stray copy inside the login template)",
+    "risk": "LOW - the index page keeps its own copy at 2090-2282; login template reverts to its single original script",
+    "procedure": "apply on the :5198 verification instance -> retest /login (script tags == 1, no TypeError, POST /login 401) and / (unchanged) -> request Tao approval for a small Golden patch -> apply to :5188",
+    "not_applied": true,
+    "reason_not_applied": "Golden may only run the version verified on :5198; a confirmed duplicate requires STOP + report + approval"
+  }
+}

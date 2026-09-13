@@ -1,0 +1,22 @@
+{
+  "http": 200,
+  "raw": {
+    "ok": true,
+    "worker_id": "aika-core-01",
+    "session_id": "abx-20260913-160838-9e55c3",
+    "title": "AI Workspace session",
+    "chat_id": "3f96b305-6360-4290-85d5-7a773c9d5771",
+    "status": "Idle",
+    "messages": [
+      {
+        "role": "user",
+        "text": "Please run exactly this one command and report its output: crontab -l"
+      },
+      {
+        "role": "assistant",
+        "text": "Ran it. Result:\n\n```\n$ crontab -l\nno crontab for aika\n```\n\nExit code **1**, no stdout at all — the message is on stderr. That's the normal \"you have no crontab\" response, not an error in the command itself. The user `aika` has no personal crontab installed.\n\nA couple of notes in case they matter to you:\n\n- This is the *user* crontab only. If you meant system-wide scheduled jobs, those live in `/etc/crontab`, `/etc/cron.d/`, and `/etc/cron.{hourly,daily,weekly,monthly}/` — say the word and I'll look there instead.\n- QwenPaw has its own scheduler (`qwenpaw cron list --agent-id ...`), which is separate from system `cron`. If you're trying to figure out what I have scheduled, that's the right place to check, not `crontab`."
+      }
+    ],
+    "resumed": true
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "check": "non-destructive rollback proof",
+  "result": "ROLLBACK_READY_YES",
+  "golden_not_rolled_back": true,
+  "bundle": {
+    "path": "/home/aika/gate2-rollback",
+    "files": {
+      "main.py.pre": {"sha16": "7f62dfea43d025f6", "bytes": 138956, "equals_golden_frozen_fingerprint": true},
+      "main.py.post": {"sha16": "64fdc422d39a3cb9", "bytes": 162056, "equals_live_on_disk": true},
+      "new-files.list": {"bytes": 425, "entries": 10, "all_exist_relative_to_repo_root": true, "missing": 0},
+      "rollback.sh": {"bytes": 1824, "bash_n_syntax": "PASS"}
+    }
+  },
+  "restore_target_paths_correct": {
+    "target_dir": "/home/aika/Projects/goaa-ai-main/local-console",
+    "matches_unit_working_directory": true,
+    "quarantine_items": ["qwenpaw_api.py", "qwenpaw_workers.json", "integrations", "tools"],
+    "over_quarantine_risk": "none - at ref 02a17ffe the directories local-console/integrations and local-console/tools did not exist (0 files each); the only contents are Gate-2 additions",
+    "repo_diff_02a17ffe_to_HEAD": "10 added, 1 modified (local-console/main.py)",
+    "quarantine_is_recoverable": true
+  },
+  "supervised_restart_logic": {
+    "mechanism": "kill -TERM <MainPID>; wait for the unit's own Restart=always to bring it back",
+    "proven_empirically": true,
+    "proof": "MainPID 6113 -> 2412403, NRestarts 0 -> 1, ActiveState active, during the actual cut-over",
+    "systemd_config_unchanged": true,
+    "unit_sha256": "dd9572d95116a7dc11abf1fc749689f21a073b8b40113d1192d095ce212f02e1",
+    "dropin_sha16": "6fab895d84668204"
+  },
+  "health_wait_logic": {
+    "pid_wait": "30 iterations x 2s until MainPID is non-empty and different from the old one",
+    "health_wait": "15 iterations x 2s until GET /health returns 200",
+    "verified_reachable": true
+  },
+  "dry_run": {
+    "command": "DRY=1 bash /home/aika/gate2-rollback/rollback.sh",
+    "output": ["== rollback: GCR-2026-09-13-AIKABOX-QWENPAW-MVP ==", "-- before --", "ActiveState=active", "SubState=running", "Restart=always", "MainPID=2412403", "64fdc422d39a3cb9", "DRY RUN - nothing changed"],
+    "side_effects": "none"
+  },
+  "restart_capability_note": {
+    "systemctl_restart": "UNAVAILABLE to user aika (polkit: interactive authentication is required)",
+    "official_current_restart_path": "supervised MainPID restart (SIGTERM + Restart=always)",
+    "sudoers_polkit_unit_modified": false
+  }
+}

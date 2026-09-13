@@ -1,0 +1,25 @@
+{
+  "check": "session history UI diagnosis (API schema vs UI render)",
+  "classification": "B - REAL UI GAP (not a test-method artifact)",
+  "api_side": {
+    "endpoint": "GET /api/qwenpaw/sessions/{session_id}?worker_id=...",
+    "implemented_at": "local-console/qwenpaw_api.py:127 -> integrations/qwenpaw/sessions.py:231 history()",
+    "returns": "compact merged history, messages[] with role/text",
+    "observed": "returned user+assistant messages for an existing session"
+  },
+  "ui_side": {
+    "history_fetch_calls_in_ui": 0,
+    "evidence": "grep for 'history' inside the inline console/UI JS yields no matches",
+    "session_select_handler": "el('qp-session').onchange = set header text + pollApprovals(); no history fetch, no log render",
+    "log_element": "div#qp-log, initial text '選一個 Worker 與 Session 後開始對話。'",
+    "observed": "selecting an existing session leaves #qp-log at its placeholder; runstatus Idle"
+  },
+  "conclusion": "The adapter endpoint works and is reachable; the UI simply has no code path that calls it when a session is selected. Restoring past conversation into the transcript panel was never implemented in the MVP UI.",
+  "minimal_fix_plan": {
+    "scope": "add one ~10-line function to the QwenPaw UI block that fetches /api/qwenpaw/sessions/{sid}?worker_id=... and renders messages[] into #qp-log; call it from the session onchange handler and after loadSessions()",
+    "risk": "LOW - additive, reuses the existing logLine() renderer",
+    "procedure": "apply on :5198 -> test session switch renders history -> request Tao approval for a small Golden patch -> apply to :5188",
+    "not_applied": true,
+    "reason_not_applied": "Golden may only run the version verified on :5198"
+  }
+}
