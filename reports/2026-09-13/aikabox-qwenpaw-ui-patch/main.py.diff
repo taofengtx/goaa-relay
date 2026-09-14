@@ -1,0 +1,225 @@
+diff --git a/local-console/main.py b/local-console/main.py
+index 94d9016..b00b85f 100644
+--- a/local-console/main.py
++++ b/local-console/main.py
+@@ -1365,6 +1365,57 @@ animation:flow 2.5s linear infinite}
+ .note{color:var(--txt2);font-size:.75rem;font-family:var(--mono)}
+ .step-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--mono);font-size:.82rem}
+ .step-row .nm{color:var(--txt);font-weight:600}.step-row .id{color:var(--txt2);font-size:.72rem}.step-row .st{margin-left:auto;font-size:.72rem;color:var(--success)}
++/* ── AI 工作區(QwenPaw)固定工作台佈局 · UI Patch 2026-09-13 · 只作用於 #p-qwenpaw ── */
++.main.ws{display:flex;flex-direction:column;height:100vh;overflow:hidden}
++#p-qwenpaw.page.show{display:flex;flex-direction:column;gap:.85rem;flex:1;min-height:0}
++#p-qwenpaw .qp-top{flex:none}
++#p-qwenpaw .qp-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr);gap:1rem;flex:1;min-height:0}
++#p-qwenpaw .chat{min-height:0;position:relative}
++#p-qwenpaw .chat .hd{flex:none;margin-bottom:.45rem}
++#p-qwenpaw .qp-chatmeta{flex:none;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-family:var(--mono);font-size:.68rem;color:var(--txt2);border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:.5rem;margin-bottom:.5rem}
++#p-qwenpaw .qp-chatmeta b{color:var(--txt);font-weight:600;font-size:.7rem;word-break:break-all}
++#p-qwenpaw .chat .body{flex:1;min-height:0;overflow-y:auto;display:block;align-items:stretch;justify-content:flex-start;text-align:left;padding-right:.4rem;overscroll-behavior:contain}
++#p-qwenpaw .chat .inp{flex:none;position:sticky;bottom:0;z-index:2;margin-top:.5rem;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.05);background:var(--panel)}
++#p-qwenpaw .qp-jump{position:absolute;right:1.1rem;bottom:5.2rem;z-index:3;font-family:var(--mono);font-size:.7rem;padding:.28rem .65rem;border-radius:999px;border:1px solid var(--border);background:#0A121A;color:var(--accent);cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.55)}
++#p-qwenpaw .qp-jump[hidden]{display:none}
++#p-qwenpaw .qp-msg,#p-qwenpaw .qp-live,#p-qwenpaw .qp-body,#p-qwenpaw .qp-txt{white-space:pre-wrap;overflow-wrap:anywhere}
++#p-qwenpaw .qp-msg,#p-qwenpaw .qp-live{margin:.35rem 0}
++#p-qwenpaw .qp-warn{color:var(--warn)}
++#p-qwenpaw .qp-msg.qp-collapsed .qp-body{max-height:17em;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 58%,rgba(0,0,0,.1) 100%);mask-image:linear-gradient(180deg,#000 58%,rgba(0,0,0,.1) 100%)}
++#p-qwenpaw .qp-toggle{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.68rem;color:var(--accent);background:none;border:1px dashed var(--border);border-radius:6px;padding:.15rem .5rem;cursor:pointer}
++#p-qwenpaw .qp-code{overflow-x:auto;background:#070B10;border:1px solid var(--border);border-radius:6px;padding:.45rem .6rem;margin:.3rem 0;font-family:var(--mono);font-size:.76rem;white-space:pre}
++#p-qwenpaw .qp-side{display:flex;flex-direction:column;gap:1rem;min-height:0}
++#p-qwenpaw .qp-side>.card{display:flex;flex-direction:column;min-height:0;flex:1 1 50%;overflow:hidden}
++#p-qwenpaw .qp-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:.35rem;overscroll-behavior:contain}
++@media (min-width:961px){
++  body:has(.main.ws){height:100vh;overflow:hidden}
++  body:has(.main.ws) .side{height:100vh;overflow-y:auto}
++}
++@media (max-width:960px){
++  /* 窄屏:仍為固定視口工作台 → 左欄改置頂(自身可捲),主區佔滿剩餘高度 */
++  body:has(.main.ws){flex-direction:column;height:100vh;overflow:hidden}
++  body:has(.main.ws) .side{width:100%;height:auto;max-height:12vh;overflow-y:auto;flex-shrink:0;padding:.5rem 0}
++  body:has(.main.ws) .side .brand{padding:0 .8rem .4rem}
++  body:has(.main.ws) .main{height:auto;flex:1;min-height:0;overflow:hidden;padding:.6rem .8rem}
++  /* 頁首/指標區在窄屏壓縮,把高度讓給工作台 */
++  body:has(.main.ws) .top{flex-direction:column;gap:.3rem;padding-bottom:.45rem}
++  body:has(.main.ws) .top h1{font-size:1.02rem}
++  body:has(.main.ws) .top p.note{font-size:.63rem;margin:.1rem 0}
++  body:has(.main.ws) .top>div:last-child{gap:.55rem;flex-wrap:wrap}
++  .main.ws{height:auto;overflow:hidden}
++  #p-qwenpaw.page.show{overflow:hidden;gap:.5rem}
++  #p-qwenpaw .qp-top{padding:.5rem .6rem}
++  #p-qwenpaw .qp-top .h{font-size:.9rem}
++  #p-qwenpaw .qp-top>p.note{font-size:.63rem;margin:.15rem 0;line-height:1.25}
++  #p-qwenpaw .qp-top select{font-size:.68rem;padding:.1rem .25rem;max-width:42vw}
++  #p-qwenpaw .qp-top .btn-send{font-size:.68rem;padding:.2rem .45rem}
++  #p-qwenpaw .qp-chatmeta{font-size:.62rem;gap:.2rem .7rem;padding-bottom:.35rem;margin-bottom:.35rem}
++  /* Chat 上 / Approval+Audit 下,各自獨立滾動;Composer 仍固定在 Chat 底部 */
++  #p-qwenpaw .qp-main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,2fr) minmax(0,1fr);gap:.5rem}
++  #p-qwenpaw .chat{height:auto;min-height:0}
++  #p-qwenpaw .qp-side{overflow-y:auto;gap:.5rem}
++  #p-qwenpaw .qp-side>.card{flex:none;height:auto;min-height:132px}
++}
+ </style></head>
+ <body>
+ <aside class="side">
+@@ -1515,7 +1566,7 @@ animation:flow 2.5s linear infinite}
+ 
+   <!-- AI 工作區(QwenPaw) · GCR-2026-09-13-AIKABOX-QWENPAW-MVP · 只增不減 -->
+   <div class="page" id="p-qwenpaw">
+-    <div class="card"><div class="h">&#9889; AI 工作區（QwenPaw）</div>
++    <div class="card qp-top"><div class="h">&#9889; AI 工作區（QwenPaw）</div>
+       <p class="note">Aika-Box 只做入口:瀏覽器 &rarr; :5188 &rarr; server-side adapter &rarr; 選定 Worker 的 QwenPaw。
+       Approve / Reject 一律由人按下,系統不會自動決策。</p>
+       <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
+@@ -1527,16 +1578,20 @@ animation:flow 2.5s linear infinite}
+         <span id="qp-runstatus" class="note">Idle</span>
+       </div>
+     </div>
+-    <div style="display:grid;grid-template-columns:1fr 340px;gap:1rem">
++    <div class="qp-main">
+       <div class="chat">
+         <div class="hd" id="qp-hd">&#128172; 未選擇 Session</div>
++        <div class="qp-chatmeta" id="qp-chatmeta"><span>Worker <b id="qp-m-worker">—</b></span><span>Session <b id="qp-m-session">—</b></span><span>狀態 <b id="qp-m-status">Idle</b></span><span>訊息 <b id="qp-m-count">0</b></span></div>
+         <div class="body" id="qp-log">選一個 Worker 與 Session 後開始對話。</div>
++        <button class="qp-jump" id="qp-jump" hidden>&#8595; 回到底部</button>
+         <div class="inp"><input id="qp-input" placeholder="送訊息給 QwenPaw… (Enter 發送)"><button class="btn-send" id="qp-send">發送</button></div>
+       </div>
+-      <div class="card"><div class="h">&#9888; Approval（需人工點擊）</div>
+-        <div id="qp-approvals" class="note">目前無待決策。</div>
+-        <div class="h" style="margin-top:.7rem">&#9636; 最近決策（audit）</div>
+-        <div id="qp-audit" class="note">—</div></div>
++      <div class="qp-side">
++        <div class="card"><div class="h">&#9888; Approval（需人工點擊）</div>
++          <div id="qp-approvals" class="note qp-scroll">目前無待決策。</div></div>
++        <div class="card"><div class="h">&#9636; 最近決策（audit）</div>
++          <div id="qp-audit" class="note qp-scroll">—</div></div>
++      </div>
+     </div>
+   </div>
+ </div>
+@@ -1551,6 +1606,7 @@ document.querySelectorAll('#nav a[data-p]').forEach(function(a){
+     a.classList.add('on');
+     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('show')});
+     var el=document.getElementById('p-'+p); if(el)el.classList.add('show');
++    var mn=document.querySelector('.main'); if(mn)mn.classList.toggle('ws',p==='qwenpaw');
+     document.getElementById('ptitle').innerHTML=navTitle[p]+' <small>Local Console 5.2.C-2</small>';
+   };
+ });
+@@ -1909,12 +1965,67 @@ setInterval(loadNodeHealth, 8000);
+   function jpost(u,b){return fetch(u,{method:'POST',credentials:'same-origin',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(function(r){
+     return r.json().then(function(j){ if(!r.ok) throw new Error(j.detail||('HTTP '+r.status)); return j; });});}
+-  function logLine(t,warn){var d=document.createElement('div');
+-    d.style.cssText='white-space:pre-wrap;margin:.35rem 0'+(warn?';color:var(--warn)':'');
+-    d.textContent=t;var box=el('qp-log');box.appendChild(d);box.scrollTop=box.scrollHeight;return d;}
+-  function ensureLive(){if(!liveEl||!liveEl.parentNode){liveEl=document.createElement('div');
+-    liveEl.style.cssText='white-space:pre-wrap;margin:.35rem 0;color:var(--txt)';
+-    el('qp-log').appendChild(liveEl);}return liveEl;}
++  // ── UI Patch 2026-09-13:獨立滾動 / 長訊息折疊 / session header(只動前端,不動 API) ──
++  function nearBottom(node,tol){
++    if(!node) return true;
++    return (node.scrollHeight-node.scrollTop-node.clientHeight)<(tol||48);
++  }
++  function showJump(on){var j=el('qp-jump'); if(!j) return;
++    if(on){j.removeAttribute('hidden');}else{j.setAttribute('hidden','');}}
++  function scrollLogToBottom(){var box=el('qp-log'); if(!box) return;
++    box.scrollTop=box.scrollHeight; showJump(false);}
++  function syncJump(){var box=el('qp-log'); if(!box) return;
++    var over=(box.scrollHeight-box.clientHeight)>8;
++    showJump(over&&!nearBottom(box,48));}
++  function updateChatMeta(){
++    var box=el('qp-log'); if(!box) return;
++    if(el('qp-m-worker')) el('qp-m-worker').textContent=st.worker||'—';
++    if(el('qp-m-session')) el('qp-m-session').textContent=st.session||'—';
++    if(el('qp-m-status')) el('qp-m-status').textContent=(el('qp-runstatus')&&el('qp-runstatus').textContent)||'Idle';
++    if(el('qp-m-count')) el('qp-m-count').textContent=String(box.querySelectorAll('.qp-msg').length);
++  }
++  function buildMsgBody(body,txt){
++    var s=(txt==null?'':String(txt));
++    var segs=s.split('```');
++    if(segs.length<2){body.textContent=s;return;}
++    segs.forEach(function(seg,i){
++      if(i%2===1){
++        var pre=document.createElement('pre');pre.className='qp-code';pre.textContent=seg;body.appendChild(pre);
++      }else if(seg){
++        var t=document.createElement('div');t.className='qp-txt';t.textContent=seg;body.appendChild(t);
++      }
++    });
++  }
++  function logLine(t,warn){
++    var box=el('qp-log'); if(!box) return null;
++    var s=(t==null?'':String(t));
++    var stick=nearBottom(box,48);
++    var d=document.createElement('div');
++    d.className='qp-msg'+(warn?' qp-warn':'');
++    var body=document.createElement('div');body.className='qp-body';
++    buildMsgBody(body,s);
++    d.appendChild(body);
++    if(s.split('\n').length>14||s.length>1600){
++      var btn=document.createElement('button');
++      btn.type='button';btn.className='qp-toggle';btn.textContent='展開全文 ▼';
++      btn.onclick=function(){
++        var collapsed=d.classList.toggle('qp-collapsed');
++        btn.textContent=collapsed?'展開全文 ▼':'收起 ▲';
++        syncJump();
++      };
++      d.appendChild(btn);d.classList.add('qp-collapsed');
++    }
++    box.appendChild(d);
++    if(stick){scrollLogToBottom();}else{syncJump();}
++    updateChatMeta();
++    return d;
++  }
++  function ensureLive(){if(!liveEl||!liveEl.parentNode){
++    liveEl=document.createElement('div');
++    liveEl.className='qp-live';
++    var box=el('qp-log');
++    if(box){var stick=nearBottom(box,64);box.appendChild(liveEl);if(!stick)syncJump();}
++  }return liveEl;}
+ 
+   // ── session history ──
+   function loadHistory(){
+@@ -1938,6 +2049,8 @@ setInterval(loadNodeHealth, 8000);
+         msgs.forEach(function(m){
+           logLine((m.role==='user'?'我：':'QwenPaw：')+(m.text==null?'':m.text),false);
+         });
++        scrollLogToBottom();
++        updateChatMeta();
+       })
+       .catch(function(e){ logLine('載入歷史失敗: '+e.message,true); });
+   }
+@@ -1982,6 +2095,7 @@ setInterval(loadNodeHealth, 8000);
+         sel.appendChild(o);
+       });
+       st.session=sel.value||null;
++      updateChatMeta();
+       el('qp-hd').textContent='⌨ QwenPaw · '+wid+' · '+(st.session||'（尚無 session，按「新 Session」）');
+       if(withHistory) loadHistory();
+     }).catch(function(e){ el('qp-hd').textContent='載入 session 失敗: '+e.message; });
+@@ -2061,7 +2175,8 @@ setInterval(loadNodeHealth, 8000);
+       if(j.run){el('qp-runstatus').textContent=j.run.status+' · sse '+j.run.sse_events;}});
+     es.addEventListener('sse',function(ev){var j=JSON.parse(ev.data);var t=liveText(j);
+       if(t){st.live=(st.live+t);if(st.live.length>6000)st.live=st.live.slice(-6000);
+-        ensureLive().textContent=st.live;el('qp-log').scrollTop=el('qp-log').scrollHeight;}});
++        var _b=el('qp-log');var _stick=nearBottom(_b,64);ensureLive().textContent=st.live;
++        if(_stick){scrollLogToBottom();}else{syncJump();}}});
+     es.addEventListener('state',function(ev){var j=JSON.parse(ev.data);
+       el('qp-runstatus').textContent=(j.status||'')+(j.error?(' · '+j.error):'');});
+     es.addEventListener('end',function(ev){var j=JSON.parse(ev.data);
+@@ -2111,6 +2226,18 @@ setInterval(loadNodeHealth, 8000);
+     if(e.key==='Enter'){e.preventDefault();send();}});
+   document.querySelectorAll('#nav a[data-p="qwenpaw"]').forEach(function(a){
+     a.addEventListener('click',function(){ if(!el('qp-worker').options.length){loadWorkers();loadAudit();} });});
++  // ── UI Patch 2026-09-13 wiring(回到底部按鈕 / status 觀察 / 進頁面時套用固定佈局) ──
++  if(el('qp-log')) el('qp-log').addEventListener('scroll',function(){syncJump();});
++  if(el('qp-jump')) el('qp-jump').onclick=function(){scrollLogToBottom();};
++  if(el('qp-runstatus')&&window.MutationObserver){
++    new MutationObserver(function(){updateChatMeta();})
++      .observe(el('qp-runstatus'),{childList:true,characterData:true,subtree:true});
++  }
++  if(el('p-qwenpaw')&&el('p-qwenpaw').classList.contains('show')){
++    var _mn=document.querySelector('.main'); if(_mn)_mn.classList.add('ws');
++  }
++  window.addEventListener('resize',function(){syncJump();});
++  updateChatMeta();
+   loadAudit();
+ })();
+ </script>

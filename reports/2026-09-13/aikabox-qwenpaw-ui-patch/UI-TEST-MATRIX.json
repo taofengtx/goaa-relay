@@ -1,0 +1,47 @@
+{
+  "artifact": "UI test matrix (U1-U18 + regression) for QwenPaw chat workspace UI patch",
+  "instance": "D0 dev :5198 (tailnet 100.114.37.90)",
+  "candidate_file_sha16": "b5371dbaf5441f14",
+  "baseline_file_sha16": "0c78b8e83516613a",
+  "code_commit": "7a57bc3",
+  "worktree": "/home/aika/gate2-ui-wt",
+  "branch": "gate2-ui-patch",
+  "base_commit": "a68fd85",
+  "method": "headless browser, DOM geometry measurements (getBoundingClientRect / scrollHeight / clientHeight / computedStyle). Visual claims are backed by numbers, not by screenshots; the executing agent has no multimodal capability and cannot view images.",
+  "viewport": {"desktop": "1440x813", "narrow": "420x900"},
+  "results": [
+    {"id": "U1", "name": "fixed viewport workbench", "result": "PASS", "evidence": {".main.ws height": 813, "overflow": "hidden", "doc.scrollHeight": 813, "doc.clientHeight": 813}},
+    {"id": "U2", "name": "composer always visible", "result": "PASS", "evidence": {"composer rect": [723, 774], "states": ["top-scroll", "mid", "122 msgs injected"], "visible": true}},
+    {"id": "U3", "name": "chat independent scroll", "result": "PASS", "evidence": {"#qp-log scrollHeight": [10287, 10832], "#qp-log clientHeight": 317, "doc unchanged": 813}},
+    {"id": "U4", "name": "scroll to bottom button", "result": "PASS", "evidence": {"at top": "#qp-jump visible", "after real click": "scrollTop == max, button hidden"}},
+    {"id": "U5", "name": "approvals independent scroll", "result": "PASS", "evidence": {"cards injected": 8, "scrollHeight": 856, "clientHeight": 171, "overflow-y": "auto", "rect": [357, 528]}},
+    {"id": "U6", "name": "audit independent scroll", "result": "PASS", "evidence": {"rows injected": 30, "scrollHeight": 494, "clientHeight": 171, "rect": [602, 774]}},
+    {"id": "U5/U6", "name": "three panes do not interfere", "result": "PASS", "evidence": {"log scrollTop": 3000, "approvals scrollTop": 685, "audit scrollTop": 300, "window.scrollY": 0}},
+    {"id": "U7/U8", "name": "long message collapse/expand", "result": "PASS", "evidence": {"collapsed height": 223, "collapsed max-height": "223.04px", "collapsed overflow": "hidden", "expanded height": 768, "expanded max-height": "none", "expanded overflow": "visible", "labels": ["展開全文 ▼", "收起 ▲"], "text length unchanged": 1639, "code overflow-x": "auto"}},
+    {"id": "U9", "name": "session history (real A->B->A)", "result": "PASS", "evidence": {"session A": "abx-20260913-213238-b237f9 (8 msgs)", "session B": "abx-20260913-210233-f7719b (2 msgs)", "api_vs_ui": "8==8, 2==2, 8==8", "order_and_content": "exact after stripping ``` fences", "residue": 0}},
+    {"id": "U10", "name": "session isolation", "result": "PASS", "evidence": {"sequence": "A->B->A", "counts": [8, 2, 8], "cross_pollution": 0, "log_cleared_on_switch": true}},
+    {"id": "U11", "name": "SSE streaming", "result": "PASS", "evidence": {".qp-live segments": 12, "segment_lengths": [95, 152, 198, 238, 283, 327, 376, 405, 458, 501, 548], "duration_s": 2.4, "final": "cleared then final render", "runstatus": "Running -> Completed"}},
+    {"id": "U12", "name": "real approval card appears", "result": "PASS (technical path)", "evidence": {"appears_within_s": 2.2, "card": "HIGH / execute_shell_command / crontab -l / PENDING / ttl 300s / findings 1", "buttons": ["Approve", "Reject"]}},
+    {"id": "U13", "name": "reject path", "result": "TECHNICAL_PATH_PASS / HUMAN_APPROVAL_NOT_ACCEPTED", "evidence": {"decision": "reject", "http_status": 200, "message": "Tool 'execute_shell_command' denied: User denied", "run": "continued and completed", "tool_output_present": false, "note": "this reject was submitted by the agent via HTTP at 23:06:52, NOT by a human click"}},
+    {"id": "U14", "name": "stale card not clickable", "result": "PASS", "evidence": {"session": "UI-FINAL-STALE", "api_state": "STALE", "clickable": false, "age_s": 328.6, "ui_label": "已失效，不可點擊", "buttonCount": 0, "worker_auto_reject_s": 300.0, "agent_clicked": false}},
+    {"id": "U15", "name": "100+ messages pressure", "result": "PASS", "evidence": {"messages_injected": 121, "total": 122, "doc.scrollHeight": 813, "vOverflow": 0, "hOverflow": 0, "log scrollHeight": 10287, "log clientHeight": 317, "composer visible": true}},
+    {"id": "U16", "name": "narrow screen 420x900", "result": "PASS", "evidence": {"doc.scrollHeight": 900, "viewport": 900, "vOverflow": 0, "hOverflow": 0, "composer rect": [673, 723], "qp-side scrollHeight": 692, "qp-side clientHeight": 142}},
+    {"id": "U17", "name": "no horizontal overflow", "result": "PASS", "evidence": {"desktop hOverflow": 0, "narrow hOverflow": 0}},
+    {"id": "U18", "name": "console JS errors", "result": "PASS", "evidence": {"window.__errs": [], "window.__rejs": [], "console_error": 0, "console_warning": 0, "note": "only favicon 404 ever seen; identical on :5188 => pre-existing"}},
+    {"id": "REG", "name": "desktop regression", "result": "PASS", "evidence": {"side": 216, "main": 1224, "qp-main": [805, 345], "doc": 813}}
+  ],
+  "special": {
+    "A_narrow_real_run": "PASS",
+    "B_three_pane_overflow_independent": "PASS",
+    "C_100plus_dom_stress": "PASS"
+  },
+  "limitations": [
+    "adapter history() returns at most messages[-30:]",
+    "worker /api/chats has no message_count (session list msgs always 0)",
+    "loadHistory() guard: if(st.es) return -> no history load while a run streams",
+    "decide() does not reload history after a decision",
+    ":5198 audit log points to the same default file as :5188 (shared artifact, unchanged)",
+    "approval TTL is 300s (worker-side setting)",
+    "favicon 404 console message (pre-existing, identical on :5188)"
+  ]
+}
