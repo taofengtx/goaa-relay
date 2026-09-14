@@ -129,7 +129,7 @@
 
 - **掃描**：16-pattern 秘密掃描器（依類別：Stripe 金鑰前綴×4、Clerk 各變體×6、PEM 私鑰標頭、AWS 存取金鑰前綴、GitHub token 前綴、PG 連線 URI、env 賦值兩式、JWT 形字串、PG 密碼檔名、Clerk 秘密指派）＋ 兩項結構檢查（未遮罩 routable IPv4、BOM）⇒ **12 檔 / 0 命中 / BOM=False**（樣式字面僅存在於掃描腳本內，不抄入交付文件）。
 - **commit（代碼）**：`7a57bc3`（branch `gate2-ui-patch`，base `a68fd85`）— **local only，未 push**（未獲授權推代碼分支）。
-- **commit（交付文件）**：本報告＋`main.py.diff`＋`UI-SECT7-EVIDENCE.json`＋`UI-TEST-MATRIX.json`＋`shots/*.png` 一併 commit 至 relay 並 push（見文末「收尾量測」）。
+- **commit（交付文件）**：本報告＋`main.py.diff`＋`UI-SECT7-EVIDENCE.json`＋`UI-TEST-MATRIX.json`＋`shots/*.png` 一併 commit 至 relay 並 push（relay main `efc553b`）。
 - **` :5188` 未套用、未重啟**：是否套用（或先做窄屏局部修正）**待 Tao 決策**。
 - 記憶已更新（daily + `MEMORY.md`）。
 
