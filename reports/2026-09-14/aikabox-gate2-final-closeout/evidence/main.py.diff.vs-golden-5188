@@ -1,0 +1,993 @@
+diff --git a/home/aika/Projects/goaa-ai-main/local-console/main.py b/local-console/main.py
+index 94d9016..b75643d 100644
+--- a/home/aika/Projects/goaa-ai-main/local-console/main.py
++++ b/local-console/main.py
+@@ -78,6 +78,10 @@ COOKIE_NAME = "goaa_console_session"
+ from qwenpaw_api import router as qwenpaw_router  # noqa: E402
+ app.include_router(qwenpaw_router)
+ 
++# ── Project Context(ADD-ONLY, 2026-09-14):Project / Chief Engineer / Worker scope ──
++from project_context import router as project_router  # noqa: E402
++app.include_router(project_router)
++
+ 
+ # ── 認證 helper ──
+ def _current_user(session_cookie):
+@@ -1365,6 +1369,144 @@ animation:flow 2.5s linear infinite}
+ .note{color:var(--txt2);font-size:.75rem;font-family:var(--mono)}
+ .step-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--mono);font-size:.82rem}
+ .step-row .nm{color:var(--txt);font-weight:600}.step-row .id{color:var(--txt2);font-size:.72rem}.step-row .st{margin-left:auto;font-size:.72rem;color:var(--success)}
++/* ── AI 工作區(QwenPaw)固定工作台佈局 · UI Patch 2026-09-13 · 只作用於 #p-qwenpaw ── */
++.main.ws{display:flex;flex-direction:column;height:100vh;overflow:hidden}
++#p-qwenpaw.page.show{display:flex;flex-direction:column;gap:.85rem;flex:1;min-height:0}
++#p-qwenpaw .qp-top{flex:none}
++#p-qwenpaw .qp-main{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr);gap:1rem;flex:1;min-height:0}
++#p-qwenpaw .chat{min-height:0;position:relative}
++#p-qwenpaw .chat .hd{flex:none;margin-bottom:.45rem}
++#p-qwenpaw .qp-chatmeta{flex:none;display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;font-family:var(--mono);font-size:.68rem;color:var(--txt2);border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:.5rem;margin-bottom:.5rem}
++#p-qwenpaw .qp-chatmeta b{color:var(--txt);font-weight:600;font-size:.7rem;word-break:break-all}
++#p-qwenpaw .chat .body{flex:1;min-height:0;overflow-y:auto;display:block;align-items:stretch;justify-content:flex-start;text-align:left;padding-right:.4rem;overscroll-behavior:contain}
++#p-qwenpaw .chat .inp{flex:none;position:sticky;bottom:0;z-index:2;margin-top:.5rem;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.05);background:var(--panel)}
++#p-qwenpaw .qp-jump{position:absolute;right:1.1rem;bottom:5.2rem;z-index:3;font-family:var(--mono);font-size:.7rem;padding:.28rem .65rem;border-radius:999px;border:1px solid var(--border);background:#0A121A;color:var(--accent);cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.55)}
++#p-qwenpaw .qp-jump[hidden]{display:none}
++#p-qwenpaw .qp-msg,#p-qwenpaw .qp-live,#p-qwenpaw .qp-body,#p-qwenpaw .qp-txt{white-space:pre-wrap;overflow-wrap:anywhere}
++#p-qwenpaw .qp-msg,#p-qwenpaw .qp-live{margin:.35rem 0}
++#p-qwenpaw .qp-warn{color:var(--warn)}
++#p-qwenpaw .qp-msg.qp-collapsed .qp-body{max-height:17em;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 58%,rgba(0,0,0,.1) 100%);mask-image:linear-gradient(180deg,#000 58%,rgba(0,0,0,.1) 100%)}
++#p-qwenpaw .qp-toggle{display:block;margin-top:.3rem;font-family:var(--mono);font-size:.68rem;color:var(--accent);background:none;border:1px dashed var(--border);border-radius:6px;padding:.15rem .5rem;cursor:pointer}
++#p-qwenpaw .qp-code{overflow-x:auto;background:#070B10;border:1px solid var(--border);border-radius:6px;padding:.45rem .6rem;margin:.3rem 0;font-family:var(--mono);font-size:.76rem;white-space:pre}
++#p-qwenpaw .qp-side{display:flex;flex-direction:column;gap:1rem;min-height:0}
++#p-qwenpaw .qp-side>.card{display:flex;flex-direction:column;min-height:0;flex:1 1 50%;overflow:hidden}
++#p-qwenpaw .qp-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:.35rem;overscroll-behavior:contain}
++@media (min-width:961px){
++  body:has(.main.ws){height:100vh;overflow:hidden}
++  body:has(.main.ws) .side{height:100vh;overflow-y:auto}
++}
++@media (max-width:960px){
++  /* 窄屏:仍為固定視口工作台 → 左欄改置頂(自身可捲),主區佔滿剩餘高度 */
++  body:has(.main.ws){flex-direction:column;height:100vh;overflow:hidden}
++  body:has(.main.ws) .side{width:100%;height:auto;max-height:12vh;overflow-y:auto;flex-shrink:0;padding:.5rem 0}
++  body:has(.main.ws) .side .brand{padding:0 .8rem .4rem}
++  body:has(.main.ws) .main{height:auto;flex:1;min-height:0;overflow:hidden;padding:.6rem .8rem}
++  /* 頁首/指標區在窄屏壓縮,把高度讓給工作台 */
++  body:has(.main.ws) .top{flex-direction:column;gap:.3rem;padding-bottom:.45rem}
++  body:has(.main.ws) .top h1{font-size:1.02rem}
++  body:has(.main.ws) .top p.note{font-size:.63rem;margin:.1rem 0}
++  body:has(.main.ws) .top>div:last-child{gap:.55rem;flex-wrap:wrap}
++  .main.ws{height:auto;overflow:hidden}
++  #p-qwenpaw.page.show{overflow:hidden;gap:.5rem}
++  #p-qwenpaw .qp-top{padding:.5rem .6rem}
++  #p-qwenpaw .qp-top .h{font-size:.9rem}
++  #p-qwenpaw .qp-top>p.note{font-size:.63rem;margin:.15rem 0;line-height:1.25}
++  #p-qwenpaw .qp-top select{font-size:.68rem;padding:.1rem .25rem;max-width:42vw}
++  #p-qwenpaw .qp-top .btn-send{font-size:.68rem;padding:.2rem .45rem}
++  #p-qwenpaw .qp-chatmeta{font-size:.62rem;gap:.2rem .7rem;padding-bottom:.35rem;margin-bottom:.35rem}
++  /* Chat 上 / Approval+Audit 下,各自獨立滾動;Composer 仍固定在 Chat 底部 */
++  #p-qwenpaw .qp-main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,2fr) minmax(0,1fr);gap:.5rem}
++  #p-qwenpaw .chat{height:auto;min-height:0}
++  #p-qwenpaw .qp-side{overflow-y:auto;gap:.5rem}
++  #p-qwenpaw .qp-side>.card{flex:none;height:auto;min-height:132px}
++}
++/* === Aika-Box: Project Context (Project / Chief Engineer / Workers) 2026-09-14 === */
++#p-qwenpaw .qp-ctx{display:flex;flex-direction:column;gap:.38rem;border-top:1px solid rgba(255,255,255,.05);margin-top:.45rem;padding-top:.45rem}
++#p-qwenpaw .qp-ctxrow{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
++#p-qwenpaw .qp-ctx select{font-size:.72rem;padding:.12rem .3rem;max-width:36vw}
++#p-qwenpaw .qp-badge{font-family:var(--mono);font-size:.64rem;color:var(--warn);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:.06rem .5rem;white-space:nowrap}
++#p-qwenpaw .qp-badge.ok{color:var(--success)}
++#p-qwenpaw .qp-mini{font-size:.66rem;padding:.18rem .5rem}
++#p-qwenpaw .qp-wlist{display:flex;flex-wrap:wrap;gap:.3rem 1rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.45rem .6rem;background:rgba(255,255,255,.012)}
++#p-qwenpaw .qp-wlist[hidden]{display:none}
++#p-qwenpaw .qp-witem{display:flex;align-items:center;gap:.35rem;font-family:var(--mono);font-size:.68rem;color:var(--txt)}
++#p-qwenpaw .qp-witem.off{opacity:.6}
++#p-qwenpaw .qp-wst{font-size:.62rem;color:var(--txt2)}
++#p-qwenpaw .qp-wst.on{color:var(--success)}
++#p-qwenpaw .qp-wst.deg{color:var(--warn)}
++/* === Aika-Box: Project Details + Document Registry (2026-09-14) === */
++#p-qwenpaw .qp-details{display:flex;flex-direction:column;gap:.5rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.5rem .6rem;background:rgba(255,255,255,.012)}
++#p-qwenpaw .qp-details[hidden]{display:none}
++#p-qwenpaw .qp-sech{font-family:var(--mono);font-size:.66rem;color:var(--txt2);margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem}
++#p-qwenpaw .qp-detrow{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end}
++#p-qwenpaw .qp-detrow label{display:flex;flex-direction:column;gap:.15rem;flex:1 1 12rem}
++#p-qwenpaw .qp-details input,#p-qwenpaw .qp-details textarea{font-size:.72rem;padding:.2rem .35rem;background:#070B10;border:1px solid var(--border);border-radius:6px;color:var(--txt);width:100%;box-sizing:border-box}
++#p-qwenpaw .qp-details textarea{resize:vertical;font-family:inherit;line-height:1.35}
++#p-qwenpaw .qp-doclist{display:flex;flex-direction:column;gap:.3rem}
++#p-qwenpaw .qp-doc{border:1px solid var(--border);border-radius:7px;background:rgba(255,255,255,.012)}
++#p-qwenpaw .qp-dochead{display:flex;align-items:center;gap:.45rem;padding:.32rem .5rem;font-size:.72rem;cursor:pointer}
++#p-qwenpaw .qp-dochead:hover{background:rgba(255,255,255,.04)}
++#p-qwenpaw .qp-dochead b{font-weight:600;color:var(--txt)}
++#p-qwenpaw .qp-doctype{font-family:var(--mono);font-size:.62rem;color:var(--accent);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:.02rem .4rem;margin-left:auto;white-space:nowrap}
++#p-qwenpaw .qp-docbody{padding:.35rem .5rem .5rem;border-top:1px solid rgba(255,255,255,.06);font-size:.68rem;color:var(--txt2);line-height:1.5;overflow-wrap:anywhere}
++#p-qwenpaw .qp-docbody[hidden]{display:none}
++#p-qwenpaw .qp-docbody code{font-family:var(--mono);color:var(--txt);word-break:break-all}
++#p-qwenpaw .qp-docform{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;border:1px dashed var(--border);border-radius:7px;padding:.45rem .5rem;margin-bottom:.4rem}
++#p-qwenpaw .qp-docform[hidden]{display:none}
++#p-qwenpaw .qp-docform label{display:flex;flex-direction:column;gap:.15rem;flex:1 1 10rem}
++#p-qwenpaw .qp-wtitle{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
++#p-qwenpaw .qp-hdsub{display:flex;gap:.45rem;flex-wrap:wrap;align-items:baseline;padding:.15rem 0 .1rem}
++#p-qwenpaw .qp-hdsub #qp-wstatus{font-family:var(--mono);font-size:.63rem;color:var(--txt2)}
++/* ── merged single-line context bar: Project | Chief | 專案詳情 | Workers ── */
++#p-qwenpaw .qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.28rem .25rem;min-width:0;row-gap:.3rem}
++#p-qwenpaw .qp-bar > label.note{display:inline-flex;align-items:center;gap:.3rem;margin:0;white-space:nowrap;line-height:1;font-size:.78rem}
++#p-qwenpaw .qp-bar select{height:1.85rem;line-height:1;font-size:.78rem;padding:0 .2rem;max-width:9.5rem}
++#p-qwenpaw .qp-bar .btn-send{height:1.85rem;display:inline-flex;align-items:center;gap:.26rem;padding:0 .42rem;line-height:1;white-space:nowrap;font-size:.74rem}
++#p-qwenpaw .qp-bar #qp-chief-status{height:1.85rem;display:inline-flex;align-items:center;white-space:nowrap;font-size:.6rem;line-height:1;padding:0 .34rem}
++#p-qwenpaw .qp-wlist::after{content:"Project Worker Scope（單一入口；OFFLINE 於執行時自動跳過）";width:100%;font-size:.62rem;color:var(--txt2)}
++#p-qwenpaw .qp-toolbar{display:flex;gap:.3rem .75rem;flex-wrap:wrap;align-items:center;margin-top:.42rem}
++#p-qwenpaw .qp-toolbar > label.note{display:inline-flex;align-items:center;gap:.32rem;margin:0;white-space:nowrap;line-height:1;font-size:.78rem}
++#p-qwenpaw .qp-toolbar select{height:1.85rem;line-height:1;font-size:.78rem;padding:0 .3rem;max-width:20rem}
++#p-qwenpaw .qp-toolbar .btn-send{height:1.85rem;display:inline-flex;align-items:center;padding:0 .58rem;line-height:1;white-space:nowrap;font-size:.74rem}
++#p-qwenpaw .qp-toolbar #qp-runstatus{font-family:var(--mono);font-size:.7rem;line-height:1.85rem}
++#p-qwenpaw .qp-btnlink{background:none;border:none;color:var(--accent);font-family:var(--mono);font-size:.66rem;cursor:pointer;padding:0}
++#p-qwenpaw .qp-hint{font-size:.62rem;color:var(--txt2)}
++/* === Aika-Box: Global Approval Inbox (UI-only, 2026-09-14) === */
++#p-qwenpaw .qp-side>.card.qp-audit-off{display:none!important}
++#p-qwenpaw .qp-side>.card.qp-inboxcard{flex:1 1 auto}
++#p-qwenpaw .qp-count{float:right;font-family:var(--mono);font-size:.68rem;color:var(--accent);font-weight:600}
++#p-qwenpaw .qp-count.qp-zero{color:var(--txt2)}
++#p-qwenpaw .qp-wgrp{font-family:var(--mono);font-size:.66rem;color:var(--txt2);margin:.15rem 0 .3rem;padding-bottom:.2rem;border-bottom:1px solid rgba(255,255,255,.07)}
++#p-qwenpaw .qp-wgrp b{color:var(--txt)}
++#p-qwenpaw .qp-ap{border:1px solid var(--border);border-left-width:3px;border-radius:8px;padding:.45rem .5rem;margin-bottom:.5rem;background:rgba(255,255,255,.012);cursor:pointer;transition:background .12s,box-shadow .12s}
++#p-qwenpaw .qp-ap:hover{background:rgba(255,255,255,.045)}
++#p-qwenpaw .qp-ap.sev-critical,#p-qwenpaw .qp-ap.sev-high{border-left-color:var(--warn)}
++#p-qwenpaw .qp-ap.sev-medium{border-left-color:var(--accent)}
++#p-qwenpaw .qp-ap.sev-low{border-left-color:var(--border);opacity:.85}
++#p-qwenpaw .qp-ap.qp-hl{box-shadow:inset 0 0 0 1px var(--accent);background:rgba(90,170,255,.08)}
++#p-qwenpaw .qp-ap.qp-done-approve{border-left-color:var(--success);opacity:.65}
++#p-qwenpaw .qp-ap.qp-done-reject{border-left-color:var(--warn);opacity:.65}
++#p-qwenpaw .qp-from{font-family:var(--mono);font-size:.65rem;color:var(--txt2);line-height:1.4;border-bottom:1px dashed rgba(255,255,255,.07);padding-bottom:.25rem;margin-bottom:.3rem}
++#p-qwenpaw .qp-from span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
++#p-qwenpaw .qp-from b{color:var(--txt);font-weight:600}
++#p-qwenpaw .qp-apsev{font-family:var(--mono);font-size:.72rem;color:var(--warn)}
++#p-qwenpaw .qp-apcmd{font-family:var(--mono);font-size:.74rem;margin:.2rem 0;word-break:break-all}
++#p-qwenpaw .qp-apmeta{font-family:var(--mono);font-size:.64rem;color:var(--txt2);line-height:1.4}
++#p-qwenpaw .qp-apbtn{margin:0}
++/* Approval card action row: [Open][Approve][Reject] — one flex row, equal size, natural wrap when narrow */
++#p-qwenpaw .qp-apbtns{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.5rem}
++#p-qwenpaw .qp-apbtns .qp-apbtn{margin:0;height:2.2rem;min-width:86px;flex:1 1 0;font-size:.8rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0 .6rem;white-space:nowrap}
++#p-qwenpaw .qp-apdone{font-family:var(--mono);font-size:.72rem;margin-top:.35rem}
++/* === Aika-Box: unified ChatGPT-style scrollbars (CSS-only) === */
++::-webkit-scrollbar{width:6px;height:6px}
++::-webkit-scrollbar-track{background:transparent}
++::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px;border:none}
++::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.30)}
++::-webkit-scrollbar-corner{background:transparent}
++/* Firefox only: thin + coloured (engines with ::-webkit-scrollbar skip this) */
++@supports (-moz-appearance:none) or (not selector(::-webkit-scrollbar)){
++  *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
++}
+ </style></head>
+ <body>
+ <aside class="side">
+@@ -1515,28 +1657,79 @@ animation:flow 2.5s linear infinite}
+ 
+   <!-- AI 工作區(QwenPaw) · GCR-2026-09-13-AIKABOX-QWENPAW-MVP · 只增不減 -->
+   <div class="page" id="p-qwenpaw">
+-    <div class="card"><div class="h">&#9889; AI 工作區（QwenPaw）</div>
++    <div class="card qp-top"><div class="h">&#9889; AI 工作區（QwenPaw）</div>
+       <p class="note">Aika-Box 只做入口:瀏覽器 &rarr; :5188 &rarr; server-side adapter &rarr; 選定 Worker 的 QwenPaw。
+       Approve / Reject 一律由人按下,系統不會自動決策。</p>
+-      <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
+-        <label class="note">Worker <select id="qp-worker"></select></label>
+-        <span id="qp-wstatus" class="note">載入中…</span>
++      <div class="qp-ctx" id="qp-ctx">
++        <div class="qp-ctxrow qp-bar" id="qp-bar">
++          <label class="note">Project <select id="qp-project"></select></label>
++          <button class="btn-send qp-mini" id="qp-projnew">+ Project</button>
++          <label class="note" title="Chief Engineer">&#32317;&#24037; <select id="qp-chief"></select></label>
++          <span id="qp-chief-status" class="qp-badge">&mdash;</span>
++          <button class="btn-send qp-mini" id="qp-dtoggle">&#23560;&#26696;&#35443;&#24773; <span id="qp-darrow">&#9660;</span></button>
++          <button class="btn-send qp-mini" id="qp-wscope">Workers <span id="qp-wcount">0/0</span> <span id="qp-warrow">&#9660;</span></button>
++        </div>
++        <div class="qp-details" id="qp-details" hidden>
++          <div class="qp-sec" id="qp-d-brief">
++            <div class="qp-sech">&#23560;&#26696;&#31777;&#20171;</div>
++            <div class="qp-detrow">
++              <label class="note">Project Name <input id="qp-d-name"></label>
++            </div>
++            <div class="qp-detrow" style="margin-top:.35rem">
++              <label class="note">Description <textarea id="qp-d-desc" rows="3" placeholder="專案簡介（由 Tao 編輯並儲存）"></textarea></label>
++            </div>
++            <div class="qp-detrow" style="margin-top:.35rem">
++              <label class="note">Objective <input id="qp-d-obj" placeholder="（選填）"></label>
++              <label class="note">Current Stage <input id="qp-d-stage" placeholder="（選填）"></label>
++            </div>
++            <div class="qp-ctxrow" style="margin-top:.4rem">
++              <button class="btn-send qp-mini" id="qp-d-save">&#20786;&#23384;&#31777;&#20171;</button>
++              <span class="qp-hint" id="qp-d-saved"></span>
++            </div>
++          </div>
++          <div class="qp-sec" id="qp-d-docs" style="margin-top:.45rem">
++            <div class="qp-sech">&#23560;&#26696;&#25991;&#20214;
++              <button class="btn-send qp-mini" id="qp-doc-new" title="新增 Project Document">+</button>
++              <span class="qp-hint">只儲存引用／中繼資料，不上傳、不讀取外部檔案</span></div>
++            <div class="qp-docform" id="qp-docform" hidden>
++              <label class="note">Title <input id="qp-doc-title"></label>
++              <label class="note">Type <select id="qp-doc-type"></select></label>
++              <label class="note">Reference / Path / URL <input id="qp-doc-ref" placeholder="https://… 或 /path/to/file"></label>
++              <label class="note">Description <input id="qp-doc-desc"></label>
++              <div class="qp-ctxrow">
++                <button class="btn-send qp-mini" id="qp-doc-save">&#20786;&#23384;&#25991;&#20214;</button>
++                <button class="btn-send qp-mini" id="qp-doc-cancel">&#21462;&#28040;</button>
++              </div>
++            </div>
++            <div class="qp-doclist" id="qp-doclist"></div>
++          </div>
++        </div>
++        <div class="qp-wlist" id="qp-wlist" hidden></div>
++      </div>
++      <div class="qp-toolbar">
++        <select id="qp-worker" hidden></select>
+         <label class="note">Session <select id="qp-session"></select></label>
+         <button class="btn-send" id="qp-newsess">新 Session</button>
+         <button class="btn-send" id="qp-reload">重新載入</button>
+         <span id="qp-runstatus" class="note">Idle</span>
+       </div>
+     </div>
+-    <div style="display:grid;grid-template-columns:1fr 340px;gap:1rem">
++    <div class="qp-main">
+       <div class="chat">
+         <div class="hd" id="qp-hd">&#128172; 未選擇 Session</div>
++        <div class="qp-hdsub"><span class="note">執行 Worker 狀態</span><span id="qp-wstatus" class="note">載入中…</span></div>
++        <div class="qp-chatmeta" id="qp-chatmeta"><span>Project <b id="qp-m-project">—</b></span><span>總工 <b id="qp-m-chief">—</b></span><span>Worker <b id="qp-m-worker">—</b></span><span>Session <b id="qp-m-session">—</b></span><span>狀態 <b id="qp-m-status">Idle</b></span><span>訊息 <b id="qp-m-count">0</b></span></div>
+         <div class="body" id="qp-log">選一個 Worker 與 Session 後開始對話。</div>
++        <button class="qp-jump" id="qp-jump" hidden>&#8595; 回到底部</button>
+         <div class="inp"><input id="qp-input" placeholder="送訊息給 QwenPaw… (Enter 發送)"><button class="btn-send" id="qp-send">發送</button></div>
+       </div>
+-      <div class="card"><div class="h">&#9888; Approval（需人工點擊）</div>
+-        <div id="qp-approvals" class="note">目前無待決策。</div>
+-        <div class="h" style="margin-top:.7rem">&#9636; 最近決策（audit）</div>
+-        <div id="qp-audit" class="note">—</div></div>
++      <div class="qp-side">
++        <div class="card qp-inboxcard"><div class="h">&#9888; APPROVAL &#183; 全局 Inbox（需人工點擊）<span id="qp-pending-count" class="qp-count qp-zero">Pending: 0</span></div>
++          <div id="qp-inbox-sub" class="note" style="flex:none;margin:.1rem 0 .35rem">彙整所有已登記 Worker / Session 的待決策項（僅 PENDING 且可點擊）。</div>
++          <div id="qp-approvals" class="note qp-scroll">目前無待決策。</div></div>
++        <div class="card qp-audit-off" hidden><div class="h">&#9636; 最近決策（audit）</div>
++          <div id="qp-audit" class="note qp-scroll">—</div></div>
++      </div>
+     </div>
+   </div>
+ </div>
+@@ -1551,6 +1744,7 @@ document.querySelectorAll('#nav a[data-p]').forEach(function(a){
+     a.classList.add('on');
+     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('show')});
+     var el=document.getElementById('p-'+p); if(el)el.classList.add('show');
++    var mn=document.querySelector('.main'); if(mn)mn.classList.toggle('ws',p==='qwenpaw');
+     document.getElementById('ptitle').innerHTML=navTitle[p]+' <small>Local Console 5.2.C-2</small>';
+   };
+ });
+@@ -1899,7 +2093,7 @@ setInterval(loadNodeHealth, 8000);
+ // 瀏覽器只與 :5188 對話;QwenPaw endpoint 永不離開伺服器端。
+ (function(){
+   var API='/api/qwenpaw';
+-  var st={worker:null,session:null,run:null,es:null,timer:null,live:'',flavor:null};
++  var st={worker:null,session:null,run:null,es:null,timer:null,live:'',flavor:null,workers:null,inbox:[],sessCache:{},decided:{},hlRid:null,hlTimer:null,inboxHold:0,inboxErr:null,itimer:null,projProjects:[],projActive:null,projCatalog:[],projTaskCtx:{},projDocTypes:null};
+   var liveEl=null;
+   function el(id){return document.getElementById(id);}
+   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+@@ -1909,12 +2103,70 @@ setInterval(loadNodeHealth, 8000);
+   function jpost(u,b){return fetch(u,{method:'POST',credentials:'same-origin',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(function(r){
+     return r.json().then(function(j){ if(!r.ok) throw new Error(j.detail||('HTTP '+r.status)); return j; });});}
+-  function logLine(t,warn){var d=document.createElement('div');
+-    d.style.cssText='white-space:pre-wrap;margin:.35rem 0'+(warn?';color:var(--warn)':'');
+-    d.textContent=t;var box=el('qp-log');box.appendChild(d);box.scrollTop=box.scrollHeight;return d;}
+-  function ensureLive(){if(!liveEl||!liveEl.parentNode){liveEl=document.createElement('div');
+-    liveEl.style.cssText='white-space:pre-wrap;margin:.35rem 0;color:var(--txt)';
+-    el('qp-log').appendChild(liveEl);}return liveEl;}
++  // ── UI Patch 2026-09-13:獨立滾動 / 長訊息折疊 / session header(只動前端,不動 API) ──
++  function nearBottom(node,tol){
++    if(!node) return true;
++    return (node.scrollHeight-node.scrollTop-node.clientHeight)<(tol||48);
++  }
++  function showJump(on){var j=el('qp-jump'); if(!j) return;
++    if(on){j.removeAttribute('hidden');}else{j.setAttribute('hidden','');}}
++  function scrollLogToBottom(){var box=el('qp-log'); if(!box) return;
++    box.scrollTop=box.scrollHeight; showJump(false);}
++  function syncJump(){var box=el('qp-log'); if(!box) return;
++    var over=(box.scrollHeight-box.clientHeight)>8;
++    showJump(over&&!nearBottom(box,48));}
++  function updateChatMeta(){
++    var box=el('qp-log'); if(!box) return;
++    if(el('qp-m-worker')) el('qp-m-worker').textContent=st.worker||'—';
++    if(el('qp-m-session')) el('qp-m-session').textContent=st.session||'—';
++    if(el('qp-m-status')) el('qp-m-status').textContent=(el('qp-runstatus')&&el('qp-runstatus').textContent)||'Idle';
++    if(el('qp-m-count')) el('qp-m-count').textContent=String(box.querySelectorAll('.qp-msg').length);
++    var _p=projActive();
++    if(el('qp-m-project')) el('qp-m-project').textContent=_p?_p.name:'—';
++    if(el('qp-m-chief')) el('qp-m-chief').textContent=_p?chiefLabel(_p.chief_engineer):'—';
++  }
++  function buildMsgBody(body,txt){
++    var s=(txt==null?'':String(txt));
++    var segs=s.split('```');
++    if(segs.length<2){body.textContent=s;return;}
++    segs.forEach(function(seg,i){
++      if(i%2===1){
++        var pre=document.createElement('pre');pre.className='qp-code';pre.textContent=seg;body.appendChild(pre);
++      }else if(seg){
++        var t=document.createElement('div');t.className='qp-txt';t.textContent=seg;body.appendChild(t);
++      }
++    });
++  }
++  function logLine(t,warn){
++    var box=el('qp-log'); if(!box) return null;
++    var s=(t==null?'':String(t));
++    var stick=nearBottom(box,48);
++    var d=document.createElement('div');
++    d.className='qp-msg'+(warn?' qp-warn':'');
++    var body=document.createElement('div');body.className='qp-body';
++    buildMsgBody(body,s);
++    d.appendChild(body);
++    if(s.split('\n').length>14||s.length>1600){
++      var btn=document.createElement('button');
++      btn.type='button';btn.className='qp-toggle';btn.textContent='展開全文 ▼';
++      btn.onclick=function(){
++        var collapsed=d.classList.toggle('qp-collapsed');
++        btn.textContent=collapsed?'展開全文 ▼':'收起 ▲';
++        syncJump();
++      };
++      d.appendChild(btn);d.classList.add('qp-collapsed');
++    }
++    box.appendChild(d);
++    if(stick){scrollLogToBottom();}else{syncJump();}
++    updateChatMeta();
++    return d;
++  }
++  function ensureLive(){if(!liveEl||!liveEl.parentNode){
++    liveEl=document.createElement('div');
++    liveEl.className='qp-live';
++    var box=el('qp-log');
++    if(box){var stick=nearBottom(box,64);box.appendChild(liveEl);if(!stick)syncJump();}
++  }return liveEl;}
+ 
+   // ── session history ──
+   function loadHistory(){
+@@ -1938,24 +2190,43 @@ setInterval(loadNodeHealth, 8000);
+         msgs.forEach(function(m){
+           logLine((m.role==='user'?'我：':'QwenPaw：')+(m.text==null?'':m.text),false);
+         });
++        scrollLogToBottom();
++        updateChatMeta();
+       })
+       .catch(function(e){ logLine('載入歷史失敗: '+e.message,true); });
+   }
+ 
+   // ── workers ──
++  // The execution Worker is NO LONGER a user-facing selector: the only Worker
++  // control is the Project "Workers n/m" scope dropdown (checkbox list).
++  function workerOnline(wid){
++    var w=(st.workers||[]).filter(function(x){return x.worker.worker_id===wid;})[0];
++    return !!(w&&String((w.status||{}).status||'').toLowerCase()==='online');
++  }
++  function pickActiveWorker(){
++    // First ONLINE worker inside the active Project's Worker Scope (never OFFLINE).
++    var sel=selWorkers();
++    for(var i=0;i<sel.length;i++){ if(workerOnline(sel[i])) return sel[i]; }
++    return null;
++  }
++  function setActiveWorker(wid){
++    st.worker=wid||null;
++    var s=el('qp-worker'); if(s&&wid&&s.querySelector('option[value="'+wid+'"]')) s.value=wid;
++    paintWorker(st.workers||[]);
++  }
+   function loadWorkers(){
+     return jget(API+'/workers').then(function(d){
+-      var sel=el('qp-worker');sel.innerHTML='';
+-      d.workers.forEach(function(w){
+-        var o=document.createElement('option');
+-        o.value=w.worker.worker_id;
+-        o.textContent=w.worker.display_name+' · '+w.status.status+(w.status.api_flavor!=='unknown'?(' ('+w.status.api_flavor+')'):'');
+-        sel.appendChild(o);
+-      });
+-      var prefer='aika-core-01';
+-      if(d.workers.some(function(w){return w.worker.worker_id===prefer;})) sel.value=prefer;
+-      st.worker=sel.value;
+-      paintWorker(d.workers);
++      var sel=el('qp-worker'); if(sel){ sel.innerHTML='';
++        d.workers.forEach(function(w){
++          var o=document.createElement('option');
++          o.value=w.worker.worker_id;
++          o.textContent=w.worker.display_name+' · '+w.status.status+(w.status.api_flavor!=='unknown'?(' ('+w.status.api_flavor+')'):'');
++          sel.appendChild(o);
++        });
++      }
++      st.workers=d.workers||[];
++      setActiveWorker(pickActiveWorker());
++      renderWorkerList();
+       return loadSessions(true);
+     }).catch(function(e){ el('qp-wstatus').textContent='載入 Worker 失敗: '+e.message; });
+   }
+@@ -1982,59 +2253,256 @@ setInterval(loadNodeHealth, 8000);
+         sel.appendChild(o);
+       });
+       st.session=sel.value||null;
+-      el('qp-hd').textContent='⌨ QwenPaw · '+wid+' · '+(st.session||'（尚無 session，按「新 Session」）');
++      updateChatMeta();
++      el('qp-hd').textContent='⌨ QwenPaw · Worker '+wid+' · Session '+(st.session||'（尚無 session，按「新 Session」）');
+       if(withHistory) loadHistory();
+     }).catch(function(e){ el('qp-hd').textContent='載入 session 失敗: '+e.message; });
+   }
+   function newSession(){
+-    if(!st.worker){logLine('請先選 Worker',true);return;}
+-    jpost(API+'/sessions',{worker_id:st.worker,title:'AI Workspace session'}).then(function(d){
++    // Never target an OFFLINE worker: pick the first ONLINE worker in the scope.
++    var pick=pickActiveWorker();
++    if(!pick){ logLine('⚠ Project「'+((projActive()||{}).name||'—')+'」的 Worker Scope 內沒有 ONLINE worker，無法建立 Session',true); return; }
++    if(pick!==st.worker) setActiveWorker(pick);
++    jpost(API+'/sessions',{worker_id:pick,title:'AI Workspace session'}).then(function(d){
+       st.session=d.session.session_id;
+-      logLine('已建立 session '+st.session,true);
+-      return loadSessions().then(function(){ el('qp-session').value=st.session; });
++      logLine('已建立 session '+st.session+'（Worker '+pick+'）',true);
++      return bindTask(st.session).then(function(){
++        return loadSessions().then(function(){ el('qp-session').value=st.session; });
++      });
+     }).catch(function(e){logLine('建立 session 失敗: '+e.message,true);});
+   }
+ 
+-  // ── approvals ──
+-  function renderApprovals(items){
+-    var box=el('qp-approvals');
+-    if(!items||!items.length){box.innerHTML='目前無待決策。';return;}
+-    box.innerHTML='';
++  // ── approvals: GLOBAL INBOX (all workers, all sessions; UI-only) ──
++  var SEV_RANK={CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3};
++  function sevClass(s){var t=String(s==null?'':s).toLowerCase();
++    if(t==='critical')return 'sev-critical';
++    if(t==='high')return 'sev-high';
++    if(t==='medium')return 'sev-medium';
++    return 'sev-low';}
++  function remainingS(a){var ttl=Number(a.expires_in_s),age=Number(a.age_s);
++    if(!isFinite(ttl))return null;
++    if(!isFinite(age))return ttl;
++    return Math.max(0,ttl-age);}
++  function cmpInbox(a,b){
++    var ra=(SEV_RANK[a.severity]==null?9:SEV_RANK[a.severity]);
++    var rb=(SEV_RANK[b.severity]==null?9:SEV_RANK[b.severity]);
++    if(ra!==rb)return ra-rb;
++    var ta=remainingS(a),tb=remainingS(b);
++    if(ta!=null&&tb!=null&&ta!==tb)return ta-tb;
++    if(ta!=null&&tb==null)return -1;
++    if(ta==null&&tb!=null)return 1;
++    return (a.created_at||0)-(b.created_at||0);
++  }
++  function widOf(a){return a._worker||a.worker_id||'?';}
++  function wlabel(wid){
++    var w=(st.workers||[]).filter(function(x){return x.worker.worker_id===wid;})[0];
++    return (w&&w.worker.display_name)?(w.worker.display_name+' \u00b7 '+wid):wid;}
++  function sessionsOf(wid){
++    var c=st.sessCache[wid];
++    if(c&&(Date.now()-c.t)<10000)return Promise.resolve(c.ids);
++    return jget(API+'/sessions?worker_id='+encodeURIComponent(wid)).then(function(d){
++      var ids=(d.sessions||[]).map(function(s){return s.session_id;}).filter(function(x){return !!x;});
++      st.sessCache[wid]={t:Date.now(),ids:ids};
++      return ids;
++    }).catch(function(){return c?c.ids:[];});
++  }
++  function workerPending(w){
++    var wid=w.worker.worker_id;
++    return sessionsOf(wid).then(function(ids){
++      // ONE approvals call per worker regardless of session count (no N x M fan-out).
++      var q=ids.map(function(s){return 'session_id='+encodeURIComponent(s);}).join('&');
++      return jget(API+'/approvals?worker_id='+encodeURIComponent(wid)+(q?('&'+q):''));
++    }).then(function(d){
++      return (d.approvals||[]).map(function(a){a._worker=wid;return a;});
++    }).catch(function(e){st.inboxErr=String((e&&e.message)||e);return [];});
++  }
++  function refreshInbox(){
++    if(Date.now()<st.inboxHold)return Promise.resolve();
++    var now=Date.now();
++    Object.keys(st.decided).forEach(function(k){if(now-st.decided[k]>120000)delete st.decided[k];});
++    var p=(st.workers&&st.workers.length)?Promise.resolve(st.workers)
++      :jget(API+'/workers').then(function(d){st.workers=d.workers||[];return st.workers;});
++    return p.then(function(ws){
++      var cs=ws.filter(function(w){return w.status&&w.status.api_flavor==='console'&&w.worker.enabled!==false;});
++      return Promise.all(cs.map(workerPending));
++    }).then(function(lists){
++      var items=[].concat.apply([],lists).filter(function(a){
++        return a.state==='PENDING'&&a.clickable===true&&!st.decided[a.request_id];});
++      st.inbox=items;renderInbox(items);
++    }).catch(function(){});
++  }
++  function inboxGroups(items){
++    var byW={},order=[];
+     items.forEach(function(a){
+-      var d=document.createElement('div');
+-      d.style.cssText='border:1px solid var(--border);border-radius:8px;padding:.5rem;margin-bottom:.5rem';
+-      var sev=(a.severity==='CRITICAL')?'var(--danger)':((a.severity==='HIGH')?'var(--warn)':'var(--txt2)');
+-      d.innerHTML='<div style="font-family:var(--mono);font-size:.76rem;color:'+sev+'">'+esc(a.severity||'-')+' · '+esc(a.tool)+'</div>'
+-        +'<div style="font-family:var(--mono);font-size:.76rem;margin:.25rem 0;word-break:break-all">'+esc(a.requested_action)+'</div>'
+-        +'<div class="note">'+esc(a.state)+' · age '+esc(a.age_s)+'s / ttl '+esc(a.expires_in_s)+'s · findings '+esc(a.findings_count)+'</div>';
+-      if(a.clickable){
+-        var b1=document.createElement('button');b1.className='btn-send';b1.textContent='Approve';
+-        var b2=document.createElement('button');b2.className='btn-send';b2.textContent='Reject';
+-        b1.style.marginRight='.4rem';
+-        b1.onclick=function(){decide(a,'approve');};
+-        b2.onclick=function(){decide(a,'reject');};
+-        d.appendChild(b1);d.appendChild(b2);
+-      }else{
+-        var n=document.createElement('div');n.className='note';
+-        n.textContent='（已失效，不可點擊）';d.appendChild(n);
+-      }
+-      box.appendChild(d);
++      var w=widOf(a);
++      if(!byW[w]){byW[w]=[];order.push(w);}
++      byW[w].push(a);
+     });
++    var groups=order.map(function(w){var l=byW[w].slice().sort(cmpInbox);return {wid:w,items:l,top:l[0]};});
++    groups.sort(function(A,B){return cmpInbox(A.top,B.top);});
++    return groups;
++  }
++  function renderInbox(items){
++    var box=el('qp-approvals'),cnt=el('qp-pending-count');
++    if(cnt){cnt.textContent='Pending: '+items.length;cnt.className='qp-count'+(items.length?'':' qp-zero');}
++    if(!box)return;
++    if(!items.length){
++      box.innerHTML=st.inboxErr?('目前無待決策。（部分 Worker 讀取失敗：'+esc(st.inboxErr)+'）'):'目前無待決策。';
++      return;}
++    st.inboxErr=null;
++    var groups=inboxGroups(items);
++    box.innerHTML='';
++    groups.forEach(function(g){
++      var gh=document.createElement('div');gh.className='qp-wgrp';
++      gh.innerHTML='<b>'+esc(wlabel(g.wid))+'</b> \u00b7 '+g.items.length+' pending';
++      box.appendChild(gh);
++      g.items.forEach(function(a){box.appendChild(inboxCard(a));});
++    });
++  }
++  function inboxCard(a){
++    var d=document.createElement('div');
++    d.className='qp-ap '+sevClass(a.severity)+(st.hlRid===a.request_id?' qp-hl':'');
++    d.setAttribute('data-rid',a.request_id);
++    var from=document.createElement('div');from.className='qp-from';
++    var _pc=projCtxOf(a.session_id);
++    from.innerHTML='<span>From</span>'
++      +'<span>Project: <b>'+esc(_pc&&_pc.project_name?_pc.project_name:'—')+'</b></span>'
++      +'<span>Chief Engineer: <b>'+esc(_pc&&_pc.chief_engineer?chiefLabel(_pc.chief_engineer):'—')+'</b></span>'
++      +'<span title="'+esc(widOf(a))+'">Worker: <b>'+esc(widOf(a))+'</b></span>'
++      +'<span title="'+esc(a.session_id||'')+'">Session: <b>'+esc(a.session_id||'?')+'</b></span>';
++    var sev=document.createElement('div');sev.className='qp-apsev';
++    sev.textContent=(a.severity||'-')+' \u00b7 '+(a.tool||'-');
++    var cmd=document.createElement('div');cmd.className='qp-apcmd';cmd.textContent=(a.requested_action||'-');
++    var rem=remainingS(a);
++    var meta=document.createElement('div');meta.className='qp-apmeta';
++    meta.textContent='findings '+(a.findings_count==null?'-':a.findings_count)
++      +' \u00b7 TTL '+(rem==null?'?':Math.round(rem)+'s left')
++      +' \u00b7 created '+new Date((a.created_at||0)*1000).toLocaleTimeString()
++      +' \u00b7 age '+Math.round(Number(a.age_s)||0)+'s';
++    d.appendChild(from);d.appendChild(sev);d.appendChild(cmd);d.appendChild(meta);
++    var holder=document.createElement('div');holder.className='qp-apbtns';
++    var bar=document.createElement('button');bar.className='btn-send qp-apbtn';bar.textContent='Open';
++    bar.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();openSource(a);};
++    holder.appendChild(bar);
++    if(a.clickable){
++      var b1=document.createElement('button');b1.className='btn-send qp-apbtn';b1.textContent='Approve';
++      var b2=document.createElement('button');b2.className='btn-send qp-apbtn';b2.textContent='Reject';
++      b1.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();decide(a,'approve');};
++      b2.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();decide(a,'reject');};
++      holder.appendChild(b1);holder.appendChild(b2);
++    }else{
++      var n2=document.createElement('div');n2.className='note';n2.textContent='（已失效，不可點擊）';
++      holder.appendChild(n2);
++    }
++    d.appendChild(holder);
++    d.onclick=function(){openSource(a);};
++    return d;
++  }
++  function syncGroupCount(){
++    var box=el('qp-approvals');if(!box)return;
++    var heads=box.querySelectorAll('.qp-wgrp');
++    for(var i=0;i<heads.length;i++){
++      var h=heads[i],n=0,sib=h.nextElementSibling;
++      while(sib&&!sib.classList.contains('qp-wgrp')){
++        if(sib.classList.contains('qp-ap')&&!sib.classList.contains('qp-done-approve')
++           &&!sib.classList.contains('qp-done-reject'))n++;
++        sib=sib.nextElementSibling;}
++      var b=h.querySelector('b');
++      h.innerHTML='<b>'+(b?esc(b.textContent):'')+'</b> \u00b7 '+n+' pending';
++    }
++  }
++  function flashCard(rid,kind,ok){
++    var d=document.querySelector('.qp-ap[data-rid="'+rid+'"]');
++    if(!d)return;
++    var btns=d.querySelectorAll('button');
++    for(var i=0;i<btns.length;i++){
++      if(btns[i].textContent==='Approve'||btns[i].textContent==='Reject'){
++        btns[i].disabled=true;btns[i].style.display='none';}}
++    d.classList.remove('qp-hl');
++    if(!ok){
++      var f=document.createElement('div');f.className='qp-apdone';
++      f.style.color='var(--warn)';f.textContent='\u2717 決定未成功（仍待決策）';
++      d.appendChild(f);return;
++    }
++    d.classList.add('qp-done-'+kind);
++    var z=document.createElement('div');z.className='qp-apdone';
++    z.style.color=(kind==='approve'?'var(--success)':'var(--warn)');
++    z.textContent=(kind==='approve'?'\u2713 Approved':'\u2717 Rejected');
++    d.appendChild(z);
++    var cnt=el('qp-pending-count');
++    if(cnt){
++      var n=parseInt(String(cnt.textContent).replace(/[^0-9]/g,''),10);
++      if(!isFinite(n))n=1;
++      n=Math.max(0,n-1);
++      cnt.textContent='Pending: '+n;cnt.className='qp-count'+(n?'':' qp-zero');}
++    st.inbox=(st.inbox||[]).filter(function(x){return x.request_id!==rid;});
++    syncGroupCount();
++    setTimeout(function(){
++      if(d.parentNode){
++        d.parentNode.removeChild(d);
++        var box=el('qp-approvals');
++        if(box&&!box.children.length)box.innerHTML='目前無待決策。';
++      }
++    },1500);
+   }
+   function decide(a,kind){
++    var wid=widOf(a),sid=a.session_id||st.session;
+     el('qp-runstatus').textContent=kind+' 送出中…';
+     jpost(API+'/approvals/'+encodeURIComponent(a.request_id)+'/'+kind,
+-      {worker_id:a.worker_id||st.worker,session_id:a.session_id||st.session})
+-      .then(function(j){ logLine('['+kind+'] '+(j.message||('ok='+j.ok)),true); loadAudit(); })
+-      .catch(function(e){ logLine('['+kind+'] 失敗: '+e.message,true); })
+-      .then(function(){ setTimeout(pollApprovals,700); });
++      {worker_id:wid,session_id:sid})
++      .then(function(j){
++        if(j&&j.ok){
++          st.decided[a.request_id]=Date.now();
++          st.inboxHold=Date.now()+1800;
++          logLine('['+kind+'] '+(j.message||'ok'),true);
++          flashCard(a.request_id,kind,true);
++        }else{
++          logLine('['+kind+'] 未成功: '+((j&&(j.message||j.error))||''),true);
++          flashCard(a.request_id,kind,false);
++        }
++        loadAudit();
++        setTimeout(pollApprovals,1900);
++      })
++      .catch(function(e){logLine('['+kind+'] 失敗: '+e.message,true);
++        flashCard(a.request_id,kind,false);});
+   }
+-  function pollApprovals(){
+-    if(!st.worker||!st.session) return;
+-    jget(API+'/approvals?worker_id='+encodeURIComponent(st.worker)+'&session_id='+encodeURIComponent(st.session))
+-      .then(function(d){ renderApprovals(d.approvals); })
+-      .catch(function(){});
++  function openSource(a){
++    var wid=widOf(a),sid=a.session_id;
++    if(!wid||!sid)return;
++    st.hlRid=a.request_id;
++    if(st.hlTimer)clearTimeout(st.hlTimer);
++    st.hlTimer=setTimeout(function(){st.hlRid=null;},4000);
++    var wsel=el('qp-worker');if(wsel)wsel.value=wid;
++    st.worker=wid;
++    jget(API+'/workers?force=true').then(function(d){
++      st.workers=d.workers||[];paintWorker(st.workers);}).catch(function(){});
++    el('qp-hd').textContent='⌨ QwenPaw \u00b7 Worker '+wid+' \u00b7 Session '+sid+'（開啟中…）';
++    jget(API+'/sessions?worker_id='+encodeURIComponent(wid)).then(function(d){
++      var list=d.sessions||[];
++      var sel=el('qp-session');sel.innerHTML='';
++      list.forEach(function(s){
++        var o=document.createElement('option');o.value=s.session_id;
++        o.textContent=s.session_id+' \u00b7 '+s.status+' \u00b7 '+s.messages+' msgs \u00b7 '+(s.source||'');
++        sel.appendChild(o);});
++      if(list.some(function(s){return s.session_id===sid;})){
++        sel.value=sid;
++      }else{
++        var o2=document.createElement('option');o2.value=sid;
++        o2.textContent=sid+' \u00b7 （不在清單，仍載入）';sel.appendChild(o2);sel.value=sid;}
++      st.sessCache[wid]={t:Date.now(),ids:list.map(function(s){return s.session_id;})};
++      st.session=sid;updateChatMeta();
++      el('qp-hd').textContent='⌨ QwenPaw \u00b7 Worker '+wid+' \u00b7 Session '+sid;
++      return loadHistory();
++    }).then(function(){
++      scrollLogToBottom();
++      renderInbox(st.inbox||[]);
++      var d=document.querySelector('.qp-ap[data-rid="'+a.request_id+'"]');
++      if(d)d.classList.add('qp-hl');
++    }).catch(function(e){logLine('開啟來源失敗: '+e.message,true);});
+   }
++  function pollApprovals(){refreshInbox();}
++  function startInbox(){if(!st.itimer)st.itimer=setInterval(function(){pollApprovals();},2000);pollApprovals();}
++  function stopInbox(){if(st.itimer){clearInterval(st.itimer);st.itimer=null;}}
+   function loadAudit(){
+     jget(API+'/audit?limit=20').then(function(d){
+       var es=(d.entries||[]).filter(function(x){return x.kind==='approval_decision';}).slice(-5).reverse();
+@@ -2061,7 +2529,8 @@ setInterval(loadNodeHealth, 8000);
+       if(j.run){el('qp-runstatus').textContent=j.run.status+' · sse '+j.run.sse_events;}});
+     es.addEventListener('sse',function(ev){var j=JSON.parse(ev.data);var t=liveText(j);
+       if(t){st.live=(st.live+t);if(st.live.length>6000)st.live=st.live.slice(-6000);
+-        ensureLive().textContent=st.live;el('qp-log').scrollTop=el('qp-log').scrollHeight;}});
++        var _b=el('qp-log');var _stick=nearBottom(_b,64);ensureLive().textContent=st.live;
++        if(_stick){scrollLogToBottom();}else{syncJump();}}});
+     es.addEventListener('state',function(ev){var j=JSON.parse(ev.data);
+       el('qp-runstatus').textContent=(j.status||'')+(j.error?(' · '+j.error):'');});
+     es.addEventListener('end',function(ev){var j=JSON.parse(ev.data);
+@@ -2076,7 +2545,7 @@ setInterval(loadNodeHealth, 8000);
+       else if(d.run.error) logLine('錯誤：'+d.run.error,true);
+       else logLine('（run '+d.run.status+'，無文字輸出）',true);
+       el('qp-runstatus').textContent=d.run.status;
+-      renderApprovals(d.approvals);
++      pollApprovals();
+       if(d.run.status==='Completed'||d.run.status==='Failed') stopPoll();
+       loadAudit();
+     }).catch(function(e){logLine('讀取結果失敗: '+e.message,true);});
+@@ -2086,32 +2555,276 @@ setInterval(loadNodeHealth, 8000);
+ 
+   // ── send ──
+   function send(){
+-    if(!st.worker){logLine('請先選 Worker',true);return;}
++    // Worker Scope is the ONLY Worker entry point → the execution Worker must live inside it.
++    if(!st.worker||selWorkers().indexOf(st.worker)<0){
++      var _pick=pickActiveWorker();
++      if(_pick!==st.worker){ if(_pick) logLine('↻ 執行 Worker 改為 '+_pick+'（依 Project Worker Scope）',true); setActiveWorker(_pick); }
++    }
++    if(!st.worker){logLine('⚠ Project「'+((projActive()||{}).name||'—')+'」的 Worker Scope 內沒有 ONLINE worker，無法送出',true);return;}
++    var _sw=(st.workers||[]).filter(function(x){return x.worker.worker_id===st.worker;})[0];
++    if(_sw&&String((_sw.status||{}).status||'').toLowerCase()!=='online'){
++      logLine('\u26d4 Worker '+st.worker+' \u76ee\u524d OFFLINE \u00b7 unavailable\uff0c\u5df2\u8df3\u904e\u9001\u51fa\uff08\u4e0d\u6703\u507d\u88dd\u6210\u53ef\u57f7\u884c\uff09',true);return;}
++    var _pp=projActive();
++    if(_pp&&_pp.selected_workers!=null&&_pp.selected_workers.indexOf(st.worker)<0){logLine('\u26a0 Worker '+st.worker+' \u4e0d\u5728 Project\u300c'+_pp.name+'\u300d\u7684 selected_workers \u5167',true);}
+     var v=el('qp-input').value.trim();if(!v)return;
+     el('qp-input').value='';
+     logLine('我：'+v,false);
+     jpost(API+'/chat',{worker_id:st.worker,session_id:st.session||'',input:v}).then(function(d){
+       st.run=d.run.run_id;st.session=d.session_id;st.flavor=d.flavor;
+       el('qp-runstatus').textContent=d.run.status+' · '+d.flavor;
+-      el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session+' · run '+st.run;
++      el('qp-hd').textContent='⌨ QwenPaw · Worker '+st.worker+' · Session '+st.session+' · run '+st.run;
+       if(d.flavor==='basic') logLine('（此 Worker 是精簡 QwenPaw：無 session 串流 / approval，僅單次回覆）',true);
+       stream(d.run.run_id);startPoll();loadSessions();
+     }).catch(function(e){liveEl=null;logLine('送出失敗: '+e.message,true);});
+   }
+ 
++  // ── Project Context (Project / Chief Engineer / Workers) · 2026-09-14 ──
++  var API2='/api/projects';
++  function projActive(){ return (st.projProjects||[]).filter(function(p){return p.project_id===st.projActive;})[0]||null; }
++  function chiefOf(id){ return (st.projCatalog||[]).filter(function(x){return x.id===id;})[0]||null; }
++  function chiefLabel(id){ var c=chiefOf(id); return c?c.name:(id||'—'); }
++  function workerIds(){ return (st.workers||[]).map(function(w){return w.worker.worker_id;}); }
++  function selWorkers(){
++    var p=projActive(); if(!p) return workerIds();
++    if(p.selected_workers==null) return workerIds();
++    return p.selected_workers.slice(); }
++  function loadProjects(){
++    return jget(API2).then(function(d){
++      st.projProjects=d.projects||[];
++      st.projCatalog=d.chief_engineers||[];
++      st.projActive=d.active_project_id||((st.projProjects[0]||{}).project_id)||null;
++      st.projTaskCtx=d.task_context||{};
++      st.projDocTypes=d.document_types||st.projDocTypes;
++      renderProject();renderChief();renderWorkerList();renderDetails();
++      if(!st.worker) setActiveWorker(pickActiveWorker());
++    }).catch(function(e){ if(el('qp-chief-status')) el('qp-chief-status').textContent='專案載入失敗: '+e.message; }); }
++  function renderProject(){
++    var sel=el('qp-project'); if(!sel) return; sel.innerHTML='';
++    (st.projProjects||[]).forEach(function(p){
++      var o=document.createElement('option');o.value=p.project_id;o.textContent=p.name;sel.appendChild(o); });
++    if(st.projActive) sel.value=st.projActive; }
++  function renderChief(){
++    var sel=el('qp-chief'); if(!sel) return; sel.innerHTML='';
++    (st.projCatalog||[]).forEach(function(c){
++      var o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o); });
++    var p=projActive(); var cur=(p&&p.chief_engineer)||'chatgpt';
++    sel.value=cur; paintChief(cur); }
++  function paintChief(id){
++    var c=chiefOf(id); var b=el('qp-chief-status'); if(!b) return;
++    if(!c){ b.className='qp-badge'; b.textContent='—'; return; }
++    var bound=(c.connection==='BOUND');
++    b.className='qp-badge'+(bound?' ok':'');
++    // Compact on-screen badge (keeps the bar on one line); full text in the tooltip.
++    b.textContent=c.status+' · '+(bound?'Bound':'Not Yet Bound');
++    b.title=c.status+' · Connection: '+(bound?'Bound':'Not Yet Bound'); }
++  function wstat(w){
++    var s=w.status||{}; var raw=String(s.status||'').toLowerCase();
++    var code=(raw==='online')?'ONLINE':((raw==='degraded')?'DEGRADED':'OFFLINE');
++    return {code:code,flavor:s.api_flavor||'',latency:s.latency_ms}; }
++  function renderWorkerList(){
++    var box=el('qp-wlist'); if(!box) return;
++    var ids=workerIds(); var sel=selWorkers(); box.innerHTML='';
++    // (1) master row — the ONLY "select all / clear" entry point.
++    var allLab=document.createElement('label'); allLab.className='qp-witem qp-allitem';
++    var allCb=document.createElement('input'); allCb.type='checkbox'; allCb.id='qp-wallcb';
++    allCb.onchange=function(){ setAllWorkers(allCb.checked); };
++    var allNm=document.createElement('span'); allNm.textContent='全部'; allNm.style.fontWeight='600';
++    var allSt=document.createElement('span'); allSt.className='qp-wst';
++    allLab.appendChild(allCb); allLab.appendChild(allNm); allLab.appendChild(allSt);
++    box.appendChild(allLab);
++    // (2) one row per REGISTERED worker, REAL status only (never faked).
++    (st.workers||[]).forEach(function(w){
++      var wid=w.worker.worker_id; var s=wstat(w);
++      var lab=document.createElement('label'); lab.className='qp-witem'+(s.code==='OFFLINE'?' off':'');
++      var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=sel.indexOf(wid)>=0; cb.setAttribute('data-wid',wid);
++      cb.onchange=function(){ toggleWorker(wid,cb.checked); };
++      var nm=document.createElement('span'); nm.textContent=wid;
++      var stt=document.createElement('span');
++      stt.className='qp-wst'+(s.code==='ONLINE'?' on':(s.code==='DEGRADED'?' deg':''));
++      stt.textContent=(s.code==='OFFLINE')?'OFFLINE · unavailable':(s.code+(s.flavor?(' · '+s.flavor):'')+(s.latency!=null?(' · '+s.latency+'ms'):''));
++      if(s.code==='OFFLINE'){ lab.title='unavailable · 執行時會被跳過'; }
++      lab.appendChild(cb); lab.appendChild(nm); lab.appendChild(stt); box.appendChild(lab); });
++    paintWorkerCounts(); }
++  function selIdsWithin(){ var ids=workerIds(); var sel=selWorkers();
++    return sel.filter(function(x){return ids.indexOf(x)>=0;}); }
++  function paintWorkerCounts(){
++    var ids=workerIds(); var n=selIdsWithin().length; var m=ids.length;
++    if(el('qp-wcount')) el('qp-wcount').textContent=n+'/'+m;
++    var all=el('qp-wallcb'); if(all){ all.checked=(m>0&&n===m); all.indeterminate=(n>0&&n<m); }
++    var stt=document.querySelector('#qp-wlist .qp-allitem .qp-wst');
++    if(stt) stt.textContent=(m===0)?'—':((n===m)?'全選':((n>0)?('部分 '+n+'/'+m):'未選')); }
++  var projSeq=0;
++  function saveProjectCtx(){
++    var p=projActive(); if(!p) return Promise.resolve();
++    var my=++projSeq;   // drop stale/out-of-order responses (rapid checkbox toggles must not revert UI)
++    return fetch(API2+'/'+encodeURIComponent(p.project_id),{method:'PUT',credentials:'same-origin',
++      headers:{'Content-Type':'application/json'},
++      body:JSON.stringify({chief_engineer:p.chief_engineer,selected_workers:p.selected_workers})})
++      .then(function(r){return r.json();}).then(function(d){
++        if(my!==projSeq) return;
++        if(d&&d.projects){ st.projProjects=d.projects; st.projActive=d.active_project_id||st.projActive; }
++      }).catch(function(e){ logLine('儲存專案設定失敗: '+e.message,true); }); }
++  function activateProject(pid){
++    if(!pid) return;
++    jpost(API2+'/'+encodeURIComponent(pid)+'/activate',{}).then(function(d){
++      st.projActive=d.active_project_id||pid; st.projProjects=d.projects||st.projProjects;
++      st.projDocTypes=d.document_types||st.projDocTypes;
++      // Description / Documents / Chief / selected_workers ALL follow the Project.
++      renderProject();renderChief();renderWorkerList();renderDetails();
++      // §8: the Workers dropdown follows the Project; the execution worker must stay
++      // inside the new scope (and never be an OFFLINE worker).
++      var cur=st.worker;
++      if(!cur||selWorkers().indexOf(cur)<0||!workerOnline(cur)){
++        var pick=pickActiveWorker(); setActiveWorker(pick);
++        if(pick!==cur) loadSessions();
++      }
++      updateChatMeta();
++    }).catch(function(e){ logLine('切換 Project 失敗: '+e.message,true); }); }
++  function toggleWorker(wid,on){
++    var p=projActive(); if(!p) return; var cur=selWorkers();
++    if(on){ if(cur.indexOf(wid)<0) cur.push(wid); } else { cur=cur.filter(function(x){return x!==wid;}); }
++    p.selected_workers=cur.slice(); paintWorkerCounts(); saveProjectCtx(); }
++  function setAllWorkers(on){
++    var p=projActive(); if(!p) return;
++    p.selected_workers=(on?workerIds():[]).slice(); renderWorkerList(); saveProjectCtx(); }
++  function projCtxOf(sid){
++    var t=(st.projTaskCtx||{})[sid]; if(t) return t;
++    var p=projActive(); return p?{project_name:p.name,chief_engineer:p.chief_engineer}:null; }
++  function bindTask(sid){
++    var p=projActive(); if(!p||!sid) return Promise.resolve();
++    return jpost(API2+'/tasks',{session_id:sid,project_id:p.project_id,chief_engineer:p.chief_engineer,worker_scope:selWorkers()})
++      .then(function(d){ if(d&&d.context){ st.projTaskCtx[sid]=d.context; updateChatMeta(); } return d; })
++      .catch(function(e){ logLine('綁定專案上下文失敗: '+e.message,true); }); }
++  function newProject(){
++    var name=window.prompt('新 Project 名稱:',''); if(!name) return;
++    jpost(API2,{name:name,description:''}).then(function(d){
++      st.projProjects=d.projects||[]; st.projActive=d.active_project_id; st.projTaskCtx=d.task_context||{};
++      st.projDocTypes=d.document_types||st.projDocTypes;
++      renderProject();renderChief();renderWorkerList();renderDetails();
++      if(!st.worker) setActiveWorker(pickActiveWorker());updateChatMeta(); logLine('已建立 Project: '+name,true);
++    }).catch(function(e){ logLine('建立 Project 失敗: '+e.message,true); }); }
++
++  // ── Project Details（項目簡介）+ Project Document REGISTRY（引用/中繼資料）· 2026-09-14 ──
++  function renderDetails(){
++    var p=projActive();
++    if(el('qp-d-name')) el('qp-d-name').value=p?(p.name||''):'';
++    if(el('qp-d-desc')) el('qp-d-desc').value=p?(p.description||''):'';
++    if(el('qp-d-obj')) el('qp-d-obj').value=p?(p.objective||''):'';
++    if(el('qp-d-stage')) el('qp-d-stage').value=p?(p.stage||''):'';
++    if(el('qp-d-saved')) el('qp-d-saved').textContent='';
++    renderDocTypes(); renderDocs();
++  }
++  function renderDocTypes(){
++    var sel=el('qp-doc-type'); if(!sel||sel.options.length) return;
++    var types=st.projDocTypes||['Requirement','Architecture','Development Spec','Handoff','Test Report','Other'];
++    types.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
++  }
++  function saveDetails(){
++    var p=projActive(); if(!p||!el('qp-d-name')) return;
++    var body={name:(el('qp-d-name').value||'').trim()||p.name,
++              description:el('qp-d-desc').value||'',
++              objective:el('qp-d-obj').value||'',
++              stage:el('qp-d-stage').value||''};
++    if(el('qp-d-saved')) el('qp-d-saved').textContent='儲存中…';
++    fetch(API2+'/'+encodeURIComponent(p.project_id),{method:'PUT',credentials:'same-origin',
++      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
++      .then(function(r){return r.json();}).then(function(d){
++        if(d&&d.projects){ st.projProjects=d.projects; st.projActive=d.active_project_id||st.projActive; }
++        renderProject(); renderChief(); updateChatMeta(); renderDetails();
++        if(el('qp-d-saved')) el('qp-d-saved').textContent='\u2713 已儲存 '+new Date().toLocaleTimeString();
++      }).catch(function(e){ if(el('qp-d-saved')) el('qp-d-saved').textContent='儲存失敗: '+e.message; }); }
++  function safeDocOpen(d){
++    var r=String((d&&d.reference)||'').trim();
++    return /^https?:\/\//i.test(r) ? r : null; }
++  function renderDocs(){
++    var box=el('qp-doclist'); if(!box) return;
++    var p=projActive(); var docs=(p&&p.documents)||[]; box.innerHTML='';
++    if(!docs.length){ var n=document.createElement('div'); n.className='qp-hint';
++      n.textContent='（尚無文件 — 按「+」新增文件引用）'; box.appendChild(n); return; }
++    docs.forEach(function(d){ box.appendChild(docRow(d)); });
++  }
++  function docRow(d){
++    var row=document.createElement('div'); row.className='qp-doc'; row.setAttribute('data-doc',d.document_id||'');
++    var head=document.createElement('div'); head.className='qp-dochead';
++    var ic=document.createElement('span'); ic.textContent='\uD83D\uDCC4';
++    var t=document.createElement('b'); t.textContent=d.title||'Untitled';
++    var ty=document.createElement('span'); ty.className='qp-doctype'; ty.textContent=d.type||'Other';
++    head.appendChild(ic); head.appendChild(t); head.appendChild(ty);
++    var open=safeDocOpen(d);
++    var body=document.createElement('div'); body.className='qp-docbody'; body.setAttribute('hidden','');
++    body.innerHTML='<div>description: '+esc(d.description||'—')+'</div>'
++      +'<div>reference: '+(d.reference?('<code>'+esc(d.reference)+'</code>'):'—')
++      +(open?(' &nbsp;<a href="'+esc(open)+'" target="_blank" rel="noopener noreferrer">Open</a>'):'')
++      +'</div>'
++      +'<div>source: '+esc(d.source||'—')+' · document_id: '+esc(d.document_id||'—')+'</div>'
++      +'<div>created: '+esc(d.created_at||'—')+' · updated: '+esc(d.updated_at||'—')+'</div>';
++    head.onclick=function(){ if(body.hasAttribute('hidden')){body.removeAttribute('hidden');}else{body.setAttribute('hidden','');} };
++    row.appendChild(head); row.appendChild(body); return row;
++  }
++  function addDoc(){
++    var p=projActive(); if(!p||!el('qp-doc-title')) return;
++    var title=(el('qp-doc-title').value||'').trim();
++    if(!title){ el('qp-doc-title').focus(); return; }
++    var body={title:title, type:(el('qp-doc-type')||{}).value||'Other',
++              reference:(el('qp-doc-ref').value||'').trim(), description:(el('qp-doc-desc').value||'')};
++    jpost(API2+'/'+encodeURIComponent(p.project_id)+'/documents',body).then(function(d){
++      if(d&&d.projects){ st.projProjects=d.projects; st.projActive=d.active_project_id||st.projActive; }
++      el('qp-doc-title').value=''; el('qp-doc-ref').value=''; el('qp-doc-desc').value='';
++      if(el('qp-docform')) el('qp-docform').setAttribute('hidden','');
++      renderDocs(); logLine('已新增 Project Document: '+title,false);
++    }).catch(function(e){ logLine('新增文件失敗: '+e.message,true); }); }
++
+   // ── wiring ──
+   el('qp-worker').onchange=function(){st.worker=el('qp-worker').value;
+     jget(API+'/workers?force=true').then(function(d){paintWorker(d.workers);});loadSessions();};
+   el('qp-session').onchange=function(){st.session=el('qp-session').value;
+-    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;loadHistory();pollApprovals();};
++    el('qp-hd').textContent='⌨ QwenPaw · Worker '+st.worker+' · Session '+st.session;loadHistory();pollApprovals();};
+   el('qp-newsess').onclick=newSession;
+-  el('qp-reload').onclick=function(){loadWorkers();loadAudit();};
++  el('qp-reload').onclick=function(){loadWorkers();loadAudit();pollApprovals();};
+   el('qp-send').onclick=send;
+   el('qp-input').addEventListener('keydown',function(e){
+     if(e.key==='Enter'){e.preventDefault();send();}});
++  // ── Project Context wiring ──
++  if(el('qp-project')) el('qp-project').onchange=function(){ activateProject(el('qp-project').value); };
++  if(el('qp-chief')) el('qp-chief').onchange=function(){
++    var _p=projActive(); if(!_p) return;
++    _p.chief_engineer=el('qp-chief').value; paintChief(_p.chief_engineer); saveProjectCtx(); updateChatMeta(); };
++  if(el('qp-wscope')) el('qp-wscope').onclick=function(){
++    var w=el('qp-wlist'); if(!w) return; var hid=w.hasAttribute('hidden');
++    if(hid){ w.removeAttribute('hidden'); paintWorkerCounts(); } else { w.setAttribute('hidden',''); }
++    if(el('qp-warrow')) el('qp-warrow').innerHTML=hid?'&#9650;':'&#9660;'; };
++  if(el('qp-dtoggle')) el('qp-dtoggle').onclick=function(){
++    var d=el('qp-details'); if(!d) return; var hid=d.hasAttribute('hidden');
++    if(hid){ d.removeAttribute('hidden'); renderDetails(); } else { d.setAttribute('hidden',''); }
++    if(el('qp-darrow')) el('qp-darrow').innerHTML=hid?'&#9650;':'&#9660;'; };
++  if(el('qp-d-save')) el('qp-d-save').onclick=saveDetails;
++  if(el('qp-doc-new')) el('qp-doc-new').onclick=function(){
++    var f=el('qp-docform'); if(!f) return; var hid=f.hasAttribute('hidden');
++    if(hid){ f.removeAttribute('hidden'); renderDocTypes(); if(el('qp-doc-title')) el('qp-doc-title').focus(); }
++    else { f.setAttribute('hidden',''); } };
++  if(el('qp-doc-save')) el('qp-doc-save').onclick=addDoc;
++  if(el('qp-doc-cancel')) el('qp-doc-cancel').onclick=function(){ if(el('qp-docform')) el('qp-docform').setAttribute('hidden',''); };
++  if(el('qp-projnew')) el('qp-projnew').onclick=newProject;
+   document.querySelectorAll('#nav a[data-p="qwenpaw"]').forEach(function(a){
+-    a.addEventListener('click',function(){ if(!el('qp-worker').options.length){loadWorkers();loadAudit();} });});
++    a.addEventListener('click',function(){ if(!el('qp-worker').options.length){loadWorkers();}
++      startInbox();loadAudit(); });});
++  document.querySelectorAll('#nav a[data-p]').forEach(function(a){
++    if(a.getAttribute('data-p')!=='qwenpaw')a.addEventListener('click',function(){ stopInbox(); });});
++  // ── UI Patch 2026-09-13 wiring(回到底部按鈕 / status 觀察 / 進頁面時套用固定佈局) ──
++  if(el('qp-log')) el('qp-log').addEventListener('scroll',function(){syncJump();});
++  if(el('qp-jump')) el('qp-jump').onclick=function(){scrollLogToBottom();};
++  if(el('qp-runstatus')&&window.MutationObserver){
++    new MutationObserver(function(){updateChatMeta();})
++      .observe(el('qp-runstatus'),{childList:true,characterData:true,subtree:true});
++  }
++  if(el('p-qwenpaw')&&el('p-qwenpaw').classList.contains('show')){
++    var _mn=document.querySelector('.main'); if(_mn)_mn.classList.add('ws');
++  }
++  window.addEventListener('resize',function(){syncJump();});
++  updateChatMeta();
+   loadAudit();
++  loadProjects();
++  if(el('p-qwenpaw')&&el('p-qwenpaw').classList.contains('show')) startInbox();
+ })();
+ </script>
+ </body></html>"""

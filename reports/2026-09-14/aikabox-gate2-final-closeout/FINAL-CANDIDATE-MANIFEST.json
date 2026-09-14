@@ -1,0 +1,57 @@
+{
+  "schema": "goaa.aikabox.gate2.final-candidate/v1",
+  "candidate_name": "Aika-Box Gate-2 Final Candidate (D0 :5198, local only)",
+  "candidate_created_at": "2026-09-14T02:17:42-07:00",
+  "closeout_at": "2026-09-14T02:33:00-07:00",
+  "environment_scope": {
+    "candidate": "D0 Aika-Box development :5198",
+    "golden": "GOLDEN-05 :5188"
+  },
+  "main_py_sha256": "2b4a1b452ad4595ae1dacea15454bf706c0182fe099dd2a760c9cac62b19e2f3",
+  "project_context_sha256": "8fe454f6adae237701d42d8c926a84dec32190842afd0b420beb55a1192fc526",
+  "main_py_bytes": 199078,
+  "project_context_bytes": 12116,
+  "source_files": [
+    "local-console/main.py",
+    "local-console/project_context.py"
+  ],
+  "source_repo": "/home/aika/gate2-ui-wt",
+  "source_branch": "gate2-ui-patch",
+  "base_commit": "0d8998c",
+  "final_local_commit": "2ede799",
+  "local_commit_scope": "source files only (no pycache, no bak, no screenshots, no tmp, no secrets)",
+  "code_remote_push": false,
+  "golden05_surface": "GOLDEN-05 Aika-Box Control Center :5188",
+  "golden05_current_hash": "0c78b8e83516613a45b648331e90e07e64e02a034add55aac2920a3a7eb7364e",
+  "golden05_current_bytes": 152687,
+  "golden05_auth_sha256": "9665e8d069bca4c87fd59f0534374c082f65a5b58c567b9d7116a4a760e32f14",
+  "golden05_unit_sha256": "dd9572d95116a7dc11abf1fc749689f21a073b8b40113d1192d095ce212f02e1",
+  "golden05_dropin_sha256": "6fab895d84668204e6dd91beb2cf66869d4a65bb725c540e6efaa3e1bfa0f37c",
+  "golden05_changed": false,
+  "golden05_restarted": false,
+  "c1_touched": false,
+  "c2_touched": false,
+  "human_approve_accepted": false,
+  "human_reject_accepted": false,
+  "technical_approve_pass": true,
+  "technical_reject_pass": true,
+  "technical_approve_actor_evidence": "audit actor=tao from an automated (browser) click - login identity only, not human proof",
+  "ready_for_human_reject": true,
+  "ready_for_golden05_cutover": false,
+  "rollback_ready": true,
+  "rollback_executed": false,
+  "safety_scan": {
+    "secret_scan": "PASS",
+    "bom": "PASS",
+    "crlf": "PASS",
+    "compiled_ast": "PASS",
+    "git_diff_check": "PASS",
+    "json_parse": "PASS"
+  },
+  "evidence_dir": "reports/2026-09-14/aikabox-gate2-final-closeout/",
+  "governance_correction": {
+    "A10_approve": "TECHNICAL_PATH_PASS / HUMAN_APPROVAL_NOT_ACCEPTED",
+    "A11_reject": "TECHNICAL_PATH_PASS / HUMAN_APPROVAL_NOT_ACCEPTED",
+    "rule": "login identity is not proof of human operation; Aika must not click Approve/Reject in any form"
+  }
+}

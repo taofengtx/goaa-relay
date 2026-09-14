@@ -1,0 +1,567 @@
+diff --git a/local-console/main.py b/local-console/main.py
+index 108442f..b75643d 100644
+--- a/local-console/main.py
++++ b/local-console/main.py
+@@ -78,6 +78,10 @@ COOKIE_NAME = "goaa_console_session"
+ from qwenpaw_api import router as qwenpaw_router  # noqa: E402
+ app.include_router(qwenpaw_router)
+ 
++# ── Project Context(ADD-ONLY, 2026-09-14):Project / Chief Engineer / Worker scope ──
++from project_context import router as project_router  # noqa: E402
++app.include_router(project_router)
++
+ 
+ # ── 認證 helper ──
+ def _current_user(session_cookie):
+@@ -1416,6 +1420,57 @@ animation:flow 2.5s linear infinite}
+   #p-qwenpaw .qp-side{overflow-y:auto;gap:.5rem}
+   #p-qwenpaw .qp-side>.card{flex:none;height:auto;min-height:132px}
+ }
++/* === Aika-Box: Project Context (Project / Chief Engineer / Workers) 2026-09-14 === */
++#p-qwenpaw .qp-ctx{display:flex;flex-direction:column;gap:.38rem;border-top:1px solid rgba(255,255,255,.05);margin-top:.45rem;padding-top:.45rem}
++#p-qwenpaw .qp-ctxrow{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center}
++#p-qwenpaw .qp-ctx select{font-size:.72rem;padding:.12rem .3rem;max-width:36vw}
++#p-qwenpaw .qp-badge{font-family:var(--mono);font-size:.64rem;color:var(--warn);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:.06rem .5rem;white-space:nowrap}
++#p-qwenpaw .qp-badge.ok{color:var(--success)}
++#p-qwenpaw .qp-mini{font-size:.66rem;padding:.18rem .5rem}
++#p-qwenpaw .qp-wlist{display:flex;flex-wrap:wrap;gap:.3rem 1rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.45rem .6rem;background:rgba(255,255,255,.012)}
++#p-qwenpaw .qp-wlist[hidden]{display:none}
++#p-qwenpaw .qp-witem{display:flex;align-items:center;gap:.35rem;font-family:var(--mono);font-size:.68rem;color:var(--txt)}
++#p-qwenpaw .qp-witem.off{opacity:.6}
++#p-qwenpaw .qp-wst{font-size:.62rem;color:var(--txt2)}
++#p-qwenpaw .qp-wst.on{color:var(--success)}
++#p-qwenpaw .qp-wst.deg{color:var(--warn)}
++/* === Aika-Box: Project Details + Document Registry (2026-09-14) === */
++#p-qwenpaw .qp-details{display:flex;flex-direction:column;gap:.5rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.5rem .6rem;background:rgba(255,255,255,.012)}
++#p-qwenpaw .qp-details[hidden]{display:none}
++#p-qwenpaw .qp-sech{font-family:var(--mono);font-size:.66rem;color:var(--txt2);margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem}
++#p-qwenpaw .qp-detrow{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end}
++#p-qwenpaw .qp-detrow label{display:flex;flex-direction:column;gap:.15rem;flex:1 1 12rem}
++#p-qwenpaw .qp-details input,#p-qwenpaw .qp-details textarea{font-size:.72rem;padding:.2rem .35rem;background:#070B10;border:1px solid var(--border);border-radius:6px;color:var(--txt);width:100%;box-sizing:border-box}
++#p-qwenpaw .qp-details textarea{resize:vertical;font-family:inherit;line-height:1.35}
++#p-qwenpaw .qp-doclist{display:flex;flex-direction:column;gap:.3rem}
++#p-qwenpaw .qp-doc{border:1px solid var(--border);border-radius:7px;background:rgba(255,255,255,.012)}
++#p-qwenpaw .qp-dochead{display:flex;align-items:center;gap:.45rem;padding:.32rem .5rem;font-size:.72rem;cursor:pointer}
++#p-qwenpaw .qp-dochead:hover{background:rgba(255,255,255,.04)}
++#p-qwenpaw .qp-dochead b{font-weight:600;color:var(--txt)}
++#p-qwenpaw .qp-doctype{font-family:var(--mono);font-size:.62rem;color:var(--accent);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:.02rem .4rem;margin-left:auto;white-space:nowrap}
++#p-qwenpaw .qp-docbody{padding:.35rem .5rem .5rem;border-top:1px solid rgba(255,255,255,.06);font-size:.68rem;color:var(--txt2);line-height:1.5;overflow-wrap:anywhere}
++#p-qwenpaw .qp-docbody[hidden]{display:none}
++#p-qwenpaw .qp-docbody code{font-family:var(--mono);color:var(--txt);word-break:break-all}
++#p-qwenpaw .qp-docform{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;border:1px dashed var(--border);border-radius:7px;padding:.45rem .5rem;margin-bottom:.4rem}
++#p-qwenpaw .qp-docform[hidden]{display:none}
++#p-qwenpaw .qp-docform label{display:flex;flex-direction:column;gap:.15rem;flex:1 1 10rem}
++#p-qwenpaw .qp-wtitle{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
++#p-qwenpaw .qp-hdsub{display:flex;gap:.45rem;flex-wrap:wrap;align-items:baseline;padding:.15rem 0 .1rem}
++#p-qwenpaw .qp-hdsub #qp-wstatus{font-family:var(--mono);font-size:.63rem;color:var(--txt2)}
++/* ── merged single-line context bar: Project | Chief | 專案詳情 | Workers ── */
++#p-qwenpaw .qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.28rem .25rem;min-width:0;row-gap:.3rem}
++#p-qwenpaw .qp-bar > label.note{display:inline-flex;align-items:center;gap:.3rem;margin:0;white-space:nowrap;line-height:1;font-size:.78rem}
++#p-qwenpaw .qp-bar select{height:1.85rem;line-height:1;font-size:.78rem;padding:0 .2rem;max-width:9.5rem}
++#p-qwenpaw .qp-bar .btn-send{height:1.85rem;display:inline-flex;align-items:center;gap:.26rem;padding:0 .42rem;line-height:1;white-space:nowrap;font-size:.74rem}
++#p-qwenpaw .qp-bar #qp-chief-status{height:1.85rem;display:inline-flex;align-items:center;white-space:nowrap;font-size:.6rem;line-height:1;padding:0 .34rem}
++#p-qwenpaw .qp-wlist::after{content:"Project Worker Scope（單一入口；OFFLINE 於執行時自動跳過）";width:100%;font-size:.62rem;color:var(--txt2)}
++#p-qwenpaw .qp-toolbar{display:flex;gap:.3rem .75rem;flex-wrap:wrap;align-items:center;margin-top:.42rem}
++#p-qwenpaw .qp-toolbar > label.note{display:inline-flex;align-items:center;gap:.32rem;margin:0;white-space:nowrap;line-height:1;font-size:.78rem}
++#p-qwenpaw .qp-toolbar select{height:1.85rem;line-height:1;font-size:.78rem;padding:0 .3rem;max-width:20rem}
++#p-qwenpaw .qp-toolbar .btn-send{height:1.85rem;display:inline-flex;align-items:center;padding:0 .58rem;line-height:1;white-space:nowrap;font-size:.74rem}
++#p-qwenpaw .qp-toolbar #qp-runstatus{font-family:var(--mono);font-size:.7rem;line-height:1.85rem}
++#p-qwenpaw .qp-btnlink{background:none;border:none;color:var(--accent);font-family:var(--mono);font-size:.66rem;cursor:pointer;padding:0}
++#p-qwenpaw .qp-hint{font-size:.62rem;color:var(--txt2)}
+ /* === Aika-Box: Global Approval Inbox (UI-only, 2026-09-14) === */
+ #p-qwenpaw .qp-side>.card.qp-audit-off{display:none!important}
+ #p-qwenpaw .qp-side>.card.qp-inboxcard{flex:1 1 auto}
+@@ -1437,7 +1492,10 @@ animation:flow 2.5s linear infinite}
+ #p-qwenpaw .qp-apsev{font-family:var(--mono);font-size:.72rem;color:var(--warn)}
+ #p-qwenpaw .qp-apcmd{font-family:var(--mono);font-size:.74rem;margin:.2rem 0;word-break:break-all}
+ #p-qwenpaw .qp-apmeta{font-family:var(--mono);font-size:.64rem;color:var(--txt2);line-height:1.4}
+-#p-qwenpaw .qp-apbtn{margin:.4rem .4rem 0 0}
++#p-qwenpaw .qp-apbtn{margin:0}
++/* Approval card action row: [Open][Approve][Reject] — one flex row, equal size, natural wrap when narrow */
++#p-qwenpaw .qp-apbtns{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.5rem}
++#p-qwenpaw .qp-apbtns .qp-apbtn{margin:0;height:2.2rem;min-width:86px;flex:1 1 0;font-size:.8rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0 .6rem;white-space:nowrap}
+ #p-qwenpaw .qp-apdone{font-family:var(--mono);font-size:.72rem;margin-top:.35rem}
+ /* === Aika-Box: unified ChatGPT-style scrollbars (CSS-only) === */
+ ::-webkit-scrollbar{width:6px;height:6px}
+@@ -1602,9 +1660,54 @@ animation:flow 2.5s linear infinite}
+     <div class="card qp-top"><div class="h">&#9889; AI 工作區（QwenPaw）</div>
+       <p class="note">Aika-Box 只做入口:瀏覽器 &rarr; :5188 &rarr; server-side adapter &rarr; 選定 Worker 的 QwenPaw。
+       Approve / Reject 一律由人按下,系統不會自動決策。</p>
+-      <div style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:center">
+-        <label class="note">Worker <select id="qp-worker"></select></label>
+-        <span id="qp-wstatus" class="note">載入中…</span>
++      <div class="qp-ctx" id="qp-ctx">
++        <div class="qp-ctxrow qp-bar" id="qp-bar">
++          <label class="note">Project <select id="qp-project"></select></label>
++          <button class="btn-send qp-mini" id="qp-projnew">+ Project</button>
++          <label class="note" title="Chief Engineer">&#32317;&#24037; <select id="qp-chief"></select></label>
++          <span id="qp-chief-status" class="qp-badge">&mdash;</span>
++          <button class="btn-send qp-mini" id="qp-dtoggle">&#23560;&#26696;&#35443;&#24773; <span id="qp-darrow">&#9660;</span></button>
++          <button class="btn-send qp-mini" id="qp-wscope">Workers <span id="qp-wcount">0/0</span> <span id="qp-warrow">&#9660;</span></button>
++        </div>
++        <div class="qp-details" id="qp-details" hidden>
++          <div class="qp-sec" id="qp-d-brief">
++            <div class="qp-sech">&#23560;&#26696;&#31777;&#20171;</div>
++            <div class="qp-detrow">
++              <label class="note">Project Name <input id="qp-d-name"></label>
++            </div>
++            <div class="qp-detrow" style="margin-top:.35rem">
++              <label class="note">Description <textarea id="qp-d-desc" rows="3" placeholder="專案簡介（由 Tao 編輯並儲存）"></textarea></label>
++            </div>
++            <div class="qp-detrow" style="margin-top:.35rem">
++              <label class="note">Objective <input id="qp-d-obj" placeholder="（選填）"></label>
++              <label class="note">Current Stage <input id="qp-d-stage" placeholder="（選填）"></label>
++            </div>
++            <div class="qp-ctxrow" style="margin-top:.4rem">
++              <button class="btn-send qp-mini" id="qp-d-save">&#20786;&#23384;&#31777;&#20171;</button>
++              <span class="qp-hint" id="qp-d-saved"></span>
++            </div>
++          </div>
++          <div class="qp-sec" id="qp-d-docs" style="margin-top:.45rem">
++            <div class="qp-sech">&#23560;&#26696;&#25991;&#20214;
++              <button class="btn-send qp-mini" id="qp-doc-new" title="新增 Project Document">+</button>
++              <span class="qp-hint">只儲存引用／中繼資料，不上傳、不讀取外部檔案</span></div>
++            <div class="qp-docform" id="qp-docform" hidden>
++              <label class="note">Title <input id="qp-doc-title"></label>
++              <label class="note">Type <select id="qp-doc-type"></select></label>
++              <label class="note">Reference / Path / URL <input id="qp-doc-ref" placeholder="https://… 或 /path/to/file"></label>
++              <label class="note">Description <input id="qp-doc-desc"></label>
++              <div class="qp-ctxrow">
++                <button class="btn-send qp-mini" id="qp-doc-save">&#20786;&#23384;&#25991;&#20214;</button>
++                <button class="btn-send qp-mini" id="qp-doc-cancel">&#21462;&#28040;</button>
++              </div>
++            </div>
++            <div class="qp-doclist" id="qp-doclist"></div>
++          </div>
++        </div>
++        <div class="qp-wlist" id="qp-wlist" hidden></div>
++      </div>
++      <div class="qp-toolbar">
++        <select id="qp-worker" hidden></select>
+         <label class="note">Session <select id="qp-session"></select></label>
+         <button class="btn-send" id="qp-newsess">新 Session</button>
+         <button class="btn-send" id="qp-reload">重新載入</button>
+@@ -1614,7 +1717,8 @@ animation:flow 2.5s linear infinite}
+     <div class="qp-main">
+       <div class="chat">
+         <div class="hd" id="qp-hd">&#128172; 未選擇 Session</div>
+-        <div class="qp-chatmeta" id="qp-chatmeta"><span>Worker <b id="qp-m-worker">—</b></span><span>Session <b id="qp-m-session">—</b></span><span>狀態 <b id="qp-m-status">Idle</b></span><span>訊息 <b id="qp-m-count">0</b></span></div>
++        <div class="qp-hdsub"><span class="note">執行 Worker 狀態</span><span id="qp-wstatus" class="note">載入中…</span></div>
++        <div class="qp-chatmeta" id="qp-chatmeta"><span>Project <b id="qp-m-project">—</b></span><span>總工 <b id="qp-m-chief">—</b></span><span>Worker <b id="qp-m-worker">—</b></span><span>Session <b id="qp-m-session">—</b></span><span>狀態 <b id="qp-m-status">Idle</b></span><span>訊息 <b id="qp-m-count">0</b></span></div>
+         <div class="body" id="qp-log">選一個 Worker 與 Session 後開始對話。</div>
+         <button class="qp-jump" id="qp-jump" hidden>&#8595; 回到底部</button>
+         <div class="inp"><input id="qp-input" placeholder="送訊息給 QwenPaw… (Enter 發送)"><button class="btn-send" id="qp-send">發送</button></div>
+@@ -1989,7 +2093,7 @@ setInterval(loadNodeHealth, 8000);
+ // 瀏覽器只與 :5188 對話;QwenPaw endpoint 永不離開伺服器端。
+ (function(){
+   var API='/api/qwenpaw';
+-  var st={worker:null,session:null,run:null,es:null,timer:null,live:'',flavor:null,workers:null,inbox:[],sessCache:{},decided:{},hlRid:null,hlTimer:null,inboxHold:0,inboxErr:null,itimer:null};
++  var st={worker:null,session:null,run:null,es:null,timer:null,live:'',flavor:null,workers:null,inbox:[],sessCache:{},decided:{},hlRid:null,hlTimer:null,inboxHold:0,inboxErr:null,itimer:null,projProjects:[],projActive:null,projCatalog:[],projTaskCtx:{},projDocTypes:null};
+   var liveEl=null;
+   function el(id){return document.getElementById(id);}
+   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+@@ -2017,6 +2121,9 @@ setInterval(loadNodeHealth, 8000);
+     if(el('qp-m-session')) el('qp-m-session').textContent=st.session||'—';
+     if(el('qp-m-status')) el('qp-m-status').textContent=(el('qp-runstatus')&&el('qp-runstatus').textContent)||'Idle';
+     if(el('qp-m-count')) el('qp-m-count').textContent=String(box.querySelectorAll('.qp-msg').length);
++    var _p=projActive();
++    if(el('qp-m-project')) el('qp-m-project').textContent=_p?_p.name:'—';
++    if(el('qp-m-chief')) el('qp-m-chief').textContent=_p?chiefLabel(_p.chief_engineer):'—';
+   }
+   function buildMsgBody(body,txt){
+     var s=(txt==null?'':String(txt));
+@@ -2090,20 +2197,36 @@ setInterval(loadNodeHealth, 8000);
+   }
+ 
+   // ── workers ──
++  // The execution Worker is NO LONGER a user-facing selector: the only Worker
++  // control is the Project "Workers n/m" scope dropdown (checkbox list).
++  function workerOnline(wid){
++    var w=(st.workers||[]).filter(function(x){return x.worker.worker_id===wid;})[0];
++    return !!(w&&String((w.status||{}).status||'').toLowerCase()==='online');
++  }
++  function pickActiveWorker(){
++    // First ONLINE worker inside the active Project's Worker Scope (never OFFLINE).
++    var sel=selWorkers();
++    for(var i=0;i<sel.length;i++){ if(workerOnline(sel[i])) return sel[i]; }
++    return null;
++  }
++  function setActiveWorker(wid){
++    st.worker=wid||null;
++    var s=el('qp-worker'); if(s&&wid&&s.querySelector('option[value="'+wid+'"]')) s.value=wid;
++    paintWorker(st.workers||[]);
++  }
+   function loadWorkers(){
+     return jget(API+'/workers').then(function(d){
+-      var sel=el('qp-worker');sel.innerHTML='';
+-      d.workers.forEach(function(w){
+-        var o=document.createElement('option');
+-        o.value=w.worker.worker_id;
+-        o.textContent=w.worker.display_name+' · '+w.status.status+(w.status.api_flavor!=='unknown'?(' ('+w.status.api_flavor+')'):'');
+-        sel.appendChild(o);
+-      });
++      var sel=el('qp-worker'); if(sel){ sel.innerHTML='';
++        d.workers.forEach(function(w){
++          var o=document.createElement('option');
++          o.value=w.worker.worker_id;
++          o.textContent=w.worker.display_name+' · '+w.status.status+(w.status.api_flavor!=='unknown'?(' ('+w.status.api_flavor+')'):'');
++          sel.appendChild(o);
++        });
++      }
+       st.workers=d.workers||[];
+-      var prefer='aika-core-01';
+-      if(d.workers.some(function(w){return w.worker.worker_id===prefer;})) sel.value=prefer;
+-      st.worker=sel.value;
+-      paintWorker(d.workers);
++      setActiveWorker(pickActiveWorker());
++      renderWorkerList();
+       return loadSessions(true);
+     }).catch(function(e){ el('qp-wstatus').textContent='載入 Worker 失敗: '+e.message; });
+   }
+@@ -2131,16 +2254,21 @@ setInterval(loadNodeHealth, 8000);
+       });
+       st.session=sel.value||null;
+       updateChatMeta();
+-      el('qp-hd').textContent='⌨ QwenPaw · '+wid+' · '+(st.session||'（尚無 session，按「新 Session」）');
++      el('qp-hd').textContent='⌨ QwenPaw · Worker '+wid+' · Session '+(st.session||'（尚無 session，按「新 Session」）');
+       if(withHistory) loadHistory();
+     }).catch(function(e){ el('qp-hd').textContent='載入 session 失敗: '+e.message; });
+   }
+   function newSession(){
+-    if(!st.worker){logLine('請先選 Worker',true);return;}
+-    jpost(API+'/sessions',{worker_id:st.worker,title:'AI Workspace session'}).then(function(d){
++    // Never target an OFFLINE worker: pick the first ONLINE worker in the scope.
++    var pick=pickActiveWorker();
++    if(!pick){ logLine('⚠ Project「'+((projActive()||{}).name||'—')+'」的 Worker Scope 內沒有 ONLINE worker，無法建立 Session',true); return; }
++    if(pick!==st.worker) setActiveWorker(pick);
++    jpost(API+'/sessions',{worker_id:pick,title:'AI Workspace session'}).then(function(d){
+       st.session=d.session.session_id;
+-      logLine('已建立 session '+st.session,true);
+-      return loadSessions().then(function(){ el('qp-session').value=st.session; });
++      logLine('已建立 session '+st.session+'（Worker '+pick+'）',true);
++      return bindTask(st.session).then(function(){
++        return loadSessions().then(function(){ el('qp-session').value=st.session; });
++      });
+     }).catch(function(e){logLine('建立 session 失敗: '+e.message,true);});
+   }
+ 
+@@ -2236,7 +2364,10 @@ setInterval(loadNodeHealth, 8000);
+     d.className='qp-ap '+sevClass(a.severity)+(st.hlRid===a.request_id?' qp-hl':'');
+     d.setAttribute('data-rid',a.request_id);
+     var from=document.createElement('div');from.className='qp-from';
++    var _pc=projCtxOf(a.session_id);
+     from.innerHTML='<span>From</span>'
++      +'<span>Project: <b>'+esc(_pc&&_pc.project_name?_pc.project_name:'—')+'</b></span>'
++      +'<span>Chief Engineer: <b>'+esc(_pc&&_pc.chief_engineer?chiefLabel(_pc.chief_engineer):'—')+'</b></span>'
+       +'<span title="'+esc(widOf(a))+'">Worker: <b>'+esc(widOf(a))+'</b></span>'
+       +'<span title="'+esc(a.session_id||'')+'">Session: <b>'+esc(a.session_id||'?')+'</b></span>';
+     var sev=document.createElement('div');sev.className='qp-apsev';
+@@ -2249,7 +2380,10 @@ setInterval(loadNodeHealth, 8000);
+       +' \u00b7 created '+new Date((a.created_at||0)*1000).toLocaleTimeString()
+       +' \u00b7 age '+Math.round(Number(a.age_s)||0)+'s';
+     d.appendChild(from);d.appendChild(sev);d.appendChild(cmd);d.appendChild(meta);
+-    var holder=document.createElement('div');
++    var holder=document.createElement('div');holder.className='qp-apbtns';
++    var bar=document.createElement('button');bar.className='btn-send qp-apbtn';bar.textContent='Open';
++    bar.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();openSource(a);};
++    holder.appendChild(bar);
+     if(a.clickable){
+       var b1=document.createElement('button');b1.className='btn-send qp-apbtn';b1.textContent='Approve';
+       var b2=document.createElement('button');b2.className='btn-send qp-apbtn';b2.textContent='Reject';
+@@ -2260,9 +2394,7 @@ setInterval(loadNodeHealth, 8000);
+       var n2=document.createElement('div');n2.className='note';n2.textContent='（已失效，不可點擊）';
+       holder.appendChild(n2);
+     }
+-    var bar=document.createElement('button');bar.className='btn-send qp-apbtn';bar.textContent='Open';
+-    bar.onclick=function(e){if(e&&e.stopPropagation)e.stopPropagation();openSource(a);};
+-    d.appendChild(holder);d.appendChild(bar);
++    d.appendChild(holder);
+     d.onclick=function(){openSource(a);};
+     return d;
+   }
+@@ -2344,7 +2476,7 @@ setInterval(loadNodeHealth, 8000);
+     st.worker=wid;
+     jget(API+'/workers?force=true').then(function(d){
+       st.workers=d.workers||[];paintWorker(st.workers);}).catch(function(){});
+-    el('qp-hd').textContent='⌨ QwenPaw \u00b7 '+wid+' \u00b7 '+sid+'（開啟中…）';
++    el('qp-hd').textContent='⌨ QwenPaw \u00b7 Worker '+wid+' \u00b7 Session '+sid+'（開啟中…）';
+     jget(API+'/sessions?worker_id='+encodeURIComponent(wid)).then(function(d){
+       var list=d.sessions||[];
+       var sel=el('qp-session');sel.innerHTML='';
+@@ -2359,7 +2491,7 @@ setInterval(loadNodeHealth, 8000);
+         o2.textContent=sid+' \u00b7 （不在清單，仍載入）';sel.appendChild(o2);sel.value=sid;}
+       st.sessCache[wid]={t:Date.now(),ids:list.map(function(s){return s.session_id;})};
+       st.session=sid;updateChatMeta();
+-      el('qp-hd').textContent='⌨ QwenPaw \u00b7 '+wid+' \u00b7 '+sid;
++      el('qp-hd').textContent='⌨ QwenPaw \u00b7 Worker '+wid+' \u00b7 Session '+sid;
+       return loadHistory();
+     }).then(function(){
+       scrollLogToBottom();
+@@ -2423,29 +2555,256 @@ setInterval(loadNodeHealth, 8000);
+ 
+   // ── send ──
+   function send(){
+-    if(!st.worker){logLine('請先選 Worker',true);return;}
++    // Worker Scope is the ONLY Worker entry point → the execution Worker must live inside it.
++    if(!st.worker||selWorkers().indexOf(st.worker)<0){
++      var _pick=pickActiveWorker();
++      if(_pick!==st.worker){ if(_pick) logLine('↻ 執行 Worker 改為 '+_pick+'（依 Project Worker Scope）',true); setActiveWorker(_pick); }
++    }
++    if(!st.worker){logLine('⚠ Project「'+((projActive()||{}).name||'—')+'」的 Worker Scope 內沒有 ONLINE worker，無法送出',true);return;}
++    var _sw=(st.workers||[]).filter(function(x){return x.worker.worker_id===st.worker;})[0];
++    if(_sw&&String((_sw.status||{}).status||'').toLowerCase()!=='online'){
++      logLine('\u26d4 Worker '+st.worker+' \u76ee\u524d OFFLINE \u00b7 unavailable\uff0c\u5df2\u8df3\u904e\u9001\u51fa\uff08\u4e0d\u6703\u507d\u88dd\u6210\u53ef\u57f7\u884c\uff09',true);return;}
++    var _pp=projActive();
++    if(_pp&&_pp.selected_workers!=null&&_pp.selected_workers.indexOf(st.worker)<0){logLine('\u26a0 Worker '+st.worker+' \u4e0d\u5728 Project\u300c'+_pp.name+'\u300d\u7684 selected_workers \u5167',true);}
+     var v=el('qp-input').value.trim();if(!v)return;
+     el('qp-input').value='';
+     logLine('我：'+v,false);
+     jpost(API+'/chat',{worker_id:st.worker,session_id:st.session||'',input:v}).then(function(d){
+       st.run=d.run.run_id;st.session=d.session_id;st.flavor=d.flavor;
+       el('qp-runstatus').textContent=d.run.status+' · '+d.flavor;
+-      el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session+' · run '+st.run;
++      el('qp-hd').textContent='⌨ QwenPaw · Worker '+st.worker+' · Session '+st.session+' · run '+st.run;
+       if(d.flavor==='basic') logLine('（此 Worker 是精簡 QwenPaw：無 session 串流 / approval，僅單次回覆）',true);
+       stream(d.run.run_id);startPoll();loadSessions();
+     }).catch(function(e){liveEl=null;logLine('送出失敗: '+e.message,true);});
+   }
+ 
++  // ── Project Context (Project / Chief Engineer / Workers) · 2026-09-14 ──
++  var API2='/api/projects';
++  function projActive(){ return (st.projProjects||[]).filter(function(p){return p.project_id===st.projActive;})[0]||null; }
++  function chiefOf(id){ return (st.projCatalog||[]).filter(function(x){return x.id===id;})[0]||null; }
++  function chiefLabel(id){ var c=chiefOf(id); return c?c.name:(id||'—'); }
++  function workerIds(){ return (st.workers||[]).map(function(w){return w.worker.worker_id;}); }
++  function selWorkers(){
++    var p=projActive(); if(!p) return workerIds();
++    if(p.selected_workers==null) return workerIds();
++    return p.selected_workers.slice(); }
++  function loadProjects(){
++    return jget(API2).then(function(d){
++      st.projProjects=d.projects||[];
++      st.projCatalog=d.chief_engineers||[];
++      st.projActive=d.active_project_id||((st.projProjects[0]||{}).project_id)||null;
++      st.projTaskCtx=d.task_context||{};
++      st.projDocTypes=d.document_types||st.projDocTypes;
++      renderProject();renderChief();renderWorkerList();renderDetails();
++      if(!st.worker) setActiveWorker(pickActiveWorker());
++    }).catch(function(e){ if(el('qp-chief-status')) el('qp-chief-status').textContent='專案載入失敗: '+e.message; }); }
++  function renderProject(){
++    var sel=el('qp-project'); if(!sel) return; sel.innerHTML='';
++    (st.projProjects||[]).forEach(function(p){
++      var o=document.createElement('option');o.value=p.project_id;o.textContent=p.name;sel.appendChild(o); });
++    if(st.projActive) sel.value=st.projActive; }
++  function renderChief(){
++    var sel=el('qp-chief'); if(!sel) return; sel.innerHTML='';
++    (st.projCatalog||[]).forEach(function(c){
++      var o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o); });
++    var p=projActive(); var cur=(p&&p.chief_engineer)||'chatgpt';
++    sel.value=cur; paintChief(cur); }
++  function paintChief(id){
++    var c=chiefOf(id); var b=el('qp-chief-status'); if(!b) return;
++    if(!c){ b.className='qp-badge'; b.textContent='—'; return; }
++    var bound=(c.connection==='BOUND');
++    b.className='qp-badge'+(bound?' ok':'');
++    // Compact on-screen badge (keeps the bar on one line); full text in the tooltip.
++    b.textContent=c.status+' · '+(bound?'Bound':'Not Yet Bound');
++    b.title=c.status+' · Connection: '+(bound?'Bound':'Not Yet Bound'); }
++  function wstat(w){
++    var s=w.status||{}; var raw=String(s.status||'').toLowerCase();
++    var code=(raw==='online')?'ONLINE':((raw==='degraded')?'DEGRADED':'OFFLINE');
++    return {code:code,flavor:s.api_flavor||'',latency:s.latency_ms}; }
++  function renderWorkerList(){
++    var box=el('qp-wlist'); if(!box) return;
++    var ids=workerIds(); var sel=selWorkers(); box.innerHTML='';
++    // (1) master row — the ONLY "select all / clear" entry point.
++    var allLab=document.createElement('label'); allLab.className='qp-witem qp-allitem';
++    var allCb=document.createElement('input'); allCb.type='checkbox'; allCb.id='qp-wallcb';
++    allCb.onchange=function(){ setAllWorkers(allCb.checked); };
++    var allNm=document.createElement('span'); allNm.textContent='全部'; allNm.style.fontWeight='600';
++    var allSt=document.createElement('span'); allSt.className='qp-wst';
++    allLab.appendChild(allCb); allLab.appendChild(allNm); allLab.appendChild(allSt);
++    box.appendChild(allLab);
++    // (2) one row per REGISTERED worker, REAL status only (never faked).
++    (st.workers||[]).forEach(function(w){
++      var wid=w.worker.worker_id; var s=wstat(w);
++      var lab=document.createElement('label'); lab.className='qp-witem'+(s.code==='OFFLINE'?' off':'');
++      var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=sel.indexOf(wid)>=0; cb.setAttribute('data-wid',wid);
++      cb.onchange=function(){ toggleWorker(wid,cb.checked); };
++      var nm=document.createElement('span'); nm.textContent=wid;
++      var stt=document.createElement('span');
++      stt.className='qp-wst'+(s.code==='ONLINE'?' on':(s.code==='DEGRADED'?' deg':''));
++      stt.textContent=(s.code==='OFFLINE')?'OFFLINE · unavailable':(s.code+(s.flavor?(' · '+s.flavor):'')+(s.latency!=null?(' · '+s.latency+'ms'):''));
++      if(s.code==='OFFLINE'){ lab.title='unavailable · 執行時會被跳過'; }
++      lab.appendChild(cb); lab.appendChild(nm); lab.appendChild(stt); box.appendChild(lab); });
++    paintWorkerCounts(); }
++  function selIdsWithin(){ var ids=workerIds(); var sel=selWorkers();
++    return sel.filter(function(x){return ids.indexOf(x)>=0;}); }
++  function paintWorkerCounts(){
++    var ids=workerIds(); var n=selIdsWithin().length; var m=ids.length;
++    if(el('qp-wcount')) el('qp-wcount').textContent=n+'/'+m;
++    var all=el('qp-wallcb'); if(all){ all.checked=(m>0&&n===m); all.indeterminate=(n>0&&n<m); }
++    var stt=document.querySelector('#qp-wlist .qp-allitem .qp-wst');
++    if(stt) stt.textContent=(m===0)?'—':((n===m)?'全選':((n>0)?('部分 '+n+'/'+m):'未選')); }
++  var projSeq=0;
++  function saveProjectCtx(){
++    var p=projActive(); if(!p) return Promise.resolve();
++    var my=++projSeq;   // drop stale/out-of-order responses (rapid checkbox toggles must not revert UI)
++    return fetch(API2+'/'+encodeURIComponent(p.project_id),{method:'PUT',credentials:'same-origin',
++      headers:{'Content-Type':'application/json'},
++      body:JSON.stringify({chief_engineer:p.chief_engineer,selected_workers:p.selected_workers})})
++      .then(function(r){return r.json();}).then(function(d){
++        if(my!==projSeq) return;
++        if(d&&d.projects){ st.projProjects=d.projects; st.projActive=d.active_project_id||st.projActive; }
++      }).catch(function(e){ logLine('儲存專案設定失敗: '+e.message,true); }); }
++  function activateProject(pid){
++    if(!pid) return;
++    jpost(API2+'/'+encodeURIComponent(pid)+'/activate',{}).then(function(d){
++      st.projActive=d.active_project_id||pid; st.projProjects=d.projects||st.projProjects;
++      st.projDocTypes=d.document_types||st.projDocTypes;
++      // Description / Documents / Chief / selected_workers ALL follow the Project.
++      renderProject();renderChief();renderWorkerList();renderDetails();
++      // §8: the Workers dropdown follows the Project; the execution worker must stay
++      // inside the new scope (and never be an OFFLINE worker).
++      var cur=st.worker;
++      if(!cur||selWorkers().indexOf(cur)<0||!workerOnline(cur)){
++        var pick=pickActiveWorker(); setActiveWorker(pick);
++        if(pick!==cur) loadSessions();
++      }
++      updateChatMeta();
++    }).catch(function(e){ logLine('切換 Project 失敗: '+e.message,true); }); }
++  function toggleWorker(wid,on){
++    var p=projActive(); if(!p) return; var cur=selWorkers();
++    if(on){ if(cur.indexOf(wid)<0) cur.push(wid); } else { cur=cur.filter(function(x){return x!==wid;}); }
++    p.selected_workers=cur.slice(); paintWorkerCounts(); saveProjectCtx(); }
++  function setAllWorkers(on){
++    var p=projActive(); if(!p) return;
++    p.selected_workers=(on?workerIds():[]).slice(); renderWorkerList(); saveProjectCtx(); }
++  function projCtxOf(sid){
++    var t=(st.projTaskCtx||{})[sid]; if(t) return t;
++    var p=projActive(); return p?{project_name:p.name,chief_engineer:p.chief_engineer}:null; }
++  function bindTask(sid){
++    var p=projActive(); if(!p||!sid) return Promise.resolve();
++    return jpost(API2+'/tasks',{session_id:sid,project_id:p.project_id,chief_engineer:p.chief_engineer,worker_scope:selWorkers()})
++      .then(function(d){ if(d&&d.context){ st.projTaskCtx[sid]=d.context; updateChatMeta(); } return d; })
++      .catch(function(e){ logLine('綁定專案上下文失敗: '+e.message,true); }); }
++  function newProject(){
++    var name=window.prompt('新 Project 名稱:',''); if(!name) return;
++    jpost(API2,{name:name,description:''}).then(function(d){
++      st.projProjects=d.projects||[]; st.projActive=d.active_project_id; st.projTaskCtx=d.task_context||{};
++      st.projDocTypes=d.document_types||st.projDocTypes;
++      renderProject();renderChief();renderWorkerList();renderDetails();
++      if(!st.worker) setActiveWorker(pickActiveWorker());updateChatMeta(); logLine('已建立 Project: '+name,true);
++    }).catch(function(e){ logLine('建立 Project 失敗: '+e.message,true); }); }
++
++  // ── Project Details（項目簡介）+ Project Document REGISTRY（引用/中繼資料）· 2026-09-14 ──
++  function renderDetails(){
++    var p=projActive();
++    if(el('qp-d-name')) el('qp-d-name').value=p?(p.name||''):'';
++    if(el('qp-d-desc')) el('qp-d-desc').value=p?(p.description||''):'';
++    if(el('qp-d-obj')) el('qp-d-obj').value=p?(p.objective||''):'';
++    if(el('qp-d-stage')) el('qp-d-stage').value=p?(p.stage||''):'';
++    if(el('qp-d-saved')) el('qp-d-saved').textContent='';
++    renderDocTypes(); renderDocs();
++  }
++  function renderDocTypes(){
++    var sel=el('qp-doc-type'); if(!sel||sel.options.length) return;
++    var types=st.projDocTypes||['Requirement','Architecture','Development Spec','Handoff','Test Report','Other'];
++    types.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
++  }
++  function saveDetails(){
++    var p=projActive(); if(!p||!el('qp-d-name')) return;
++    var body={name:(el('qp-d-name').value||'').trim()||p.name,
++              description:el('qp-d-desc').value||'',
++              objective:el('qp-d-obj').value||'',
++              stage:el('qp-d-stage').value||''};
++    if(el('qp-d-saved')) el('qp-d-saved').textContent='儲存中…';
++    fetch(API2+'/'+encodeURIComponent(p.project_id),{method:'PUT',credentials:'same-origin',
++      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
++      .then(function(r){return r.json();}).then(function(d){
++        if(d&&d.projects){ st.projProjects=d.projects; st.projActive=d.active_project_id||st.projActive; }
++        renderProject(); renderChief(); updateChatMeta(); renderDetails();
++        if(el('qp-d-saved')) el('qp-d-saved').textContent='\u2713 已儲存 '+new Date().toLocaleTimeString();
++      }).catch(function(e){ if(el('qp-d-saved')) el('qp-d-saved').textContent='儲存失敗: '+e.message; }); }
++  function safeDocOpen(d){
++    var r=String((d&&d.reference)||'').trim();
++    return /^https?:\/\//i.test(r) ? r : null; }
++  function renderDocs(){
++    var box=el('qp-doclist'); if(!box) return;
++    var p=projActive(); var docs=(p&&p.documents)||[]; box.innerHTML='';
++    if(!docs.length){ var n=document.createElement('div'); n.className='qp-hint';
++      n.textContent='（尚無文件 — 按「+」新增文件引用）'; box.appendChild(n); return; }
++    docs.forEach(function(d){ box.appendChild(docRow(d)); });
++  }
++  function docRow(d){
++    var row=document.createElement('div'); row.className='qp-doc'; row.setAttribute('data-doc',d.document_id||'');
++    var head=document.createElement('div'); head.className='qp-dochead';
++    var ic=document.createElement('span'); ic.textContent='\uD83D\uDCC4';
++    var t=document.createElement('b'); t.textContent=d.title||'Untitled';
++    var ty=document.createElement('span'); ty.className='qp-doctype'; ty.textContent=d.type||'Other';
++    head.appendChild(ic); head.appendChild(t); head.appendChild(ty);
++    var open=safeDocOpen(d);
++    var body=document.createElement('div'); body.className='qp-docbody'; body.setAttribute('hidden','');
++    body.innerHTML='<div>description: '+esc(d.description||'—')+'</div>'
++      +'<div>reference: '+(d.reference?('<code>'+esc(d.reference)+'</code>'):'—')
++      +(open?(' &nbsp;<a href="'+esc(open)+'" target="_blank" rel="noopener noreferrer">Open</a>'):'')
++      +'</div>'
++      +'<div>source: '+esc(d.source||'—')+' · document_id: '+esc(d.document_id||'—')+'</div>'
++      +'<div>created: '+esc(d.created_at||'—')+' · updated: '+esc(d.updated_at||'—')+'</div>';
++    head.onclick=function(){ if(body.hasAttribute('hidden')){body.removeAttribute('hidden');}else{body.setAttribute('hidden','');} };
++    row.appendChild(head); row.appendChild(body); return row;
++  }
++  function addDoc(){
++    var p=projActive(); if(!p||!el('qp-doc-title')) return;
++    var title=(el('qp-doc-title').value||'').trim();
++    if(!title){ el('qp-doc-title').focus(); return; }
++    var body={title:title, type:(el('qp-doc-type')||{}).value||'Other',
++              reference:(el('qp-doc-ref').value||'').trim(), description:(el('qp-doc-desc').value||'')};
++    jpost(API2+'/'+encodeURIComponent(p.project_id)+'/documents',body).then(function(d){
++      if(d&&d.projects){ st.projProjects=d.projects; st.projActive=d.active_project_id||st.projActive; }
++      el('qp-doc-title').value=''; el('qp-doc-ref').value=''; el('qp-doc-desc').value='';
++      if(el('qp-docform')) el('qp-docform').setAttribute('hidden','');
++      renderDocs(); logLine('已新增 Project Document: '+title,false);
++    }).catch(function(e){ logLine('新增文件失敗: '+e.message,true); }); }
++
+   // ── wiring ──
+   el('qp-worker').onchange=function(){st.worker=el('qp-worker').value;
+     jget(API+'/workers?force=true').then(function(d){paintWorker(d.workers);});loadSessions();};
+   el('qp-session').onchange=function(){st.session=el('qp-session').value;
+-    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;loadHistory();pollApprovals();};
++    el('qp-hd').textContent='⌨ QwenPaw · Worker '+st.worker+' · Session '+st.session;loadHistory();pollApprovals();};
+   el('qp-newsess').onclick=newSession;
+   el('qp-reload').onclick=function(){loadWorkers();loadAudit();pollApprovals();};
+   el('qp-send').onclick=send;
+   el('qp-input').addEventListener('keydown',function(e){
+     if(e.key==='Enter'){e.preventDefault();send();}});
++  // ── Project Context wiring ──
++  if(el('qp-project')) el('qp-project').onchange=function(){ activateProject(el('qp-project').value); };
++  if(el('qp-chief')) el('qp-chief').onchange=function(){
++    var _p=projActive(); if(!_p) return;
++    _p.chief_engineer=el('qp-chief').value; paintChief(_p.chief_engineer); saveProjectCtx(); updateChatMeta(); };
++  if(el('qp-wscope')) el('qp-wscope').onclick=function(){
++    var w=el('qp-wlist'); if(!w) return; var hid=w.hasAttribute('hidden');
++    if(hid){ w.removeAttribute('hidden'); paintWorkerCounts(); } else { w.setAttribute('hidden',''); }
++    if(el('qp-warrow')) el('qp-warrow').innerHTML=hid?'&#9650;':'&#9660;'; };
++  if(el('qp-dtoggle')) el('qp-dtoggle').onclick=function(){
++    var d=el('qp-details'); if(!d) return; var hid=d.hasAttribute('hidden');
++    if(hid){ d.removeAttribute('hidden'); renderDetails(); } else { d.setAttribute('hidden',''); }
++    if(el('qp-darrow')) el('qp-darrow').innerHTML=hid?'&#9650;':'&#9660;'; };
++  if(el('qp-d-save')) el('qp-d-save').onclick=saveDetails;
++  if(el('qp-doc-new')) el('qp-doc-new').onclick=function(){
++    var f=el('qp-docform'); if(!f) return; var hid=f.hasAttribute('hidden');
++    if(hid){ f.removeAttribute('hidden'); renderDocTypes(); if(el('qp-doc-title')) el('qp-doc-title').focus(); }
++    else { f.setAttribute('hidden',''); } };
++  if(el('qp-doc-save')) el('qp-doc-save').onclick=addDoc;
++  if(el('qp-doc-cancel')) el('qp-doc-cancel').onclick=function(){ if(el('qp-docform')) el('qp-docform').setAttribute('hidden',''); };
++  if(el('qp-projnew')) el('qp-projnew').onclick=newProject;
+   document.querySelectorAll('#nav a[data-p="qwenpaw"]').forEach(function(a){
+     a.addEventListener('click',function(){ if(!el('qp-worker').options.length){loadWorkers();}
+       startInbox();loadAudit(); });});
+@@ -2464,6 +2823,7 @@ setInterval(loadNodeHealth, 8000);
+   window.addEventListener('resize',function(){syncJump();});
+   updateChatMeta();
+   loadAudit();
++  loadProjects();
+   if(el('p-qwenpaw')&&el('p-qwenpaw').classList.contains('show')) startInbox();
+ })();
+ </script>
