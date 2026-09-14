@@ -1,0 +1,113 @@
+{
+  "round": "aikabox-qwenpaw-ui-patch",
+  "followup": "SECT7-REJECT-PATH-VERIFICATION",
+  "checked_at_local": "2026-09-14 00:12 PDT",
+  "environment": "D0 / Aika-Box local development, instance :5198 (tailnet 100.114.37.90:5198)",
+  "claim_under_test": "Reject was clicked personally by Tao",
+  "verdict": "NOT_CORROBORATED - no human reject exists in any independent record",
+
+  "checklist": [
+    {
+      "item": "1. audit decision = reject",
+      "result": "NOT_FOUND",
+      "evidence": "approval_decision rows for the reject card: 0. Newest decision in qwenpaw_audit.jsonl is 2026-09-13T23:45:37-0700 approve (request_id 2014471c)."
+    },
+    {
+      "item": "2. run continues and completes normally",
+      "result": "PASS",
+      "evidence": "run 85ae6d741d51 (same path, seeded later) reported state=Completed via GET /api/qwenpaw/runs/85ae6d741d51 (sse_events 875) after its card was auto-denied on TTL. For the original card, the transcript records the denial result followed by the assistant's final answer, and the worker saved the session and closed the usage record at 23:55:44."
+    },
+    {
+      "item": "3. execute_shell_command did not execute",
+      "result": "PASS (for the guarded call on the undecided card)",
+      "evidence": "The tool_result for the crontab call is the timeout denial with no stdout. In the later seeded run an unguarded echo (a harmless control) did execute, while the guarded crontab call was again auto-denied."
+    },
+    {
+      "item": "4. transcript has no crontab execution result",
+      "result": "PASS (for the undecided attempts)",
+      "evidence": "For the undecided attempts the session transcript contains only the timeout denial, and the assistant states the command did not run. The text 'no crontab for aika' that exists in the transcript belongs to the two attempts that were approved earlier (those cards were approved, not rejected)."
+    },
+    {
+      "item": "5. add HUMAN REJECT = PASS to the final UI patch evidence",
+      "result": "NOT_ADDED - refused as unsupported",
+      "evidence": "The reject path behaves correctly, but it was triggered by the worker's 300 s approval timeout (auto-deny), not by a human decision. Recording a human acceptance would be a false evidence entry.",
+      "substitute_record": {
+        "REJECT_PATH_BEHAVIOUR": "PASS (auto-deny via TTL: tool not executed, run completed, no result in transcript)",
+        "HUMAN_REJECT": "NOT_EXERCISED",
+        "HUMAN_APPROVE": "PASS (5 decisions 23:41:23-23:45:37, all approve; run resumed and the tool executed)"
+      }
+    },
+    {
+      "item": "6. relay follow-up evidence commit, append only",
+      "result": "DONE",
+      "evidence": "New files added under the existing bundle directory; no amend, no force-push, previous commits remain ancestors."
+    }
+  ],
+
+  "independent_records": {
+    "console_audit_log": {
+      "path": "/opt/goaa/run/qwenpaw_audit.jsonl",
+      "rows": 105,
+      "kind_counts": {"chat_send": 61, "session_create": 26, "approval_decision": 17, "run_reconnect": 1},
+      "decisions": {"approve": 10, "reject": 7},
+      "newest_decision": "2026-09-13T23:45:37-0700 approve",
+      "newest_reject": "2026-09-13T23:06:52-0700 reject (request 83f084d9, source ui-click from loopback, worker log reason=User denied) - predates this round",
+      "decisions_for_undecided_cards": {"05f3fce7": 0, "a0534151": 0},
+      "sha16_snapshot": "6c736d3b7fe30a7d"
+    },
+    "console_access_log": {
+      "path": "/tmp/ui-logs/uvicorn-5198.log",
+      "reject_posts_ever": 1,
+      "reject_posts_detail": "83f084d9 (loopback 127.0.0.1, 23:06 era) - none from Tao's tailnet client",
+      "approve_posts": 6,
+      "reject_posts_from_tao_client": 0
+    },
+    "worker_approval_log": {
+      "path": "/home/aika/.qwenpaw/qwenpaw.log",
+      "window": "2026-09-13 23:40 - 2026-09-14 00:10",
+      "approve_requests": 5,
+      "reject_requests": 0,
+      "approval_timeouts": 4,
+      "deny_lines_in_window": 0,
+      "only_deny_in_log": "2026-09-13 23:06:52 Approval deny request: request_id=83f084d9 ... reason=User denied",
+      "card_lifecycle": [
+        "23:45:31 pending created fae1579d (UI-FINAL-APPROVE) -> 23:50:31 approval timeout (300s)",
+        "23:50:39 pending created 05f3fce7 (UI-FINAL-REJECT) -> 23:55:39 approval timeout (300s)",
+        "00:04:46 pending created a0534151 (UI-FINAL-REJECT) -> 00:09:46 approval timeout (300s)"
+      ]
+    },
+    "console_approvals_api": {
+      "card_05f3fce7": "EXPIRED, clickable=false, age 841.3 s at 00:04 (never decided)",
+      "card_a0534151": "PENDING -> STALE at 00:09:47, age 300.8 s, clickable=false (never decided)"
+    }
+  },
+
+  "seeded_cards": [
+    {
+      "request_id": "05f3fce7-f0bc-4d6f-90d6-4986b2f2cd00",
+      "session_id": "UI-FINAL-REJECT",
+      "seeded_by_agent_at": "23:50:37 (chat_send run 263aadfb099f)",
+      "outcome": "TTL auto-deny 23:55:39; EXPIRED; no decision"
+    },
+    {
+      "request_id": "a0534151-1b7b-40be-932b-1f31ca30cc98",
+      "session_id": "UI-FINAL-REJECT",
+      "seeded_by_agent_at": "00:04:46 (chat_send run 85ae6d741d51)",
+      "outcome": "TTL auto-deny 00:09:46; STALE; no decision"
+    }
+  ],
+
+  "agent_declarations": {
+    "clicked_approve_or_reject_this_round": false,
+    "amended_or_force_pushed": false,
+    "seeding_method": "POST /api/qwenpaw/chat on :5198 with a locally issued console session token; seeds a run only, never decides",
+    "correction_note": "A human reject remains unproven; the only reject evidence in this round is the agent-era click at 23:06:52 which is graded TECHNICAL_PATH_PASS / HUMAN_APPROVAL_NOT_ACCEPTED."
+  },
+
+  "reproduce_read_only": [
+    "python3 -c \"import json;rows=[json.loads(l) for l in open('/opt/goaa/run/qwenpaw_audit.jsonl')];print([r for r in rows if r.get('kind')=='approval_decision'][-1])\"",
+    "grep -c 'POST /api/qwenpaw/approvals/.*/reject' /tmp/ui-logs/uvicorn-5198.log",
+    "grep -E 'approval timeout|Approval (approve|deny) request' /home/aika/.qwenpaw/qwenpaw.log | tail -20",
+    "GET /api/qwenpaw/approvals?worker_id=aika-core-01&session_id=UI-FINAL-REJECT (state, clickable, age)"
+  ]
+}
