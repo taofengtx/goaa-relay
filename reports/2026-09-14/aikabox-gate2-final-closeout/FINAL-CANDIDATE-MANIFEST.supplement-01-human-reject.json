@@ -1,0 +1,37 @@
+{
+  "kind": "manifest-supplement",
+  "supplement_of": "FINAL-CANDIDATE-MANIFEST.json",
+  "note": "The original manifest is a frozen snapshot taken at closeout time and is left unmodified. This follow-up supplement supersedes only the fields listed below.",
+  "generated_at": "2026-09-14T02:45:40-0700",
+  "relay_evidence_commit_base": "13aed2a",
+  "supersedes": {
+    "human_reject_accepted": true,
+    "ready_for_human_reject": "DONE (human reject exercised 2026-09-14T02:42:05-0700, request_id 2a71a93e-958e-4139-afd1-f7e5c14e78fd)"
+  },
+  "unsupported_unchanged": {
+    "human_approve_accepted": false,
+    "technical_approve_pass": true,
+    "technical_reject_pass": true,
+    "ready_for_golden05_cutover": false
+  },
+  "human_reject_evidence": {
+    "session_id": "UI-FINAL-HUMAN-REJECT",
+    "request_id": "2a71a93e-958e-4139-afd1-f7e5c14e78fd",
+    "tool": "execute_shell_command",
+    "command": "crontab -l",
+    "decision": "reject",
+    "actor": "tao",
+    "source": "ui-click",
+    "decided_at": "2026-09-14T02:42:05-0700",
+    "tool_executed": false,
+    "run_id": "342b862a45a4",
+    "run_final_status": "Completed",
+    "run_finished_at": "2026-09-14T02:42:07-0700"
+  },
+  "unchanged_hashes": {
+    "candidate_main_py": "2b4a1b452ad4595ae1dacea15454bf706c0182fe099dd2a760c9cac62b19e2f3",
+    "candidate_project_context_py": "8fe454f6adae237701d42d8c926a84dec32190842afd0b420beb55a1192fc526",
+    "local_source_commit": "2ede799",
+    "golden05_main_py": "0c78b8e83516613a45b648331e90e07e64e02a034add55aac2920a3a7eb7364e"
+  }
+}
