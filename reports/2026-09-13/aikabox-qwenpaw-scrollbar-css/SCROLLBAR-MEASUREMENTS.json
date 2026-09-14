@@ -1,0 +1,70 @@
+{
+  "round": "aikabox-qwenpaw-scrollbar-css",
+  "date": "2026-09-13",
+  "environment": "D0 / Aika-Box local development",
+  "scope": "CSS-only scrollbar skin; no JS/API/Approval/Session/DB/Auth/systemd change",
+  "instance": {
+    "verified_on": "http://100.114.37.90:5198 (D0 dev, tailnet-bound)",
+    "engine": "Chromium via managed CDP, viewports 1440x813 and 420x900",
+    "golden_5188": "not modified, not restarted (MainPID 2457759, NRestarts 2, main.py 0c78b8e83516613a)"
+  },
+  "artifacts": {
+    "file": "/home/aika/gate2-ui-wt/local-console/main.py",
+    "sha16_before": "b5371dbaf5441f14",
+    "sha16_after": "deea05988031b503",
+    "lines_before_after": [2244, 2254],
+    "bytes_before_after": [160684, 161285],
+    "diff": "+10 / -0 lines, 601 bytes inserted, single hunk before </style></head>",
+    "worktree_commit": "29bd973",
+    "served_page_5198": {"bytes": 107703, "sha16": "0826dc6f2e5f30d9", "scrollbar_css_occurrences": 7},
+    "served_page_5188": {"bytes": 99105, "sha16": "0ac695507342933b", "scrollbar_css_occurrences": 0}
+  },
+  "measurements": {
+    "scrollbar_thickness_px": {
+      "before": {"html": 0, "body": 0, "side_nav": 16, "chat_qp_log": 15, "approvals": 15, "audit": 15, "code_horizontal": 17},
+      "after":  {"html": 0, "body": 0, "side_nav": 7,  "chat_qp_log": 6,  "approvals": 6,  "audit": 6,  "code_horizontal": 8},
+      "note": "side_nav includes its own 1px border; code block includes 2px border"
+    },
+    "computed_webkit_pseudo": {
+      "before": {"bar": ["auto", "auto"], "thumb_bg": "rgba(0, 0, 0, 0)", "thumb_radius": "0px", "track_bg": "rgba(0, 0, 0, 0)"},
+      "after":  {"bar": ["6px", "6px"],   "thumb_bg": "rgba(255, 255, 255, 0.18)", "thumb_radius": "999px", "track_bg": "rgba(0, 0, 0, 0)", "corner_bg": "rgba(0, 0, 0, 0)", "thumb_border_width": "0px"}
+    },
+    "narrow_420x900": {
+      "after": {"side_nav": 7, "chat_qp_log": 6, "approvals": 0, "audit": 0},
+      "note": "0 = element has no overflow, so no bar is rendered (correct)",
+      "doc": [900, 900],
+      "horizontal_overflow": 0,
+      "composer_rect": [30, 673, 360, 50]
+    },
+    "layout_rects_identical_before_after": {
+      ".side": [0, 0, 216, 813],
+      ".main": [216, 0, 1224, 813],
+      ".qp-main": [245, 316, 1166, 475],
+      "#p-qwenpaw .chat": [245, 316, 805, 475],
+      ".qp-side": [1066, 316, 345, 475],
+      "composer": [262, 723, 771, 50],
+      "#qp-log": [262, 399, 771, 317],
+      "#qp-approvals": [1085, 357, 308, 171],
+      "#qp-audit": [1085, 602, 308, 171],
+      "doc": [813, 813],
+      "horizontal_overflow": 0
+    },
+    "engine_guard_experiment": {
+      "css.supports_moz_appearance_none": false,
+      "css.supports_selector_webkit_scrollbar": true,
+      "variant_a_webkit_only": {"bar_px": {"side": 7, "chat": 6, "approvals": 6, "audit": 6, "code": 8}},
+      "variant_b_plus_unguarded_firefox_props": {"bar_px": {"side": 11, "chat": 10, "approvals": 10, "audit": 10, "code": 12}, "conclusion": "Chromium drops legacy ::-webkit-scrollbar styling once scrollbar-color is non-auto"},
+      "variant_c_shipped_guarded": {"bar_px": {"side": 7, "chat": 6, "approvals": 6, "audit": 6, "code": 8}, "scrollbar_width_computed": "auto", "conclusion": "guard keeps Chromium on the 6px WebKit styling while Firefox gets thin+coloured"}
+    },
+    "console_errors_after": {"js_errors": 0, "uncaught_exceptions": 0}
+  },
+  "screenshots": [
+    {"file": "shots/SC-01-scrollbar-chat-desktop.png", "bytes": 215182, "sha16": "a30a21f3dc3b51a4", "viewport": "1440x813"},
+    {"file": "shots/SC-02-scrollbar-narrow-420x900.png", "bytes": 108103, "sha16": "a960abc0c48b77d3", "viewport": "420x900"},
+    {"file": "shots/SC-03-scrollbar-approvals-audit-code.png", "bytes": 237896, "sha16": "1908f54ce6d97042", "viewport": "1440x813", "note": "overflow content injected by the probe so all three panels scroll"}
+  ],
+  "honest_limits": [
+    "agent has no image perception: screenshots captured but not visually judged; all visual claims are DOM/computed-style numbers",
+    "Firefox branch reasoned from engine capability, not executed in a Firefox instance"
+  ]
+}
