@@ -1,0 +1,70 @@
+--- /tmp/fix-b-before.py	2026-09-13 17:11:22.873189639 -0700
++++ /home/aika/gate2-patch-wt/local-console/main.py	2026-09-13 17:11:22.883180300 -0700
+@@ -1916,6 +1916,32 @@
+     liveEl.style.cssText='white-space:pre-wrap;margin:.35rem 0;color:var(--txt)';
+     el('qp-log').appendChild(liveEl);}return liveEl;}
+ 
++  // ── session history ──
++  function loadHistory(){
++    // Restore the selected session's transcript. Never interrupts a live run and
++    // never blocks sending: a failure is reported inline only.
++    var wid=st.worker, sid=st.session;
++    if(!wid||!sid) return Promise.resolve();
++    if(st.es) return Promise.resolve();
++    var box=el('qp-log');
++    box.innerHTML='';liveEl=null;st.live='';
++    logLine('載入歷史…',false);
++    return jget(API+'/sessions/'+encodeURIComponent(sid)+'?worker_id='+encodeURIComponent(wid))
++      .then(function(d){
++        if(st.session!==sid||st.worker!==wid) return;   // selection changed meanwhile
++        box.innerHTML='';liveEl=null;st.live='';
++        var msgs=d.messages||[];
++        if(!msgs.length){
++          logLine(d.resumed?'（此 session 尚無文字訊息）':'（此 session 在本機尚無歷史）',false);
++          return;
++        }
++        msgs.forEach(function(m){
++          logLine((m.role==='user'?'我：':'QwenPaw：')+(m.text==null?'':m.text),false);
++        });
++      })
++      .catch(function(e){ logLine('載入歷史失敗: '+e.message,true); });
++  }
++
+   // ── workers ──
+   function loadWorkers(){
+     return jget(API+'/workers').then(function(d){
+@@ -1930,7 +1956,7 @@
+       if(d.workers.some(function(w){return w.worker.worker_id===prefer;})) sel.value=prefer;
+       st.worker=sel.value;
+       paintWorker(d.workers);
+-      return loadSessions();
++      return loadSessions(true);
+     }).catch(function(e){ el('qp-wstatus').textContent='載入 Worker 失敗: '+e.message; });
+   }
+   function paintWorker(ws){
+@@ -1945,7 +1971,7 @@
+   }
+ 
+   // ── sessions ──
+-  function loadSessions(){
++  function loadSessions(withHistory){
+     var wid=st.worker; if(!wid) return Promise.resolve();
+     el('qp-hd').textContent='載入 session…';
+     return jget(API+'/sessions?worker_id='+encodeURIComponent(wid)).then(function(d){
+@@ -1957,6 +1983,7 @@
+       });
+       st.session=sel.value||null;
+       el('qp-hd').textContent='⌨ QwenPaw · '+wid+' · '+(st.session||'（尚無 session，按「新 Session」）');
++      if(withHistory) loadHistory();
+     }).catch(function(e){ el('qp-hd').textContent='載入 session 失敗: '+e.message; });
+   }
+   function newSession(){
+@@ -2076,7 +2103,7 @@
+   el('qp-worker').onchange=function(){st.worker=el('qp-worker').value;
+     jget(API+'/workers?force=true').then(function(d){paintWorker(d.workers);});loadSessions();};
+   el('qp-session').onchange=function(){st.session=el('qp-session').value;
+-    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;pollApprovals();};
++    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;loadHistory();pollApprovals();};
+   el('qp-newsess').onclick=newSession;
+   el('qp-reload').onclick=function(){loadWorkers();loadAudit();};
+   el('qp-send').onclick=send;

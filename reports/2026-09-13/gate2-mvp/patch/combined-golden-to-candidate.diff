@@ -1,0 +1,270 @@
+--- /tmp/fix-a-before.py	2026-09-13 17:10:50.375577330 -0700
++++ /home/aika/gate2-patch-wt/local-console/main.py	2026-09-13 17:11:22.883180300 -0700
+@@ -165,199 +165,6 @@
+ document.getElementById('btn').onclick=doLogin;
+ document.getElementById('p').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+ </script>
+-<script>
+-// ── AI 工作區（QwenPaw）· GCR-2026-09-13-AIKABOX-QWENPAW-MVP ──
+-// 瀏覽器只與 :5188 對話;QwenPaw endpoint 永不離開伺服器端。
+-(function(){
+-  var API='/api/qwenpaw';
+-  var st={worker:null,session:null,run:null,es:null,timer:null,live:'',flavor:null};
+-  var liveEl=null;
+-  function el(id){return document.getElementById(id);}
+-  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+-    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+-  function jget(u){return fetch(u,{credentials:'same-origin'}).then(function(r){
+-    return r.json().then(function(j){ if(!r.ok) throw new Error(j.detail||('HTTP '+r.status)); return j; });});}
+-  function jpost(u,b){return fetch(u,{method:'POST',credentials:'same-origin',
+-    headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(function(r){
+-    return r.json().then(function(j){ if(!r.ok) throw new Error(j.detail||('HTTP '+r.status)); return j; });});}
+-  function logLine(t,warn){var d=document.createElement('div');
+-    d.style.cssText='white-space:pre-wrap;margin:.35rem 0'+(warn?';color:var(--warn)':'');
+-    d.textContent=t;var box=el('qp-log');box.appendChild(d);box.scrollTop=box.scrollHeight;return d;}
+-  function ensureLive(){if(!liveEl||!liveEl.parentNode){liveEl=document.createElement('div');
+-    liveEl.style.cssText='white-space:pre-wrap;margin:.35rem 0;color:var(--txt)';
+-    el('qp-log').appendChild(liveEl);}return liveEl;}
+-
+-  // ── workers ──
+-  function loadWorkers(){
+-    return jget(API+'/workers').then(function(d){
+-      var sel=el('qp-worker');sel.innerHTML='';
+-      d.workers.forEach(function(w){
+-        var o=document.createElement('option');
+-        o.value=w.worker.worker_id;
+-        o.textContent=w.worker.display_name+' · '+w.status.status+(w.status.api_flavor!=='unknown'?(' ('+w.status.api_flavor+')'):'');
+-        sel.appendChild(o);
+-      });
+-      var prefer='aika-core-01';
+-      if(d.workers.some(function(w){return w.worker.worker_id===prefer;})) sel.value=prefer;
+-      st.worker=sel.value;
+-      paintWorker(d.workers);
+-      return loadSessions();
+-    }).catch(function(e){ el('qp-wstatus').textContent='載入 Worker 失敗: '+e.message; });
+-  }
+-  function paintWorker(ws){
+-    var w=ws.filter(function(x){return x.worker.worker_id===st.worker;})[0];
+-    if(!w){el('qp-wstatus').textContent='—';return;}
+-    var s=w.status;
+-    el('qp-wstatus').innerHTML='<span style="color:'+(s.status==='Online'?'var(--success)':'var(--warn)')+'">&#9679;</span> '
+-      +esc(s.status)+' · '+esc(s.api_flavor||'')+' · v'+esc(s.qwenpaw_version||'?')
+-      +' · '+esc(s.latency_ms==null?'-':(s.latency_ms+'ms'))
+-      +' · last seen '+esc(s.last_seen?new Date(s.last_seen*1000).toLocaleTimeString():'—')
+-      +(s.error?(' · '+esc(s.error)):'');
+-  }
+-
+-  // ── sessions ──
+-  function loadSessions(){
+-    var wid=st.worker; if(!wid) return Promise.resolve();
+-    el('qp-hd').textContent='載入 session…';
+-    return jget(API+'/sessions?worker_id='+encodeURIComponent(wid)).then(function(d){
+-      var sel=el('qp-session');sel.innerHTML='';
+-      (d.sessions||[]).forEach(function(s){
+-        var o=document.createElement('option');o.value=s.session_id;
+-        o.textContent=s.session_id+' · '+s.status+' · '+s.messages+' msgs · '+(s.source||'');
+-        sel.appendChild(o);
+-      });
+-      st.session=sel.value||null;
+-      el('qp-hd').textContent='⌨ QwenPaw · '+wid+' · '+(st.session||'（尚無 session，按「新 Session」）');
+-    }).catch(function(e){ el('qp-hd').textContent='載入 session 失敗: '+e.message; });
+-  }
+-  function newSession(){
+-    if(!st.worker){logLine('請先選 Worker',true);return;}
+-    jpost(API+'/sessions',{worker_id:st.worker,title:'AI Workspace session'}).then(function(d){
+-      st.session=d.session.session_id;
+-      logLine('已建立 session '+st.session,true);
+-      return loadSessions().then(function(){ el('qp-session').value=st.session; });
+-    }).catch(function(e){logLine('建立 session 失敗: '+e.message,true);});
+-  }
+-
+-  // ── approvals ──
+-  function renderApprovals(items){
+-    var box=el('qp-approvals');
+-    if(!items||!items.length){box.innerHTML='目前無待決策。';return;}
+-    box.innerHTML='';
+-    items.forEach(function(a){
+-      var d=document.createElement('div');
+-      d.style.cssText='border:1px solid var(--border);border-radius:8px;padding:.5rem;margin-bottom:.5rem';
+-      var sev=(a.severity==='CRITICAL')?'var(--danger)':((a.severity==='HIGH')?'var(--warn)':'var(--txt2)');
+-      d.innerHTML='<div style="font-family:var(--mono);font-size:.76rem;color:'+sev+'">'+esc(a.severity||'-')+' · '+esc(a.tool)+'</div>'
+-        +'<div style="font-family:var(--mono);font-size:.76rem;margin:.25rem 0;word-break:break-all">'+esc(a.requested_action)+'</div>'
+-        +'<div class="note">'+esc(a.state)+' · age '+esc(a.age_s)+'s / ttl '+esc(a.expires_in_s)+'s · findings '+esc(a.findings_count)+'</div>';
+-      if(a.clickable){
+-        var b1=document.createElement('button');b1.className='btn-send';b1.textContent='Approve';
+-        var b2=document.createElement('button');b2.className='btn-send';b2.textContent='Reject';
+-        b1.style.marginRight='.4rem';
+-        b1.onclick=function(){decide(a,'approve');};
+-        b2.onclick=function(){decide(a,'reject');};
+-        d.appendChild(b1);d.appendChild(b2);
+-      }else{
+-        var n=document.createElement('div');n.className='note';
+-        n.textContent='（已失效，不可點擊）';d.appendChild(n);
+-      }
+-      box.appendChild(d);
+-    });
+-  }
+-  function decide(a,kind){
+-    el('qp-runstatus').textContent=kind+' 送出中…';
+-    jpost(API+'/approvals/'+encodeURIComponent(a.request_id)+'/'+kind,
+-      {worker_id:a.worker_id||st.worker,session_id:a.session_id||st.session})
+-      .then(function(j){ logLine('['+kind+'] '+(j.message||('ok='+j.ok)),true); loadAudit(); })
+-      .catch(function(e){ logLine('['+kind+'] 失敗: '+e.message,true); })
+-      .then(function(){ setTimeout(pollApprovals,700); });
+-  }
+-  function pollApprovals(){
+-    if(!st.worker||!st.session) return;
+-    jget(API+'/approvals?worker_id='+encodeURIComponent(st.worker)+'&session_id='+encodeURIComponent(st.session))
+-      .then(function(d){ renderApprovals(d.approvals); })
+-      .catch(function(){});
+-  }
+-  function loadAudit(){
+-    jget(API+'/audit?limit=20').then(function(d){
+-      var es=(d.entries||[]).filter(function(x){return x.kind==='approval_decision';}).slice(-5).reverse();
+-      el('qp-audit').innerHTML = es.length? es.map(function(x){
+-        return '<div style="font-family:var(--mono);font-size:.72rem;margin:.15rem 0">'
+-          +esc((x.iso||'').slice(11,19))+' '+esc(x.decision)+' '+esc(x.actor||'')+' · '+(x.success?'ok':'fail')
+-          +' · '+esc((x.worker_id||''))+'</div>';}).join('') : '—';
+-    }).catch(function(){});
+-  }
+-
+-  // ── run streaming ──
+-  function liveText(ev){
+-    if(typeof ev.text==='string'&&ev.text) return ev.text;
+-    if(typeof ev.delta==='string'&&ev.delta) return ev.delta;
+-    if(ev.object==='content'&&typeof ev.content==='string'&&ev.content) return ev.content;
+-    return '';
+-  }
+-  function stream(runId){
+-    if(st.es){try{st.es.close();}catch(e){}}
+-    st.live='';liveEl=null;
+-    var es=new EventSource(API+'/runs/'+runId+'/stream?from=0');
+-    st.es=es;
+-    es.addEventListener('run',function(ev){var j=JSON.parse(ev.data);
+-      if(j.run){el('qp-runstatus').textContent=j.run.status+' · sse '+j.run.sse_events;}});
+-    es.addEventListener('sse',function(ev){var j=JSON.parse(ev.data);var t=liveText(j);
+-      if(t){st.live=(st.live+t);if(st.live.length>6000)st.live=st.live.slice(-6000);
+-        ensureLive().textContent=st.live;el('qp-log').scrollTop=el('qp-log').scrollHeight;}});
+-    es.addEventListener('state',function(ev){var j=JSON.parse(ev.data);
+-      el('qp-runstatus').textContent=(j.status||'')+(j.error?(' · '+j.error):'');});
+-    es.addEventListener('end',function(ev){var j=JSON.parse(ev.data);
+-      try{es.close();}catch(e){}st.es=null;finalize(runId,j);});
+-    es.onerror=function(){};
+-  }
+-  function finalize(runId,j){
+-    jget(API+'/runs/'+runId).then(function(d){
+-      if(liveEl&&liveEl.parentNode)liveEl.parentNode.removeChild(liveEl);
+-      liveEl=null;st.live='';
+-      if(d.run.text) logLine('QwenPaw：'+d.run.text,false);
+-      else if(d.run.error) logLine('錯誤：'+d.run.error,true);
+-      else logLine('（run '+d.run.status+'，無文字輸出）',true);
+-      el('qp-runstatus').textContent=d.run.status;
+-      renderApprovals(d.approvals);
+-      if(d.run.status==='Completed'||d.run.status==='Failed') stopPoll();
+-      loadAudit();
+-    }).catch(function(e){logLine('讀取結果失敗: '+e.message,true);});
+-  }
+-  function startPoll(){stopPoll();st.timer=setInterval(function(){pollApprovals();},2000);}
+-  function stopPoll(){if(st.timer){clearInterval(st.timer);st.timer=null;}}
+-
+-  // ── send ──
+-  function send(){
+-    if(!st.worker){logLine('請先選 Worker',true);return;}
+-    var v=el('qp-input').value.trim();if(!v)return;
+-    el('qp-input').value='';
+-    logLine('我：'+v,false);
+-    jpost(API+'/chat',{worker_id:st.worker,session_id:st.session||'',input:v}).then(function(d){
+-      st.run=d.run.run_id;st.session=d.session_id;st.flavor=d.flavor;
+-      el('qp-runstatus').textContent=d.run.status+' · '+d.flavor;
+-      el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session+' · run '+st.run;
+-      if(d.flavor==='basic') logLine('（此 Worker 是精簡 QwenPaw：無 session 串流 / approval，僅單次回覆）',true);
+-      stream(d.run.run_id);startPoll();loadSessions();
+-    }).catch(function(e){liveEl=null;logLine('送出失敗: '+e.message,true);});
+-  }
+-
+-  // ── wiring ──
+-  el('qp-worker').onchange=function(){st.worker=el('qp-worker').value;
+-    jget(API+'/workers?force=true').then(function(d){paintWorker(d.workers);});loadSessions();};
+-  el('qp-session').onchange=function(){st.session=el('qp-session').value;
+-    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;pollApprovals();};
+-  el('qp-newsess').onclick=newSession;
+-  el('qp-reload').onclick=function(){loadWorkers();loadAudit();};
+-  el('qp-send').onclick=send;
+-  el('qp-input').addEventListener('keydown',function(e){
+-    if(e.key==='Enter'){e.preventDefault();send();}});
+-  document.querySelectorAll('#nav a[data-p="qwenpaw"]').forEach(function(a){
+-    a.addEventListener('click',function(){ if(!el('qp-worker').options.length){loadWorkers();loadAudit();} });});
+-  loadAudit();
+-})();
+-</script>
+ </body></html>"""
+ 
+ 
+@@ -2109,6 +1916,32 @@
+     liveEl.style.cssText='white-space:pre-wrap;margin:.35rem 0;color:var(--txt)';
+     el('qp-log').appendChild(liveEl);}return liveEl;}
+ 
++  // ── session history ──
++  function loadHistory(){
++    // Restore the selected session's transcript. Never interrupts a live run and
++    // never blocks sending: a failure is reported inline only.
++    var wid=st.worker, sid=st.session;
++    if(!wid||!sid) return Promise.resolve();
++    if(st.es) return Promise.resolve();
++    var box=el('qp-log');
++    box.innerHTML='';liveEl=null;st.live='';
++    logLine('載入歷史…',false);
++    return jget(API+'/sessions/'+encodeURIComponent(sid)+'?worker_id='+encodeURIComponent(wid))
++      .then(function(d){
++        if(st.session!==sid||st.worker!==wid) return;   // selection changed meanwhile
++        box.innerHTML='';liveEl=null;st.live='';
++        var msgs=d.messages||[];
++        if(!msgs.length){
++          logLine(d.resumed?'（此 session 尚無文字訊息）':'（此 session 在本機尚無歷史）',false);
++          return;
++        }
++        msgs.forEach(function(m){
++          logLine((m.role==='user'?'我：':'QwenPaw：')+(m.text==null?'':m.text),false);
++        });
++      })
++      .catch(function(e){ logLine('載入歷史失敗: '+e.message,true); });
++  }
++
+   // ── workers ──
+   function loadWorkers(){
+     return jget(API+'/workers').then(function(d){
+@@ -2123,7 +1956,7 @@
+       if(d.workers.some(function(w){return w.worker.worker_id===prefer;})) sel.value=prefer;
+       st.worker=sel.value;
+       paintWorker(d.workers);
+-      return loadSessions();
++      return loadSessions(true);
+     }).catch(function(e){ el('qp-wstatus').textContent='載入 Worker 失敗: '+e.message; });
+   }
+   function paintWorker(ws){
+@@ -2138,7 +1971,7 @@
+   }
+ 
+   // ── sessions ──
+-  function loadSessions(){
++  function loadSessions(withHistory){
+     var wid=st.worker; if(!wid) return Promise.resolve();
+     el('qp-hd').textContent='載入 session…';
+     return jget(API+'/sessions?worker_id='+encodeURIComponent(wid)).then(function(d){
+@@ -2150,6 +1983,7 @@
+       });
+       st.session=sel.value||null;
+       el('qp-hd').textContent='⌨ QwenPaw · '+wid+' · '+(st.session||'（尚無 session，按「新 Session」）');
++      if(withHistory) loadHistory();
+     }).catch(function(e){ el('qp-hd').textContent='載入 session 失敗: '+e.message; });
+   }
+   function newSession(){
+@@ -2269,7 +2103,7 @@
+   el('qp-worker').onchange=function(){st.worker=el('qp-worker').value;
+     jget(API+'/workers?force=true').then(function(d){paintWorker(d.workers);});loadSessions();};
+   el('qp-session').onchange=function(){st.session=el('qp-session').value;
+-    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;pollApprovals();};
++    el('qp-hd').textContent='⌨ QwenPaw · '+st.worker+' · '+st.session;loadHistory();pollApprovals();};
+   el('qp-newsess').onclick=newSession;
+   el('qp-reload').onclick=function(){loadWorkers();loadAudit();};
+   el('qp-send').onclick=send;

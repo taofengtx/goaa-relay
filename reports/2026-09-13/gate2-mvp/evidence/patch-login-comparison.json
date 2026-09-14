@@ -1,0 +1,28 @@
+{
+  "check": "Fix A verification: /login must contain no QwenPaw script",
+  "result": "PASS",
+  "method": "byte-level comparison of the served /login page",
+  "legacy_instance": {
+    "port": 5197,
+    "source": "/home/aika/gate2-rollback/main.py.pre",
+    "sha16": "7f62dfea43d025f6",
+    "meaning": "pre-cutover / Golden-frozen source"
+  },
+  "candidate_instance": {"port": 5198, "sha16": "0c78b8e83516613a"},
+  "login_page": {
+    "legacy_bytes": 3560,
+    "candidate_bytes": 3560,
+    "byte_identical": true,
+    "sha256_equal": true
+  },
+  "live_golden_5188_login_before_fix": {
+    "script_tags": 2,
+    "stray_block_bytes": 10220,
+    "replayed_error": "TypeError: Cannot set properties of null (setting 'onchange')"
+  },
+  "conclusion": "The candidate's /login is exactly the legacy page: no stray script, no load-time error, and the original wiring is intact (doLogin present, button bound, POST /login returns 401 for bad credentials).",
+  "screenshots": {
+    "before": "shots/patch-login-before-5188.png",
+    "after": "shots/patch-login-after.png"
+  }
+}

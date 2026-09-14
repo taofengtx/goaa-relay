@@ -1,0 +1,56 @@
+{
+  "candidate": {
+    "branch": "gate2-final-patch",
+    "worktree": "/home/aika/gate2-patch-wt",
+    "code_commit": "a68fd85",
+    "base_commit": "68d6f38",
+    "file": "local-console/main.py",
+    "sha16": "0c78b8e83516613a",
+    "bytes": 152687,
+    "lines": 2117,
+    "applied_to_golden": false
+  },
+  "verification_instance": {
+    "port": 5198,
+    "pid": 2423736,
+    "cwd": "/home/aika/gate2-patch-wt/local-console",
+    "port_5198": "http://127.0.0.1:5198"
+  },
+  "tests": {
+    "T1_login_no_stray_script": {"result": "PASS", "script_tags": 1, "qwenpaw_refs": 0, "setInterval": 0},
+    "T2_login_no_js_error": {"result": "PASS", "note": "the only script is the legacy one; the page is byte-identical to the Golden legacy page (see patch-login-comparison.json)"},
+    "T3_login_wiring": {"result": "PASS", "doLogin_defs": 1, "btn_onclick_bound": 1, "post_login_bad_creds": 401},
+    "T4_index_qwenpaw_script_count": {"result": "PASS", "count": 1},
+    "T5_index_qwenpaw_nav": {"result": "PASS", "nav_items": 1, "page_div": 1},
+    "T6_approval_poll_timer": {"result": "PASS", "structural": "exactly one setInterval(...pollApprovals...) and one startPoll definition inside the single QwenPaw script block", "functional": "7 /api/qwenpaw/approvals requests in a 10001 ms window (a single 2 s timer); a duplicated timer would give ~10-14"},
+    "T7_session_switch_restores_history": {"result": "PASS", "note": "on workspace open the auto-selected session's transcript rendered automatically; switching the selector renders that session's transcript"},
+    "T8_message_order": {"result": "PASS", "sample": "abx-20260913-160838-9e55c3 -> user line then assistant line, identical to the history API order"},
+    "T9_cross_session_isolation": {"result": "PASS", "a_contains_b_text": false, "b_contains_a_text": false, "sessions": ["abx-20260913-160838-9e55c3", "abx-20260913-160614-630ef5"]},
+    "T10_new_session_send": {"result": "PASS", "session_id": "abx-20260913-171329-66f668", "prompt": "Reply exactly: AIKA_PATCH_T10_OK", "reply": "AIKA_PATCH_T10_OK"},
+    "T11_sse": {"result": "PASS", "run_id": "71e7ed86f9b1", "session_id": "abx-20260913-171437-8488b2", "sse_events_recorded": 32, "stream_url": "/api/qwenpaw/runs/<id>/stream?from=0", "observed": "event: sse frames with object=content, delta=true text chunks, plus event: run status snapshots", "final_text": "AIKA_PATCH_SSE_OK"},
+    "T12_approval_card": {"result": "PASS", "session_id": "abx-20260913-171345-e0d2e9", "card": "HIGH · execute_shell_command · crontab -l · PENDING · ttl 300s · findings 1", "buttons": ["Approve", "Reject"]},
+    "T13a_reject": {"result": "PASS", "session_id": "abx-20260913-171345-e0d2e9", "request_id": "db8af4b3-b114-4148-98d2-ee47a3f11589", "clicked": "Reject", "run_status": "Completed", "command_executed": false},
+    "T13b_approve": {"result": "PASS", "session_id": "abx-20260913-171403-8b96ae", "request_id": "22624d5c-956c-4d09-952a-6d60868b532c", "clicked": "Approve", "run_status": "Completed", "observed_output": "no crontab for aika (exit 1)"},
+    "T14_stale_not_clickable": {"result": "PASS", "session_id": "abx-20260913-171417-039f7a", "api": "STALE / clickable=false at age 302 s", "ui": "STALE · age 324.1s / ttl 300s · （已失效，不可點擊）", "button_count": 0, "note": "One approval was seeded and left undecided; it aged out naturally. No mass seeding."},
+    "T15_audit": {"result": "PASS", "rows": 50, "kinds": {"session_create": 15, "chat_send": 24, "approval_decision": 10, "run_reconnect": 1}, "sources": ["ui-click"], "actors": ["tao"], "key_like_markers": "none"}
+  },
+  "regression": {
+    "worker_roster": {"aika-core-01": "Online / console", "do-cloud-1": "Online / basic (NOT presented as full console)", "do-cloud-2": "Offline", "do-cloud-3": "Offline"},
+    "golden_01_04": "untouched",
+    "golden_05_on_disk_main_py_sha16": "64fdc422d39a3cb9 (unchanged by this round)",
+    "c1": "untouched",
+    "c2": "untouched",
+    "db": "no migration, no writes",
+    "systemd_unit_sha256": "dd9572d95116a7dc (unchanged)",
+    "systemd_dropin_sha16": "6fab895d84668204 (unchanged)",
+    "auth_py_sha16": "9665e8d069bca4c8 (identical in both worktrees, 0 changes)",
+    "canonical_manifest_sha16": "d7404862d4c93ad1 (unchanged)"
+  },
+  "scan": {
+    "secret_patterns_16": 0,
+    "routable_ipv4_unmasked": 2,
+    "routable_ipv4_note": "both occurrences are pre-existing in the Golden baseline source (present at 02a17ffe, at HEAD and in the Golden on-disk file); the candidate has the same count of 2, so the patch introduces none",
+    "bom": false
+  },
+  "observation_note": "A stale render can look like a wrong render: when no run is streaming the approval timer is stopped, so the card keeps the state from its last poll. Re-selecting the session re-polls and shows the correct STALE state."
+}
