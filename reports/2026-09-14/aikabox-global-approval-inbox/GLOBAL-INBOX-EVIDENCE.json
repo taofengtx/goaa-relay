@@ -1,0 +1,113 @@
+{
+  "deliverable": "Aika-Box Global Approval Inbox (dev candidate)",
+  "date": "2026-09-14",
+  "environment": "D0 (Aika-Box local development) - dev instance :5198 ONLY",
+  "golden_instance_5188_modified": false,
+  "artifact": {
+    "path": "/home/aika/gate2-ui-wt/local-console/main.py",
+    "sha256_16": "5763464caa9bbf88",
+    "bytes": 172821,
+    "worktree": "/home/aika/gate2-ui-wt",
+    "branch": "gate2-ui-patch",
+    "pre_change_sha256_16": "deea05988031b503",
+    "pre_change_bytes": 161285,
+    "pre_change_commit": "29bd973",
+    "patch1_result_sha256_16": "b8d0c8431e4c23c2",
+    "chain": [
+      "deea05988031b503",
+      "b8d0c8431e4c23c2",
+      "5763464caa9bbf88"
+    ],
+    "diff_this_round": { "file": "global-approval-inbox.diff", "lines": 364, "add": 255, "del": 39, "sha256_16": "d6c4b4b1d0254031" },
+    "diff_vs_golden": { "file": "main.py.diff.vs-golden", "add": 403, "del": 50, "golden_sha256_16": "0c78b8e83516613a" }
+  },
+  "runtime": {
+    "pid": 2494507,
+    "cmd": "uvicorn main:app --host 100.114.37.90 --port 5198",
+    "listen": "100.114.37.90:5198",
+    "health": 200,
+    "log": "/tmp/ui-logs/uvicorn-5198.log",
+    "cookie_helper": { "pid": 2489158, "listen": "100.114.37.90:5196", "target": 5198 }
+  },
+  "order_implementation": {
+    "hide_audit_ui_only": {
+      "html": "line 1626 <div class=\"card qp-audit-off\" hidden>",
+      "css": "line 1420 #p-qwenpaw .qp-side>.card.qp-audit-off{display:none!important}",
+      "data_api_write_logic_untouched": true,
+      "still_fetches": "GET /api/qwenpaw/audit?limit=20"
+    },
+    "global_approval_inbox": {
+      "functions": ["refreshInbox(2191)", "workerPending(2181)", "renderInbox(2217)", "inboxCard(2234)", "cmpInbox(2158)", "remainingS(2154)", "widOf(2168)", "wlabel(2169)", "openSource(2337)", "startInbox(2372)", "stopInbox(2373)"],
+      "header": "line 1623 warning-sign APPROVAL - global Inbox (needs human click) + #qp-pending-count",
+      "session_selection_required": false,
+      "filter": "state==PENDING && clickable==true"
+    },
+    "per_card_source": {
+      "dom": ".qp-from with two <b>: 'From Worker: <name>' / 'Session: <id>'",
+      "group_header": ".qp-wgrp = '<display name> · <worker_id> · <n> pending'"
+    }
+  },
+  "call_model": {
+    "approvals_endpoint": "GET /api/qwenpaw/approvals?worker_id=<id>&session_id=<a>&session_id=<b>...",
+    "sessions_without_session_id_return": "0 rows (server collect_pending: if wanted and ...)",
+    "strategy": "per console-flavoured worker: GET /sessions then ONE GET /approvals with all session ids",
+    "complexity": "O(number of console workers) per 2s poll, independent of session count",
+    "measured_12s_window": {
+      "approvals_gets": 6,
+      "sessions_gets": 1,
+      "workers_gets": 0,
+      "decision_posts": 0,
+      "sessions_known": 41,
+      "approvals_url_length_bytes": 1459
+    },
+    "known_bound": "approvals URL grows linearly with session count (~500 sessions => ~17 KB); server-side 'empty session_id => all' not implemented on purpose (would change existing approvals semantics)"
+  },
+  "test_matrix": [
+    { "id": "G1", "name": "global aggregation without picking a session", "result": "PASS", "evidence": "Pending: 2, 2 cards, session picker untouched" },
+    { "id": "G2", "name": "cards from different sessions in one inbox", "result": "PASS", "evidence": "UI-FINAL-REJECT + UI-FINAL-APPROVE" },
+    { "id": "G3", "name": "per-card origin label", "result": "PASS", "evidence": "From Worker: aika-core-01 / Session: UI-FINAL-REJECT" },
+    { "id": "G4", "name": "worker group header", "result": "PASS", "evidence": "Aika-Box (local runtime) · aika-core-01 · 2 pending" },
+    { "id": "G5", "name": "per-card actions", "result": "PASS", "evidence": "[Approve, Reject, Open] on every card" },
+    { "id": "G6", "name": "ordering severity then shortest TTL", "result": "PASS", "evidence": "TTL left ascending 188s -> 189s" },
+    { "id": "G7", "name": "Open switches worker+session (real switch)", "result": "PASS", "evidence": "UI-FINAL-REJECT log 5614 -> UI-FINAL-APPROVE log 2079; #qp-hd updated" },
+    { "id": "G8", "name": "chat auto-scroll to latest", "result": "PASS", "evidence": "scrollTop+clientHeight >= scrollHeight-4" },
+    { "id": "G9", "name": "only opened card highlighted; inbox intact", "result": "PASS", "evidence": "hl=[4daeab3b...]; inbox 2 cards / Pending: 2" },
+    { "id": "G10", "name": "decision click success path (mock fetch)", "result": "PASS", "evidence": "qp-done-reject, 'Rejected', Pending 100->99, group header 50->49" },
+    { "id": "G11", "name": "card removal after decision", "result": "PASS", "evidence": "node gone after ~1.7s, DOM 99 cards" },
+    { "id": "G12", "name": "expired/non-clickable excluded automatically", "result": "PASS", "evidence": "after TTL expiry: 0 cards, Pending: 0, qp-zero, 'no pending decisions'; server side STALE/clickable=false" },
+    { "id": "G13", "name": "no cross-wiring to selected session", "result": "PASS", "evidence": "POST /approvals/.../reject body worker_id=do-cloud-1 session_id=MOCK-A-016 (card own source; selection was aika-core-01)" },
+    { "id": "G14", "name": "audit hidden but data/API intact", "result": "PASS", "evidence": "hidden=true, display=none, #qp-audit rows present, audit GETs on the wire" },
+    { "id": "G15", "name": "desktop layout regression", "result": "PASS", "evidence": "docScrollHeight 813 == viewport 813, hOverflow 0, inbox own scroll" },
+    { "id": "G16", "name": "scale 100 cards / 2 console workers", "result": "PASS", "evidence": "100 cards, 2 headers, sizes [50,50], no interleaved headers (pattern H C C C...), per-group ordering holds" },
+    { "id": "G17", "name": "polling cost model", "result": "PASS", "evidence": "see call_model.measured_12s_window" },
+    { "id": "G18", "name": "console cleanliness", "result": "PASS", "evidence": "only /favicon.ico 404 (pre-existing)" },
+    { "id": "G19", "name": "narrow viewport 420x900", "result": "PASS", "evidence": "doc=viewport, hOverflow 0, inbox 394x142, audit display none + offsetParent null" }
+  ],
+  "bug_found_and_fixed": {
+    "symptom": "with >1 console worker only one group header rendered (cards flattened, header emitted only on adjacent worker change)",
+    "fix": "group by worker first (independent group per worker, group order by most urgent card), then order cards within group (severity -> shortest TTL -> oldest)",
+    "verification": "G16 re-run on 5763464caa9bbf88; G1-G9 re-passed"
+  },
+  "server_side_cross_check": {
+    "dev_5198_access_log": { "approve_posts": 6, "approve_posts_unchanged": true, "reject_posts": 1, "reject_posts_unchanged": true, "note": "the single reject POST is the pre-existing 127.0.0.1 call at 23:06:52" },
+    "audit_jsonl": { "path": "/opt/goaa/run/qwenpaw_audit.jsonl", "rows": 108, "kinds": { "session_create": 26, "chat_send": 64, "approval_decision": 17, "run_reconnect": 1 }, "last_decision": "2026-09-13T23:45:37 approve 2014471c", "mtime": "2026-09-14 00:19:30 -0700", "mtime_unchanged_by_verification": true },
+    "conclusion": "decision-path tests sent zero HTTP and produced zero audit rows; no human Approve/Reject was performed by the agent"
+  },
+  "limitations": [
+    "no second real console-flavoured worker on :5198; multi-worker rendering verified via mocked /workers + /sessions + /approvals feeding the real handler code",
+    "real POST path not re-exercised this round (mocked response); genuine approve/reject path proven earlier on the same code family",
+    "no image input for this model: all visual claims are DOM geometry / computed style; PNGs are attachments only",
+    "test IDs G1-G19 are this session's own numbering because the 00:13 order text was truncated in transit",
+    "audit data still produced and written, per order; its future surface (log history / approval history) was out of scope"
+  ],
+  "screenshots": [
+    { "file": "shots/GI-01-global-inbox-two-sessions.png", "bytes": 231464, "sha256_16": "c7c69b543eec817b", "shows": "inbox with 2 pending from 2 sessions, no session selection" },
+    { "file": "shots/GI-02-open-source-deeplink-highlight.png", "bytes": 258080, "sha256_16": "b463e6e14da06b0f", "shows": "after Open: session switched + card highlighted" },
+    { "file": "shots/GI-03-inbox-empty-after-expiry.png", "bytes": 227959, "sha256_16": "f1a3124fe82e1442", "shows": "inbox self-cleared after TTL expiry (Pending: 0)" }
+  ],
+  "open_items_for_tao": [
+    "promote candidate 5763464caa9bbf88 to :5188?",
+    "approve/discard optional server-side aggregation improvement (empty session_id => all)",
+    "decide where the hidden audit surfaces later (approval history / log view)"
+  ]
+}
