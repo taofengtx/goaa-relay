@@ -45,7 +45,8 @@ and `shots/patch-login-after.png`.
 
 ## 3. Fix B — restore a session's transcript when the session is selected
 
-**Diff:** +26 lines (one function) plus 3 one-line call-site edits. `patch/fix-b-session-history.diff`
+**Diff:** net +27 lines — a 26-line function plus three one-line call-site changes.
+`patch/fix-b-session-history.diff` (2283 → 2090 after Fix A → 2117 after Fix B).
 
 ```js
 function loadHistory(){
