@@ -1,0 +1,127 @@
+{
+  "artifact_type": "GOLDEN_REMOTE_REGISTRATION_EVIDENCE",
+  "golden_id": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1",
+  "version": "1.1",
+  "registration": "ADD_ONLY_CANONICAL_REMOTE_REGISTRATION",
+  "authority": "TAO_EXPLICIT_APPROVAL",
+  "registration_authority_quote": "批准 GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1 v1.1 Remote Registration：由小千按 add-only 原则将已验证 Candidate 登记到 canonical Golden registry；不得覆盖 GOLDEN-01～05，不修改产品代码、Task/store、C1/C2/C3，不 Deploy，不 restart。",
+  "registered_by": "QwenPaw agent 'default' (xiaoqian)",
+  "registered_at_utc": "2026-09-19T22:23:30Z",
+  "canonical_registry": {
+    "path": "reports/2026-09-13/golden-baseline-v1/GOLDEN-SURFACE-MANIFEST.json",
+    "schema": "goaa.golden.registry/v1",
+    "registry_version_before": "1.0",
+    "registry_version_after": "1.1",
+    "sha256_before": "d7404862d4c93ad18eb0a4a36f0a5dce62e0979cea91006f855cf87688692d05",
+    "sha256_after": "e05a7a28134160a070de7541dab0862cc8b38247957f916b2d8b91cd9222ed5a"
+  },
+  "legacy_alias": {
+    "path": "reports/2026-09-13/golden-baseline-v1/GOLDEN-REGISTRY.json",
+    "sha256_before": "2e93faf1463cd06ae12f16a061588c765df72a497d5ab4415ca67dde80e19997",
+    "sha256_after": "2e93faf1463cd06ae12f16a061588c765df72a497d5ab4415ca67dde80e19997",
+    "touched": false,
+    "reason": "frozen LEGACY_ALIAS / compatibility alias; new references are forbidden by CANONICAL-MANIFEST-NAMING-FIX.md, and a second Golden registry must not be created"
+  },
+  "schema_change": {
+    "type": "ADD_ONLY_EXTENSION",
+    "added_keys": [
+      "registry_version_history",
+      "governance_baselines_schema",
+      "governance_baselines"
+    ],
+    "changed_existing_keys": [
+      "version"
+    ],
+    "surfaces_semantics_unchanged": true,
+    "golden_01_05_renumbered": false,
+    "canonical_role_direction_changed": false,
+    "environment_mapping_changed": false,
+    "future_surface_semantics_changed": false
+  },
+  "candidate_provenance": {
+    "state": "GOLDEN_CANDIDATE_BUILT_AND_INDEPENDENTLY_VERIFIED",
+    "source_candidate": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE",
+    "candidate_tar_sha256": "a466e86002af07f491fe4be863626b5c055ee6e26879bb43494b54b448361f48",
+    "document_sha256": "97edd7c44dc7e0c9d9b525e429e9126ea1331dfab3d8802e1cd661046447b8d1",
+    "manifest_sha256": "99279d91c269f623a95c651624a91f97629870f8271e82cd679d08ef0de226f1",
+    "verify_sha256": "01613b9621e234721eebcf35580315a1127e584bbd8435094d92c944c9f8b1c5",
+    "sha256sums_sha256": "916f8473a072307701afe1d7112247f870bb7735954a7b83153cf4a644fa30df",
+    "changelog_sha256": "95a6ce85c0c82d683be1629525a0fa63637ab7fd35c3c37822c305761e80ea1b",
+    "manifest_txt_sha256": "f5c9dde0c8c4528cc87eda41b0ec26cd66f3506b559b211977caf83cb3b12bad",
+    "verification": "PASS",
+    "verification_detail": "build 23/23 PASS (S01-S06, M01-M17); independent Part-2 verify 25/25 critical + 16/16 boundary + seal PASS",
+    "freeze_check_at_registration": "all 7 seals matched (0 drift)"
+  },
+  "evidence_directory": {
+    "path": "reports/2026-09-19/golden-goaa-aika-dev-operating-model-v1.1/",
+    "files": [
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md",
+      "MANIFEST.txt",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE.tar.gz.sha256",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-REMOTE-REGISTRATION-REPORT.md",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-REGISTRATION-EVIDENCE.json"
+    ],
+    "package_binary_included": false,
+    "package_binary_reason": "the relay repository stores no package binaries (only markdown/json/text/patch/screenshot evidence); the tarball is therefore represented by its pinned .sha256 only",
+    "internal_integrity": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt covers the 5 sealed document files in this directory (byte-identical copies)"
+  },
+  "diff_scope": {
+    "allowed": [
+      "reports/2026-09-13/golden-baseline-v1/GOLDEN-SURFACE-MANIFEST.json (add-only registry entry + version bump)",
+      "reports/2026-09-19/golden-goaa-aika-dev-operating-model-v1.1/ (new evidence directory)"
+    ],
+    "forbidden_observed": [],
+    "gate_result": "PASS",
+    "gate_checks": {
+      "json_parse": "PASS",
+      "no_bom": "PASS",
+      "ascii_only": "PASS",
+      "surfaces_unchanged": "PASS",
+      "golden_01_05_ids_and_fingerprints_unchanged": "PASS",
+      "environment_mapping_unchanged": "PASS",
+      "canonical_role_direction_unchanged": "PASS",
+      "golden_definition_unchanged": "PASS",
+      "future_additions_not_golden_unchanged": "PASS",
+      "legacy_alias_unchanged": "PASS",
+      "unrelated_relay_files_changed": 0
+    }
+  },
+  "commit": {
+    "commit_sha": "SELF (this commit; a commit cannot record its own sha - see the post-push read-back delivered with the task report)",
+    "commit_message": "golden: register GOAA Aika development operating model v1.1",
+    "amend": false,
+    "force": false,
+    "history_rewrite": false,
+    "pushed_to": "git@github-relay:taofengtx/goaa-relay.git refs/heads/main",
+    "remote_main_before": "d58826580190582018b46d76b579e692a2680e86"
+  },
+  "rollback": {
+    "procedure": "git revert <registration commit> (or reset the registry file to sha256 d7404862... and delete reports/2026-09-19/golden-goaa-aika-dev-operating-model-v1.1/)",
+    "golden_01_05_impact": "none",
+    "evidence_after_rollback": "no dangling references remain because the entry lives inside the canonical registry only"
+  },
+  "no_side_effects": {
+    "product_source_change": "NO",
+    "task_change": "NO",
+    "store_change": "NO",
+    "worker_registry_change": "NO",
+    "c1_change": "NO",
+    "c2_change": "NO",
+    "c3_change": "NO",
+    "db_change": "NO",
+    "auth_change": "NO",
+    "pricing_change": "NO",
+    "domain_change": "NO",
+    "deploy": "NO",
+    "restart": "NO",
+    "systemd_change": "NO",
+    "scheduler_change": "NO",
+    "webhook_change": "NO",
+    "backup_created": "NO"
+  },
+  "memory_written": "NO"
+}

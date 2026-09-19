@@ -1,6 +1,6 @@
 {
   "schema": "goaa.golden.registry/v1",
-  "version": "1.0",
+  "version": "1.1",
   "canonical": true,
   "status": "canonical",
   "canonical_manifest": "GOLDEN-SURFACE-MANIFEST.json",
@@ -414,5 +414,104 @@
     "risk": "'agent' is ambiguous: human Provider today (GOLDEN-03) vs AI Agent in future D3"
   },
   "change_policy_ref": "GOLDEN-CHANGE-POLICY.md",
-  "report_ref": "GOLDEN-BASELINE-V1.md"
+  "report_ref": "GOLDEN-BASELINE-V1.md",
+  "registry_version_history": [
+    {
+      "version": "1.0",
+      "date_utc": "2026-09-13",
+      "change": "initial canonical Golden surface manifest (GOLDEN-01..GOLDEN-05 FROZEN)"
+    },
+    {
+      "version": "1.1",
+      "date_utc": "2026-09-19",
+      "change": "ADD-ONLY extension: + registry_version_history, + governance_baselines_schema, + governance_baselines[1] = GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1 v1.1 (status ACTIVE, human-approved). surfaces[] / environment_mapping / canonical_role_direction / golden_definition / future_additions_not_golden / schema unchanged.",
+      "authority": "TAO_EXPLICIT_APPROVAL"
+    }
+  ],
+  "governance_baselines_schema": {
+    "collection": "governance_baselines",
+    "introduced_in_registry_version": "1.1",
+    "introduced_at_utc": "2026-09-19T22:23:30Z",
+    "add_only": true,
+    "applies_to": "DEVELOPMENT_OPERATING_MODEL / DEVELOPMENT_GOVERNANCE baselines",
+    "not_surface_golden": true,
+    "numbering_rule": "entries use their own golden_id namespace (GOLDEN-<NAME>-V<N>); they MUST NOT be numbered into the GOLDEN-01..GOLDEN-05 surface series",
+    "surface_semantics_unchanged": true,
+    "ai_self_promotion": "forbidden - human (Tao) approval required before status ACTIVE",
+    "fields": [
+      "candidate_tar_sha256",
+      "control_plane",
+      "document_sha256",
+      "evidence_path",
+      "golden_id",
+      "golden_type_full",
+      "legacy_role_compatibility",
+      "manifest_sha256",
+      "not_a_surface",
+      "notes",
+      "owner",
+      "registered_at_utc",
+      "registered_by",
+      "registration_authority",
+      "registration_mode",
+      "role_model",
+      "source_candidate",
+      "status",
+      "surface_series_untouched",
+      "track_a",
+      "track_b",
+      "track_c",
+      "type",
+      "verification",
+      "verification_detail",
+      "version"
+    ],
+    "change_policy_ref": "GOLDEN-CHANGE-POLICY.md"
+  },
+  "governance_baselines": [
+    {
+      "golden_id": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1",
+      "version": "1.1",
+      "type": "DEVELOPMENT_OPERATING_MODEL",
+      "golden_type_full": "DEVELOPMENT_OPERATING_MODEL + DEVELOPMENT_GOVERNANCE",
+      "status": "ACTIVE",
+      "owner": "Tao",
+      "registered_at_utc": "2026-09-19T22:23:30Z",
+      "source_candidate": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE",
+      "candidate_tar_sha256": "a466e86002af07f491fe4be863626b5c055ee6e26879bb43494b54b448361f48",
+      "document_sha256": "97edd7c44dc7e0c9d9b525e429e9126ea1331dfab3d8802e1cd661046447b8d1",
+      "manifest_sha256": "99279d91c269f623a95c651624a91f97629870f8271e82cd679d08ef0de226f1",
+      "verification": "PASS",
+      "verification_detail": {
+        "verify_json_sha256": "01613b9621e234721eebcf35580315a1127e584bbd8435094d92c944c9f8b1c5",
+        "sha256sums_sha256": "916f8473a072307701afe1d7112247f870bb7735954a7b83153cf4a644fa30df",
+        "changelog_sha256": "95a6ce85c0c82d683be1629525a0fa63637ab7fd35c3c37822c305761e80ea1b",
+        "manifest_txt_sha256": "f5c9dde0c8c4528cc87eda41b0ec26cd66f3506b559b211977caf83cb3b12bad",
+        "part1_build_verdict": "PASS 23/23",
+        "part2_independent_verify_verdict": "PASS 25/25 (critical), 16/16 (boundary)"
+      },
+      "control_plane": "AIKA_5188",
+      "track_a": "aika-core-01",
+      "track_b": "C3 / W5 / do-cloud-3",
+      "track_c": "Aika-2",
+      "role_model": "CLIENT / PROVIDER / ADMIN / WORK",
+      "legacy_role_compatibility": {
+        "customer": "CLIENT",
+        "agent": "PROVIDER",
+        "admin": "ADMIN"
+      },
+      "registration_authority": "TAO_EXPLICIT_APPROVAL",
+      "registration_mode": "ADD_ONLY",
+      "registered_by": "QwenPaw agent 'default' (xiaoqian)",
+      "evidence_path": "reports/2026-09-19/golden-goaa-aika-dev-operating-model-v1.1/",
+      "not_a_surface": true,
+      "surface_series_untouched": true,
+      "notes": [
+        "Development operating model + development governance baseline; NOT a Golden surface.",
+        "Registered in its own golden_id namespace; GOLDEN-01..GOLDEN-05 numbering untouched.",
+        "Additive-only: no existing registry key, surface entry, environment mapping, role direction, or future-addition record was modified.",
+        "Rollback: revert this commit (registry entry + evidence directory are hash-pinned)."
+      ]
+    }
+  ]
 }

@@ -1,0 +1,61 @@
+﻿GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE — MANIFEST
+==============================================================
+Candidate ID                 = GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1
+Document Version             = v1.1  (Golden Candidate)
+Candidate Type              = DEVELOPMENT OPERATING MODEL + DEVELOPMENT GOVERNANCE
+Created At                   = 2026-09-19  (America/Los_Angeles)
+Owner                        = Tao
+Authority                    = TAO_APPROVED_GOLDEN_CANDIDATE_BUILD
+Control Plane                = Aika / 5188
+Build Stage                  = BUILD GOLDEN CANDIDATE + CONSISTENCY CORRECTION + MANIFEST + VERIFY
+
+GOLDEN_STATUS                = GOLDEN_CANDIDATE
+REGISTRATION                 = PENDING_TAO_REVIEW
+REMOTE_ACTIVATION            = NOT_PERFORMED
+SECOND_GOLDEN_REGISTRY       = NOT_CREATED
+
+--- contents ---
+GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md            canonical operating model (v1.1)
+GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json machine-readable manifest (identity, mappings, tracks, roles, boundaries)
+GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json   structural + semantic + safety verification result
+GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt sha256 of every sealed file in this directory
+GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md  v1.1 changes, corrections, explicit non-changes
+MANIFEST.txt                                            this index (house-style candidate manifest)
+
+--- packaging ---
+Sealed set                   = all files listed above except SHA256SUMS.txt (which covers the rest)
+Integrity                    = GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt
+Tarball                      = ../GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE.tar.gz (+ .sha256)
+                               created AFTER sealing; its hash lives in the sibling .sha256 file
+                               (self-reference inside the sealed set avoided by design)
+Code snapshot tarball        = NOT_APPLICABLE (this candidate contains documents only, no source snapshot)
+
+--- canonical corrections encoded in v1.1 ---
+Infra worker                 = C3 = W5 = do-cloud-3        (CANONICAL)
+Infra worker (forbidden)     = C3 = W3                     (W3 = do-cloud-1 = C1)
+Aika-2 identity              = AIKA-2                      (OS/toolchain = dispatch-time attribute, never identity)
+Aika-2 responsibility        = VOICE / AUDIO / APP DEVELOPMENT WORKER
+Chief Engineer               = configurable reasoning role (not mutually exclusive with Aika / 5188)
+Roles                        = CLIENT/USER · PROVIDER · ADMIN · WORK   (legacy customer/agent/admin unchanged)
+Task states                  = live 25 recorded as IMPLEMENTATION_EVOLUTION (no forced downgrade to 22)
+
+--- compatibility boundary ---
+GOLDEN-01…GOLDEN-05 Overwritten           = NO
+Remote GOLDEN-SURFACE-MANIFEST Modified   = NO
+Remote GOLDEN-REGISTRY Modified           = NO
+Relay Repo Pushed                         = NO
+Product Repo Pushed                       = NO
+Live Task / Store Modified                = NO
+Worker Registry Modified                  = NO
+Role Token Renamed                        = NO
+DB Migration                              = NO
+C1 / C2 / C3 Modified                     = NO
+Service Restarted                         = NO
+
+--- related references ---
+governance/CANONICAL-RULES.md                        existing canonical execution governance (referenced, unchanged)
+governance/AIKABOX-PROJECT-OPERATING-MODEL-v1.0.md   existing operating model document (referenced, unchanged)
+relay Golden surface baseline v1.0                   compatibility reference only (NOT overwritten, NOT updated)
+pm-test/GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1-CONSISTENCY-AUDIT-REPORT.md   prior read-only audit (evidence)
+
+Memory Written = NO

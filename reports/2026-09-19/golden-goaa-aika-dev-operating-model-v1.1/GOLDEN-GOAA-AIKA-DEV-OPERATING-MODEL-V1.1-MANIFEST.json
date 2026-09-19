@@ -1,0 +1,265 @@
+{
+  "golden_id": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1",
+  "document_version": "1.1",
+  "golden_type": ["DEVELOPMENT_OPERATING_MODEL", "DEVELOPMENT_GOVERNANCE"],
+  "owner": "Tao",
+  "authority": "TAO_APPROVED_GOLDEN_CANDIDATE_BUILD",
+  "control_plane": "Aika / 5188 (CONTROL PLANE / DEVELOPMENT OS)",
+  "build_date": "2026-09-19",
+  "build_timezone": "America/Los_Angeles",
+  "build_stage": "BUILD GOLDEN CANDIDATE + CONSISTENCY CORRECTION + MANIFEST + VERIFY",
+  "golden_status": "GOLDEN_CANDIDATE",
+  "registration": "PENDING_TAO_REVIEW",
+  "remote_activation": "NOT_PERFORMED",
+  "registry_kind": "DOCUMENT_CANDIDATE_SET",
+  "second_golden_registry_created": false,
+  "change_policy": "additive-only; content change requires impact statement + Tao approval + rollback anchor + manifest update + version bump",
+
+  "artifacts": [
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md",
+    "MANIFEST.txt"
+  ],
+
+  "hierarchy": {
+    "L0": "TAO — Human Authority",
+    "L1": "AIKA / 5188 — Control Plane",
+    "L2": "WORKERS — Execution",
+    "L3": "QWENPAW / 小千 — Final Development / Runtime / Infra Fallback"
+  },
+
+  "control_plane": {
+    "identity": "Aika / 5188",
+    "kind": "CONTROL_PLANE / DEVELOPMENT_OS",
+    "responsibilities": [
+      "Project Management",
+      "Chief Engineer orchestration",
+      "Task Pool",
+      "Worker dispatch",
+      "Review",
+      "Approval Inbox",
+      "State machine",
+      "Delivery governance",
+      "Worker visibility"
+    ],
+    "chief_engineer": {
+      "kind": "CONFIGURABLE_REASONING_ROLE",
+      "examples": ["ChatGPT", "Claude", "Gemini", "other configured CE"],
+      "mutually_exclusive_with_control_plane": false
+    }
+  },
+
+  "fallback_l3": {
+    "identity": "QwenPAW / 小千",
+    "rule": "must not default-replace the normal 5188 workflow",
+    "escalation_conditions": [
+      "5188 cannot complete",
+      "worker cannot register or connect",
+      "runtime problems",
+      "service problems",
+      "control plane itself needs repair",
+      "low-level infra / diagnostics",
+      "Golden / governance repair"
+    ]
+  },
+
+  "tracks": {
+    "A": {
+      "name": "GOAA.ai PRODUCT MAINLINE",
+      "control_plane": "Aika / 5188",
+      "primary_worker": "aika-core-01",
+      "worker_number": "W6",
+      "environment": "D0",
+      "scope": ["Client AI Butler", "Matter", "Provider Connection", "Service Order", "Provider Workspace", "Admin", "GOAA Golden Flow", "Product Features"]
+    },
+    "B": {
+      "name": "INFRA / AUTOMATION",
+      "control_plane": "Aika / 5188",
+      "primary_worker": "C3 = W5 = do-cloud-3 = goaa-aika-cloud-3",
+      "forbidden_aliases": ["C3 = W3", "C3 / W3"],
+      "fallback": "QwenPAW / 小千",
+      "scope": ["AUTO-MERGE-SYNC", "Webhook", "Ingress", "Worker Automation", "Runtime Automation", "Infrastructure"]
+    },
+    "C": {
+      "name": "AIKA VOICE APP",
+      "project_control_plane": "Aika / 5188",
+      "execution_worker": "AIKA-2",
+      "canonical_worker_identity": "AIKA-2",
+      "responsibility": "VOICE / AUDIO / APP DEVELOPMENT WORKER",
+      "platform_attribute": "runtime-verified (OS / Xcode / Swift / audio capability)",
+      "scope": ["Wake Word", "Hi Aika", "Audio Capture", "VAD", "STT", "TTS", "Voice Session", "Role Router", "Event Inbox", "Voice Approval", "Mobile / Desktop Voice Frontend", "Apple development capability when available"],
+      "identity_rule": "machine identity is not an OS probe result; missing capability => escalation/provisioning, never rename"
+    }
+  },
+
+  "environments": {
+    "D0": "Development / Aika local development tier",
+    "C1": "Production",
+    "C2": "Staging / Test",
+    "C3": "Worker Infrastructure"
+  },
+
+  "worker_map": {
+    "W1": {"machine": "aika-1", "environment": null, "note": "primary coordinator (Windows 11)"},
+    "W2": {"machine": "aika-2", "environment": null, "note": "secondary; independent AIKA-2 voice/apple worker identity"},
+    "W3": {"machine": "do-cloud-1", "environment": "C1", "address": "34.199.227.108"},
+    "W4": {"machine": "do-cloud-2", "environment": "C2", "address": "143.198.224.71"},
+    "W5": {"machine": "do-cloud-3", "environment": "C3", "address": "64.23.166.121"},
+    "W6": {"machine": "aika-core-01", "environment": "D0", "address": "100.114.37.90"}
+  },
+
+  "canonical_mapping_statements": [
+    "C3 = W5 = do-cloud-3",
+    "Aika-2 = AIKA-2 (voice/apple execution worker identity)"
+  ],
+
+  "roles": {
+    "canonical_business_roles": ["CLIENT / USER", "PROVIDER", "ADMIN", "WORK / DEVELOPER"],
+    "legacy_compatibility": {
+      "customer": "CLIENT",
+      "agent": "PROVIDER",
+      "admin": "ADMIN",
+      "developer": "WORK (control-plane execution context)"
+    },
+    "rename_migration_in_this_version": false,
+    "forbidden_now": ["rename DB role", "rename routes", "rename provider portal", "break Golden-03 compatibility"]
+  },
+
+  "voice": {
+    "role_model": ["CLIENT", "PROVIDER", "ADMIN", "WORK"],
+    "multi_role_flow": "Login -> Role Selector -> Active Role Context",
+    "session_metadata": ["user_id", "active_role", "workspace_id", "session_id", "device_id"],
+    "event_flow": "Backend Event -> Event Router -> Push -> User Opens -> Aika Speaks -> AI Summary -> User Voice Response -> Backend Action -> Workspace Record",
+    "event_types": ["INFORMATION", "ACTION_REQUIRED", "APPROVAL_REQUIRED", "WARNING", "CRITICAL"],
+    "approval_flow": "WHO / WHAT / WHY / IMPACT / RISK / ROLLBACK -> HUMAN CONFIRMATION",
+    "high_risk_confirmation_phrases": ["确认批准", "批准", "确认执行"],
+    "weak_confirmations_insufficient": ["OK", "好", "行"],
+    "aika_may_not": "substitute for human approval"
+  },
+
+  "c1_protection": {
+    "c1": "PRODUCTION",
+    "requires_explicit_tao_authorization": [
+      "production deploy",
+      "C1 source mutation",
+      "DB destructive operation",
+      "secret change",
+      "auth change",
+      "pricing change",
+      "domain change",
+      "rollback pointer",
+      "production service restart",
+      "systemd mutation"
+    ],
+    "worker_self_approval": "FORBIDDEN"
+  },
+
+  "development_flow": [
+    "Tao", "5188 / Chief Engineer", "Proposal", "Tao Plan Approval", "Task Pool", "Worker",
+    "Task Branch", "Code Review", "PR", "Integration", "C2", "C2 PASS", "READY_FOR_C1",
+    "Tao Production Approval", "C1", "LIVE", "COMPLETED"
+  ],
+
+  "task_state_machine": {
+    "live_state_count": 25,
+    "legacy_documented_count": 22,
+    "extra_live_states": ["CODE_REVIEW", "PROMOTION_APPROVAL_PENDING", "NEEDS_REVISION"],
+    "classification": "IMPLEMENTATION_EVOLUTION",
+    "forced_downgrade_to_22": false,
+    "reconciliation": "separate GCR"
+  },
+
+  "auto_merge_sync": {
+    "p0": "CLOSED",
+    "phase_3a": "SOURCE_APPLIED_RUNTIME_LOADED_INERT",
+    "github_webhook": "NOT ACTIVE",
+    "webhook_secret": "ABSENT",
+    "scheduler": "NOT ACTIVE",
+    "phase_3b": "PARALLEL INFRA TRACK",
+    "phase_3b_worker": "C3 / W5 / do-cloud-3",
+    "phase_3c": "DEFERRED"
+  },
+
+  "priorities": [
+    {"priority": "P0", "work": "GOAA Product Mainline", "track": "A", "worker": "aika-core-01", "state": "ACTIVE"},
+    {"priority": "P0", "work": "Aika-2 worker registration / capability audit", "track": "C", "worker": "AIKA-2", "state": "NEXT"},
+    {"priority": "P0", "work": "Aika Voice V1 Architecture Freeze", "track": "C", "owner": "5188 CE", "state": "NEXT"},
+    {"priority": "P1", "work": "Voice Environment Audit", "track": "C", "worker": "AIKA-2", "state": "planned"},
+    {"priority": "P1", "work": "Voice Event Inbox", "track": "C", "worker": "AIKA-2", "state": "planned"},
+    {"priority": "P1", "work": "Voice Approval", "track": "C", "worker": "AIKA-2", "state": "planned"},
+    {"priority": "P1", "work": "AUTO-MERGE-SYNC Phase 3B", "track": "B", "worker": "C3 / W5 / do-cloud-3", "state": "planned"},
+    {"priority": "P2", "work": "AUTO-MERGE-SYNC Phase 3C", "track": "B", "state": "DEFERRED"}
+  ],
+
+  "gcr_triggers": [
+    "Control Plane semantics",
+    "Worker responsibility",
+    "Environment responsibility",
+    "C1/C2/C3 meaning",
+    "Worker-number mapping",
+    "Role semantics",
+    "legacy agent/provider migration",
+    "approval semantics",
+    "human approval rules",
+    "production permissions",
+    "auth",
+    "pricing",
+    "domain",
+    "destructive DB change",
+    "Golden registry schema",
+    "Voice App becoming business truth source",
+    "Worker bypassing 5188/C2/Approval",
+    "QwenPAW fallback semantics"
+  ],
+
+  "source_references": {
+    "existing_canonical_governance": [
+      "governance/CANONICAL-RULES.md",
+      "governance/AIKABOX-PROJECT-OPERATING-MODEL-v1.0.md"
+    ],
+    "golden_surface_baseline": {
+      "repo": "taofengtx/goaa-relay",
+      "path": "reports/2026-09-13/golden-baseline-v1/",
+      "surfaces": ["GOLDEN-01", "GOLDEN-02", "GOLDEN-03", "GOLDEN-04", "GOLDEN-05"],
+      "role": "compatibility reference only",
+      "overwritten": false
+    },
+    "live_system_evidence": [
+      "local-console/project_context.py",
+      "local-console/qwenpaw_workers.json",
+      "live Task Pool / store",
+      "approval flow (admin session required)",
+      "environment mapping"
+    ]
+  },
+
+  "registration_boundary": {
+    "remote_manifest_modified": false,
+    "remote_registry_modified": false,
+    "relay_push": false,
+    "product_repo_push": false,
+    "golden_01_05_overwritten": false,
+    "remote_activation": false,
+    "live_task_or_store_modified": false,
+    "worker_registry_modified": false,
+    "role_token_renamed": false,
+    "db_modified": false,
+    "c1_c2_c3_modified": false,
+    "service_restarted": false,
+    "output": "REGISTRATION = PENDING_TAO_REVIEW"
+  },
+
+  "open_items": [
+    {"id": "C-01", "item": "Track C project container creation", "trigger": "authorization"},
+    {"id": "C-02", "item": "Aika-2 worker registration + capability audit", "trigger": "P0"},
+    {"id": "C-03", "item": "Role semantics / legacy-token migration", "trigger": "GCR"},
+    {"id": "C-04", "item": "Task-state documentation reconciliation", "trigger": "GCR"},
+    {"id": "C-05", "item": "Golden registration decision", "trigger": "Tao decision"},
+    {"id": "C-06", "item": "Environment semantics vs frozen surface baseline", "trigger": "GCR"}
+  ],
+
+  "memory_written": "NO"
+}

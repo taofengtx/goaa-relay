@@ -1,0 +1,483 @@
+{
+  "golden_id": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1",
+  "version": "1.1",
+  "candidate_status": "GOLDEN_CANDIDATE",
+  "registration": "PENDING_TAO_REVIEW",
+  "remote_activation": "NOT_PERFORMED",
+  "candidate_files": [
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json",
+    "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md",
+    "MANIFEST.txt"
+  ],
+  "critical_checks": [
+    {
+      "id": "V01",
+      "name": "file set: all 5 required candidate artifacts exist in one package",
+      "status": "PASS",
+      "detail": "present=5/5 dir=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'MANIFEST.txt']"
+    },
+    {
+      "id": "V02",
+      "name": "golden_id / version / type / owner / registration",
+      "status": "PASS",
+      "detail": "id=GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1 ver=1.1 type=['DEVELOPMENT_OPERATING_MODEL', 'DEVELOPMENT_GOVERNANCE'] owner=Tao registration=PENDING_TAO_REVIEW"
+    },
+    {
+      "id": "V03",
+      "name": "no ACTIVE / REGISTERED / REMOTE_ACTIVE claim anywhere in the candidate",
+      "status": "PASS",
+      "detail": "hits=[]"
+    },
+    {
+      "id": "V04",
+      "name": "worker map: W3=do-cloud-1=C1, W4=do-cloud-2=C2, W5=do-cloud-3=C3, W6=aika-core-01=D0",
+      "status": "PASS",
+      "detail": "manifest={'W1': ('aika-1', None), 'W2': ('aika-2', None), 'W3': ('do-cloud-1', 'C1'), 'W4': ('do-cloud-2', 'C2'), 'W5': ('do-cloud-3', 'C3'), 'W6': ('aika-core-01', 'D0')}"
+    },
+    {
+      "id": "V05",
+      "name": "document worker table carries the same W3..W6 mapping",
+      "status": "PASS",
+      "detail": "rows_found=[True, True, True, True]"
+    },
+    {
+      "id": "V06",
+      "name": "C3 canonical = W5 = do-cloud-3 (doc + manifest + index)",
+      "status": "PASS",
+      "detail": "doc=True manifest=C3 = W5 = do-cloud-3 = goaa-aika-cloud-3 index=True"
+    },
+    {
+      "id": "V07",
+      "name": "no incorrect canonical statement 'C3 = W3' (all occurrences labelled FORBIDDEN)",
+      "status": "PASS",
+      "detail": "unlabelled_occurrences=[]"
+    },
+    {
+      "id": "V08",
+      "name": "Aika-2 canonical identity preserved as AIKA-2",
+      "status": "PASS",
+      "detail": "doc=True manifest=AIKA-2"
+    },
+    {
+      "id": "V09",
+      "name": "no identity rename: Aika-Mac / Aika-Voice / New Worker appear only as prohibitions",
+      "status": "PASS",
+      "detail": "occurrences=[{'name': 'Aika-Mac', 'prohibition_context': True}]"
+    },
+    {
+      "id": "V10",
+      "name": "OS / Xcode / Swift described as runtime/dispatch capability, not machine identity",
+      "status": "PASS",
+      "detail": "manifest_platform_attribute=runtime-verified (OS / Xcode / Swift / audio capability)"
+    },
+    {
+      "id": "V11",
+      "name": "Aika-2 responsibility = VOICE / AUDIO / APP DEVELOPMENT WORKER",
+      "status": "PASS",
+      "detail": "manifest=VOICE / AUDIO / APP DEVELOPMENT WORKER"
+    },
+    {
+      "id": "V12",
+      "name": "canonical roles CLIENT/USER · PROVIDER · ADMIN · WORK present",
+      "status": "PASS",
+      "detail": "manifest_roles=['CLIENT / USER', 'PROVIDER', 'ADMIN', 'WORK / DEVELOPER']"
+    },
+    {
+      "id": "V13",
+      "name": "legacy compat map customer->CLIENT, agent->PROVIDER, admin->ADMIN (+developer->WORK)",
+      "status": "PASS",
+      "detail": "map={'customer': 'CLIENT', 'agent': 'PROVIDER', 'admin': 'ADMIN', 'developer': 'WORK (control-plane execution context)'}"
+    },
+    {
+      "id": "V14",
+      "name": "no rename migration / no DB role rename / no route or portal rename; Golden-03 intact",
+      "status": "PASS",
+      "detail": "rename_migration=False golden03_guard=True"
+    },
+    {
+      "id": "V15",
+      "name": "Aika/5188 = CONTROL PLANE; Chief Engineer = configurable reasoning role",
+      "status": "PASS",
+      "detail": "control_plane_kind=CONTROL_PLANE / DEVELOPMENT_OS ce_kind=CONFIGURABLE_REASONING_ROLE excl=False"
+    },
+    {
+      "id": "V16",
+      "name": "development flow present in canonical order (Tao -> CE/Proposal -> Approval -> ... -> C1 -> LIVE)",
+      "status": "PASS",
+      "detail": "missing_or_out_of_order=[]"
+    },
+    {
+      "id": "V17",
+      "name": "worker cannot reach C1 without Tao production approval / cannot self-approve",
+      "status": "PASS",
+      "detail": "tokens_ok=True explicit_auth_sentence=True"
+    },
+    {
+      "id": "V18",
+      "name": "25 states not downgraded to 22; recorded as IMPLEMENTATION_EVOLUTION + separate GCR",
+      "status": "PASS",
+      "detail": "classification=IMPLEMENTATION_EVOLUTION forced_downgrade=False reconciliation=separate GCR"
+    },
+    {
+      "id": "V19",
+      "name": "voice roles CLIENT / PROVIDER / ADMIN / WORK present",
+      "status": "PASS",
+      "detail": "manifest_role_model=['CLIENT', 'PROVIDER', 'ADMIN', 'WORK']"
+    },
+    {
+      "id": "V20",
+      "name": "universal voice event model present in canonical order",
+      "status": "PASS",
+      "detail": "missing_or_out_of_order=[]"
+    },
+    {
+      "id": "V21",
+      "name": "voice approval governance: AI may analyse but never substitute human approval; high-risk needs explicit confirmation",
+      "status": "PASS",
+      "detail": "weak_confirmation_rule=True"
+    },
+    {
+      "id": "V22",
+      "name": "GCR trigger list covers all 17 required triggers",
+      "status": "PASS",
+      "detail": "manifest_triggers=18 missing=[]"
+    },
+    {
+      "id": "V23",
+      "name": "changelog records all 7 v1.0->v1.1 items",
+      "status": "PASS",
+      "detail": "items={'C3/W3 -> C3/W5/do-cloud-3': True, 'Aika-2 identity preserved': True, 'OS/toolchain decoupled from machine identity': True, 'Chief Engineer separated from 5188 control plane': True, 'legacy customer/agent/admin compat mapping': True, '25-state implementation evolution preserved': True, 'remote Golden registration deferred': True}"
+    },
+    {
+      "id": "V24",
+      "name": "SHA256SUMS matches the candidate files byte-for-byte",
+      "status": "PASS",
+      "detail": "covered=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'MANIFEST.txt']"
+    },
+    {
+      "id": "V25",
+      "name": "manifest lists the full candidate file set",
+      "status": "PASS",
+      "detail": "manifest_artifacts=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'MANIFEST.txt'] actual=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'MANIFEST.txt']"
+    }
+  ],
+  "boundary_checks": {
+    "PRODUCT_SOURCE_CHANGE": {
+      "status": "PASS",
+      "detail": "fingerprints=all unchanged (9 files)"
+    },
+    "LIVE_TASK_CHANGE": {
+      "status": "PASS",
+      "detail": "ui-tasks.json sha unchanged; mtime=2026-09-18 23:05:42 PDT"
+    },
+    "LIVE_STORE_CHANGE": {
+      "status": "PASS",
+      "detail": "ui-task-reviews.json sha unchanged; mtime=2026-09-18 19:53:20 PDT"
+    },
+    "WORKER_REGISTRY_CHANGE": {
+      "status": "PASS",
+      "detail": "sha unchanged; registry workers=[{'worker_id': 'aika-core-01', 'display_name': 'Aika-Box (local runtime)', 'qwenpaw_base_url': 'http://100.114.37.90:8088', 'environment': 'local', 'transport': 'tailnet', 'api_flavor': 'console', 'capabilities': ['chat', 'sessions', 'approvals', 'tools'], 'enabled': True, 'note': 'Primary worker. QwenPaw on the Aika-Box itself, reachable over the tailnet.'}, {'worker_id': 'do-cloud-1', 'display_name': 'DO runtime anchor (cloud)', 'qwenpaw_base_url': 'http://127.0.0.1:18088', 'environment': 'cloud', 'transport': 'ssh-tunnel', 'api_flavor': 'basic', 'capabilities': ['chat'], 'enabled': True, 'note': 'Reached through a local SSH tunnel (tools/start_qwenpaw_tunnels.sh). Probe on 2026-09-13 found a MINIMAL QwenPaw wrapper (title QwenPaw 1.0.0, node QwenPaw-DO): only GET /health and POST /chat - no /api/console/*, so no sessions/streaming/approvals. Reported, not changed. The node is not on the tailnet and that service listens on 0.0.0.⟨0⟩:8088 (reported exposure).'}, {'worker_id': 'do-cloud-2', 'display_name': 'DO worker 2', 'qwenpaw_base_url': 'http://127.0.0.1:18089', 'environment': 'cloud', 'transport': 'ssh-tunnel', 'api_flavor': 'auto', 'capabilities': ['chat', 'sessions', 'approvals'], 'enabled': True, 'note': 'No QwenPaw service observed on this node as of 2026-09-13; expected to report Offline until installed.'}, {'worker_id': 'do-cloud-3', 'display_name': 'DO worker 3', 'qwenpaw_base_url': 'http://127.0.0.1:18090', 'environment': 'cloud', 'transport': 'ssh-tunnel', 'api_flavor': 'auto', 'capabilities': ['chat', 'sessions', 'approvals'], 'enabled': True, 'note': 'No QwenPaw service observed on this node as of 2026-09-13; expected to report Offline until installed.'}]"
+    },
+    "DB_CHANGE": {
+      "status": "PASS",
+      "detail": "local_user.db sha256=8ffcf2e9a7f739fd mtime=2026-09-13 21:19:25 PDT (predates the build => not written by this round)"
+    },
+    "ROLE_RENAME": {
+      "status": "PASS",
+      "detail": "console_accounts=[('tao', 'admin')] ; order-api.ts still uses customer/agent tokens (no CLIENT/PROVIDER rename)"
+    },
+    "C1_CHANGE": {
+      "status": "PASS",
+      "detail": "NO remote execution channel was used; no C1 artifact touched; product+console source fingerprints unchanged"
+    },
+    "C2_CHANGE": {
+      "status": "PASS",
+      "detail": "NO remote execution channel was used; no C2 artifact touched"
+    },
+    "C3_CHANGE": {
+      "status": "PASS",
+      "detail": "NO remote execution channel was used; no C3 (do-cloud-3) artifact touched; not referenced in any write"
+    },
+    "DEPLOY": {
+      "status": "PASS",
+      "detail": "no deploy channel used; service start unchanged (Sat 2026-09-19 01:36:24 PDT)"
+    },
+    "RESTART": {
+      "status": "PASS",
+      "detail": "ActiveEnterTimestamp=Sat 2026-09-19 01:36:24 PDT MainPID=266756 NRestarts=0 (identical to pre-build)"
+    },
+    "SYSTEMD_CHANGE": {
+      "status": "PASS",
+      "detail": "unit mtime=2026-06-05 00:27:19 PDT (predates the build => not modified by this round)"
+    },
+    "REMOTE_GOLDEN_REGISTRY_CHANGE": {
+      "status": "PASS",
+      "detail": "relay main HEAD=d58826580190582018b46d76b579e692a2680e86 (pre-build value=d58826580190582018b46d76b579e692a2680e86) => canonical registry untouched"
+    },
+    "REMOTE_PUSH": {
+      "status": "PASS",
+      "detail": "product integration head=a43f32cbd52267c07417a0d09b1587ad842c5143 == PR#25 merge commit recorded pre-build (a43f32cbd52267c07417a0d09b1587ad842c5143); local HEAD=301b8ea9152d7a80b8072d77d98cd088a1bf65e5; agent issued no push"
+    },
+    "BACKUP_CREATED": {
+      "status": "PASS",
+      "detail": "no backup created; workspace paths written during the round window: ['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE.tar.gz', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CANDIDATE.tar.gz.sha256', 'skill.json']"
+    },
+    "PRODUCT_SOURCE_CHANGE_2": {
+      "status": "PASS",
+      "detail": "double-entry of PRODUCT_SOURCE_CHANGE (recomputed)"
+    }
+  },
+  "sha_checks": {
+    "files": {
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md": {
+        "size": 6464,
+        "sha256": "95a6ce85c0c82d683be1629525a0fa63637ab7fd35c3c37822c305761e80ea1b"
+      },
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json": {
+        "size": 10479,
+        "sha256": "99279d91c269f623a95c651624a91f97629870f8271e82cd679d08ef0de226f1"
+      },
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md": {
+        "size": 19997,
+        "sha256": "97edd7c44dc7e0c9d9b525e429e9126ea1331dfab3d8802e1cd661046447b8d1"
+      },
+      "MANIFEST.txt": {
+        "size": 3849,
+        "sha256": "f5c9dde0c8c4528cc87eda41b0ec26cd66f3506b559b211977caf83cb3b12bad"
+      }
+    },
+    "files_not_listed_here": [
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt"
+    ],
+    "self_reference": {
+      "excluded": [
+        "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json",
+        "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt"
+      ],
+      "reason": "this file is written before the seal and SHA256SUMS.txt never lists itself, so their own final hashes can only be published in SHA256SUMS.txt; embedding them here would be stale by construction",
+      "authoritative_source": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt (line for GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json)",
+      "seal_procedure": "VERIFY.json is written first, SHA256SUMS.txt is recomputed from the on-disk bytes after it, and the post-seal match is re-verified (recorded in part2-verify.json)"
+    },
+    "sums_matches_files": true,
+    "sums_covers": [
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json",
+      "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md",
+      "MANIFEST.txt"
+    ],
+    "manifest_lists_all_files": true
+  },
+  "changelog_checks": {
+    "C3/W3 -> C3/W5/do-cloud-3": true,
+    "Aika-2 identity preserved": true,
+    "OS/toolchain decoupled from machine identity": true,
+    "Chief Engineer separated from 5188 control plane": true,
+    "legacy customer/agent/admin compat mapping": true,
+    "25-state implementation evolution preserved": true,
+    "remote Golden registration deferred": true
+  },
+  "gcr_trigger_checks": {
+    "Control Plane semantics": "control plane",
+    "Worker responsibility": "worker responsibility",
+    "Environment semantics": "environment",
+    "C1/C2/C3 semantics": "c1/c2/c3",
+    "Worker-number mapping": "worker-number",
+    "Role semantics": "role semantics",
+    "agent/provider migration": "agent/provider",
+    "approval semantics": "approval semantics",
+    "production permissions": "production permissions",
+    "auth": "auth",
+    "pricing": "pricing",
+    "domain": "domain",
+    "destructive DB": "destructive db",
+    "Golden registry schema": "golden registry schema",
+    "Voice business-truth change": "business truth source",
+    "Worker bypassing approval": "bypassing 5188",
+    "QwenPAW fallback semantics": "qwenpaw fallback"
+  },
+  "overall_result": "PASS",
+  "verdict": "PASS",
+  "results": {
+    "critical_total": 25,
+    "critical_pass": 25,
+    "critical_fail": 0,
+    "boundary_total": 16,
+    "boundary_fail": 0,
+    "sha_fail": []
+  },
+  "fails": {
+    "critical": [],
+    "boundary": [],
+    "sha": []
+  },
+  "part2_verified_at": "2026-09-19 15:16:48 PDT",
+  "part2_verifier": "QwenPaw agent 'default' (小千) — read-only verification; no redesign",
+  "part2_method": "independent re-verification from the artifacts themselves; live fingerprints re-hashed; remote HEADs compared against pre-build values (read-only GitHub API GET + git ls-remote)",
+  "part1_build_verification": {
+    "source": "pm-test/golden-v1.1/build-result.json",
+    "verdict": "PASS",
+    "results": {
+      "total": 23,
+      "pass": 23,
+      "fail": 0
+    },
+    "checks": [
+      {
+        "id": "S01",
+        "name": "required candidate artifacts present",
+        "status": "PASS",
+        "detail": "present=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'MANIFEST.txt']"
+      },
+      {
+        "id": "S02",
+        "name": "no golden registry / surface-manifest file created in candidate",
+        "status": "PASS",
+        "detail": "files=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'MANIFEST.txt']"
+      },
+      {
+        "id": "S03",
+        "name": "golden document contains sections 0..17",
+        "status": "PASS",
+        "detail": "missing_sections=[]"
+      },
+      {
+        "id": "S04",
+        "name": "manifest identity/status/registration fields",
+        "status": "PASS",
+        "detail": "golden_id=GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1 version=1.1 status=GOLDEN_CANDIDATE registration=PENDING_TAO_REVIEW authority=TAO_APPROVED_GOLDEN_CANDIDATE_BUILD"
+      },
+      {
+        "id": "S05",
+        "name": "no literal backslash-u escapes in any text artifact",
+        "status": "PASS",
+        "detail": "bad_lines=[]"
+      },
+      {
+        "id": "S06",
+        "name": "all artifacts are valid UTF-8",
+        "status": "PASS",
+        "detail": "errors=[]"
+      },
+      {
+        "id": "M01",
+        "name": "C3 = W5 = do-cloud-3 canonical mapping present (doc + manifest)",
+        "status": "PASS",
+        "detail": "doc_has_mapping=True manifest_primary_worker=C3 = W5 = do-cloud-3 = goaa-aika-cloud-3"
+      },
+      {
+        "id": "M02",
+        "name": "every 'C3 = W3' / 'C3 / W3' occurrence is labelled FORBIDDEN",
+        "status": "PASS",
+        "detail": "occurrences=3 unlabeled=0"
+      },
+      {
+        "id": "M03",
+        "name": "AIKA-2 canonical identity preserved; replacement name only in prohibition",
+        "status": "PASS",
+        "detail": "identity_statement=True replacement_occurrences=[True]"
+      },
+      {
+        "id": "M04",
+        "name": "OS/toolchain recorded as dispatch-time capability, never as identity",
+        "status": "PASS",
+        "detail": "rule_present=True"
+      },
+      {
+        "id": "M05",
+        "name": "Chief Engineer = configurable role, not mutually exclusive with Aika/5188",
+        "status": "PASS",
+        "detail": "kind=CONFIGURABLE_REASONING_ROLE"
+      },
+      {
+        "id": "M06",
+        "name": "legacy customer/agent compatibility declared; no rename migration",
+        "status": "PASS",
+        "detail": "mapping={'customer': 'CLIENT', 'agent': 'PROVIDER', 'admin': 'ADMIN', 'developer': 'WORK (control-plane execution context)'} rename_migration=False"
+      },
+      {
+        "id": "M07",
+        "name": "25 states recorded as IMPLEMENTATION_EVOLUTION (no downgrade to 22)",
+        "status": "PASS",
+        "detail": "live=25 documented=22 classification=IMPLEMENTATION_EVOLUTION forced_downgrade=False"
+      },
+      {
+        "id": "M08",
+        "name": "registration reported as PENDING_TAO_REVIEW, never ACTIVE",
+        "status": "PASS",
+        "detail": "doc_statement=True manifest_registration=PENDING_TAO_REVIEW"
+      },
+      {
+        "id": "M09",
+        "name": "GOLDEN-01..05 not overwritten; no surface file in candidate set",
+        "status": "PASS",
+        "detail": "manifest_overwritten=False surface_files_present=[]"
+      },
+      {
+        "id": "M10",
+        "name": "no DB migration performed or proposed in v1.1",
+        "status": "PASS",
+        "detail": "doc_statement=True manifest_db_modified=False"
+      },
+      {
+        "id": "M11",
+        "name": "live source + store fingerprints unchanged vs build baseline",
+        "status": "PASS",
+        "detail": "mismatches=[]"
+      },
+      {
+        "id": "M12",
+        "name": "worker registry file unmodified (no Aika-2 / no C3 entry added)",
+        "status": "PASS",
+        "detail": "sha_ok=True keys=['_comment', 'version', 'updated', 'workers']"
+      },
+      {
+        "id": "M13",
+        "name": "control-plane service start time unchanged (agent performed no restart)",
+        "status": "PASS",
+        "detail": "MainPID=266756 ActiveEnterTimestamp=Sat 2026-09-19 01:36:24 PDT expected=Sat 2026-09-19 01:36:24 PDT"
+      },
+      {
+        "id": "M14",
+        "name": "Golden ID unique: no competing Golden document claims this ID",
+        "status": "PASS",
+        "detail": "outside_hits=7 runtime_artifacts=7 unexpected=[] all_outside=['/home/aika/.qwenpaw/workspaces/default/memory/2026-09-19.md', '/home/aika/.qwenpaw/workspaces/default/pm-test/GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1-AUDIT.json', '/home/aika/.qwenpaw/workspaces/default/pm-test/GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1-CONSISTENCY-AUDIT-REPORT.md', '/home/aika/.qwenpaw/workspaces/default/pm-test/golden-v1.1/build-result.json', '/home/aika/.qwenpaw/workspaces/default/pm-test/golden-v1.1/final-verify.json', '/home/aika/.qwenpaw/workspaces/default/sessions/aika-box-console_UI-FINAL-HUMAN-REJECT.json', '/home/aika/.qwenpaw/workspaces/default/tool_results/bbb73f03edb2443b8ad9010de8386c10.txt']"
+      },
+      {
+        "id": "M15",
+        "name": "artifact set confined to candidate dir (+ sibling tarball, created separately)",
+        "status": "PASS",
+        "detail": "candidate_files=['GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-CHANGELOG.md', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-MANIFEST.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-SHA256SUMS.txt', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1-VERIFY.json', 'GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1.1.md', 'MANIFEST.txt']"
+      },
+      {
+        "id": "M16",
+        "name": "Aika-2 responsibility = VOICE / AUDIO / APP DEVELOPMENT WORKER (doc + manifest + index)",
+        "status": "PASS",
+        "detail": "doc=True manifest=VOICE / AUDIO / APP DEVELOPMENT WORKER index=True"
+      },
+      {
+        "id": "M17",
+        "name": "no-bypass rule present: tasks must not bypass 5188 straight to 小千",
+        "status": "PASS",
+        "detail": "rule_present=True"
+      }
+    ]
+  },
+  "supersedes_prior_in_package_verify": {
+    "note": "the VERIFY.json previously shipped in this package (pre-Part-2 schema) is replaced by this file; pre-Part-1/2 evidence lives in pm-test/golden-v1.1/build-result.json (build) and pm-test/golden-v1.1/part2-verify.json (independent Part-2 run)",
+    "prior_in_package_results": {
+      "critical_total": 25,
+      "critical_pass": 25,
+      "critical_fail": 0,
+      "boundary_total": 16,
+      "boundary_fail": 0,
+      "sha_fail": []
+    },
+    "prior_in_package_verdict": "PASS"
+  },
+  "memory_written": "NO"
+}
