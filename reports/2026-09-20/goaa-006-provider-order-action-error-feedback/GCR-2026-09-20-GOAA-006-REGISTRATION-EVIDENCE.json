@@ -1,0 +1,169 @@
+{
+  "schema": "goaa.golden.change_record/v1",
+  "gcr_id": "GCR-2026-09-20-GOAA-006-PROVIDER-ORDER-ACTION-ERROR-FEEDBACK",
+  "record_type": "GOLDEN_CHANGE_RECORD",
+  "human_readable_record": "GCR-2026-09-20-GOAA-006-PROVIDER-ORDER-ACTION-ERROR-FEEDBACK.md",
+  "golden_id": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1",
+  "golden_version_in_effect": "v1.1",
+  "golden_change_policy_ref": "GOLDEN-CHANGE-POLICY.md",
+  "change_type": "ADD_ONLY_COMPATIBILITY_PRESERVING_FRONTEND_CHANGE",
+  "change_class": "A_ADDITIVE",
+  "project": "GOAA.ai",
+  "task_id": "GOAA-006",
+  "task_title": "Provider Service Order Workspace - Action Error Feedback Completion",
+  "control_plane": "AIKA_5188",
+  "primary_execution_worker": "aika-core-01",
+  "target_environment": "D0",
+  "branch": "worker/aika-core-01/GOAA-006",
+  "date_pdt": "2026-09-20",
+  "registered_at_utc": "2026-09-21T00:05:06Z",
+  "registered_by": "AIKA control plane (5188) session UI-FINAL-HUMAN-REJECT",
+  "registration_authority": "TAO_EXPLICIT_APPROVAL",
+  "registration_mode": "LOCAL_ONLY_NO_PUSH",
+  "source_draft": {
+    "path": "pm-test/goaa-006/GOAA-006-GCR-DRAFT.md",
+    "sha256": "45ece52fcf91aa93e4ff325483f7218f84f6c1d87da09b75fa002b2dc832a137",
+    "bytes": 3659,
+    "status_before": "READY_FOR_TAO_APPROVAL"
+  },
+
+  "change": {
+    "files_changed": ["app/agent-order-live/page.tsx"],
+    "file_count": 1,
+    "diff_stat": {
+      "files": 1,
+      "insertions": 8,
+      "deletions": 5,
+      "summary": "1 file changed, 8 insertions(+), 5 deletions(-)"
+    },
+    "base_commit": "a43f32cbd52267c07417a0d09b1587ad842c5143",
+    "base_file_sha256": "fc3e517ab3212b62c25afdc6494d6717bf8cceb92b3392414b39067da8dc2c1f",
+    "candidate_file_sha256": "31946aaad354ed84cb95022f3ea6d94a0b9d59d2605b93f5f956ff3a5bda4a62",
+    "candidate_file_bytes": 21875,
+    "diff_artifact_sha256": "18cad11a19c6a46ee536af7a7d2e7588a7c1f3c8a73ea23f6166b112b49489d5",
+    "diff_artifact_bytes": 18762,
+    "hunks_u0": ["@@ -44 +44,4 @@", "@@ -95 +98 @@", "@@ -97,3 +100,3 @@"],
+    "mechanism": "scoped actionError state + ACTION_LABEL map + actionApiMessage() + failure clears stale error + action catch returns before refresh + refresh catch fallback; 4 DOM render points covering all 5 actions",
+    "new_dependency": false,
+    "new_error_system": false,
+    "new_visual_system": false
+  },
+
+  "compatibility": {
+    "backend_change": false,
+    "db_change": false,
+    "migration": false,
+    "auth_change": false,
+    "payment_change": false,
+    "api_contract_change": false,
+    "route_change": false,
+    "role_change": false,
+    "domain_change": false,
+    "destructive_change": false,
+    "deploy_change": false,
+    "golden_flow_state_machine_change": false,
+    "existing_handlers_unchanged": true,
+    "existing_handlers_proof": "base L69-88 vs candidate L72-91 byte-identical (sha256 5ce3f5de...)"
+  },
+
+  "golden_impact_assessment": {
+    "golden_section": "14_GCR_TRIGGERS",
+    "touches_any_gcr_trigger": false,
+    "triggers_checked": [
+      "control_plane_semantics", "worker_responsibility", "environment_responsibility",
+      "c1_c2_c3_meaning", "worker_number_mapping", "role_semantics",
+      "legacy_agent_provider_migration", "approval_semantics", "human_approval_rules",
+      "production_permissions", "auth", "pricing", "domain", "destructive_db_change",
+      "golden_registry_schema", "voice_app_as_truth_source", "worker_bypassing_5188_c2_approval",
+      "qwenpaw_fallback_semantics"
+    ],
+    "golden_artifacts_unchanged": true,
+    "golden_surface_manifest_sha256_pre": "e05a7a28134160a070de7541dab0862cc8b38247957f916b2d8b91cd9222ed5a",
+    "golden_surface_manifest_sha256_post": "e05a7a28134160a070de7541dab0862cc8b38247957f916b2d8b91cd9222ed5a",
+    "golden_change_policy_sha256_pre": "6d4055afb3fa34e9c12eb81f1d97a1a2dacedb2f97db182d74c4bfada5553eb0",
+    "golden_change_policy_sha256_post": "6d4055afb3fa34e9c12eb81f1d97a1a2dacedb2f97db182d74c4bfada5553eb0",
+    "golden_id_mutated": false,
+    "golden_version_bump": false,
+    "schema_change": "NONE"
+  },
+
+  "verification": {
+    "static_gates": {
+      "tsc_exit": 0,
+      "lint_exit": 0,
+      "build_exit": 0,
+      "build_note": "/agent-order-live 6.05 kB"
+    },
+    "behavior_matrix": {
+      "total_cases": 42,
+      "pass": 42,
+      "fail": [],
+      "canonical_evidence_sha256": "490fb5ae9ef41cd5cece0adad57c61807b9e2ff3e22af66deed93ab51d733aad",
+      "canonical_evidence_path": "pm-test/goaa-006/verify_results.CODE_COMPLETE.json"
+    },
+    "code_review": {
+      "verdict": "PASS",
+      "scope_check": "PASS",
+      "regression_check": "PASS",
+      "add_only_content_level": "PASS",
+      "error_handling_5_actions": "PASS",
+      "blockers": "NONE",
+      "mode": "READ_ONLY"
+    },
+    "promotion_ready": true,
+    "documented_gap": {
+      "id": "GOAA-006-REFRESH-ERROR-SURFACE",
+      "description": "on the 'start / ok + refresh failure' path the refresh failure surfaces via the runtime badge instead of a new action-error row",
+      "refresh_failure_user_visible": true,
+      "action_error_refresh_branch_reachable": false,
+      "accepted_by": "Tao",
+      "blocker": false
+    }
+  },
+
+  "rollback": {
+    "anchor_type": "GIT_REVERT_SINGLE_FILE_FRONTEND_COMMIT",
+    "target_branch": "worker/aika-core-01/GOAA-006",
+    "restore_file_sha256": "fc3e517ab3212b62c25afdc6494d6717bf8cceb92b3392414b39067da8dc2c1f",
+    "requires_data_rollback": false,
+    "requires_contract_rollback": false,
+    "requires_infra_rollback": false
+  },
+
+  "governance_boundary": {
+    "product_code_modified_by_registration": false,
+    "task_state_modified_by_registration": false,
+    "store_written_by_registration": false,
+    "tsconfig_tsbuildinfo_touched": false,
+    "push": false,
+    "merge": false,
+    "deploy": false,
+    "promotion_approved": false,
+    "golden_semantics_changed": false
+  },
+
+  "process_fields": {
+    "GCR_REQUIRED": "YES",
+    "GCR_TYPE": "ADD-ONLY / COMPATIBILITY-PRESERVING FRONTEND CHANGE",
+    "GCR_STATUS": "REGISTERED",
+    "GCR_REGISTERED": "YES",
+    "GOLDEN_ID": "GOLDEN-GOAA-AIKA-DEV-OPERATING-MODEL-V1",
+    "GOLDEN_VERSION": "v1.1",
+    "FILES_CHANGED": "app/agent-order-live/page.tsx",
+    "DIFF": "1 file changed, 8 insertions(+), 5 deletions(-)",
+    "BACKEND_CHANGE": "NO",
+    "DB_CHANGE": "NO",
+    "AUTH_CHANGE": "NO",
+    "PAYMENT_CHANGE": "NO",
+    "API_CONTRACT_CHANGE": "NO",
+    "ROLE_CHANGE": "NO",
+    "DOMAIN_CHANGE": "NO",
+    "DESTRUCTIVE_CHANGE": "NO",
+    "DEPLOY_CHANGE": "NO",
+    "DOCUMENTED_GAP": "GOAA-006-REFRESH-ERROR-SURFACE",
+    "CODE_REVIEW": "PASS",
+    "PROMOTION_READY": "YES",
+    "TASK_STATE_CHANGED": "NO",
+    "GOLDEN_ALIGNMENT": "PASS"
+  }
+}
